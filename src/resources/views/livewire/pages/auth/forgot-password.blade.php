@@ -8,25 +8,18 @@ new #[Layout('layouts.guest')] class extends Component
 {
     public string $email = '';
 
-    /**
-     * Send a password reset link to the provided email address.
-     */
     public function sendPasswordResetLink(): void
     {
         $this->validate([
             'email' => ['required', 'string', 'email'],
         ]);
 
-        // We will send the password reset link to this user. Once we have attempted
-        // to send the link, we will examine the response then see the message we
-        // need to show to the user. Finally, we'll send out a proper response.
         $status = Password::sendResetLink(
             $this->only('email')
         );
 
         if ($status != Password::RESET_LINK_SENT) {
             $this->addError('email', __($status));
-
             return;
         }
 
@@ -36,26 +29,49 @@ new #[Layout('layouts.guest')] class extends Component
     }
 }; ?>
 
-<div>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+<div class="w-full">
+    <div class="mb-6 text-center">
+        <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl border border-amber-100 bg-gradient-to-br from-emerald-50 to-sky-50 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                Logo
+            </span>
+        </div>
+
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
+            EcoData
+        </p>
+        <h1 class="mt-2 text-3xl font-extrabold text-slate-900">
+            Recuperar acceso
+        </h1>
+        <p class="mt-2 text-sm leading-6 text-slate-600">
+            Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.
+        </p>
     </div>
 
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    <div class="rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-200/50 backdrop-blur">
+        <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <form wire:submit="sendPasswordResetLink">
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autofocus />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+        <form wire:submit="sendPasswordResetLink" class="space-y-5">
+            <div>
+                <x-input-label for="email" value="Correo electrónico" />
+                <x-text-input
+                    wire:model="email"
+                    id="email"
+                    class="mt-1 block w-full"
+                    type="email"
+                    name="email"
+                    required
+                    autofocus
+                    placeholder="tu-correo@institucion.edu"
+                />
+                <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Email Password Reset Link') }}
-            </x-primary-button>
-        </div>
-    </form>
+            <div class="pt-2">
+                <x-primary-button class="w-full justify-center rounded-2xl bg-emerald-600 py-3 text-sm font-semibold hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800">
+                    Enviar enlace de recuperación
+                </x-primary-button>
+            </div>
+        </form>
+    </div>
 </div>

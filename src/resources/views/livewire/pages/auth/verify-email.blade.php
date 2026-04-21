@@ -8,14 +8,10 @@ use Livewire\Volt\Component;
 
 new #[Layout('layouts.guest')] class extends Component
 {
-    /**
-     * Send an email verification notification to the user.
-     */
     public function sendVerification(): void
     {
         if (Auth::user()->hasVerifiedEmail()) {
             $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
-
             return;
         }
 
@@ -24,9 +20,6 @@ new #[Layout('layouts.guest')] class extends Component
         Session::flash('status', 'verification-link-sent');
     }
 
-    /**
-     * Log the current user out of the application.
-     */
     public function logout(Logout $logout): void
     {
         $logout();
@@ -35,24 +28,47 @@ new #[Layout('layouts.guest')] class extends Component
     }
 }; ?>
 
-<div>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
+<div class="w-full">
+    <div class="mb-6 text-center">
+        <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-sky-50 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                Logo
+            </span>
+        </div>
+
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
+            EcoData
+        </p>
+        <h1 class="mt-2 text-3xl font-extrabold text-slate-900">
+            Verifica tu correo
+        </h1>
+        <p class="mt-2 text-sm leading-6 text-slate-600">
+            Antes de continuar, confirma tu dirección de correo usando el enlace que enviamos a tu bandeja de entrada.
+        </p>
     </div>
 
-    @if (session('status') == 'verification-link-sent')
-        <div class="mb-4 font-medium text-sm text-green-600">
-            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
+    <div class="rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-200/50 backdrop-blur">
+        @if (session('status') == 'verification-link-sent')
+            <div class="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                Hemos enviado un nuevo enlace de verificación al correo registrado.
+            </div>
+        @endif
+
+        <div class="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+            <x-primary-button
+                wire:click="sendVerification"
+                class="justify-center rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-semibold hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800"
+            >
+                Reenviar correo de verificación
+            </x-primary-button>
+
+            <button
+                wire:click="logout"
+                type="button"
+                class="text-sm font-medium text-slate-600 transition hover:text-slate-900"
+            >
+                Cerrar sesión
+            </button>
         </div>
-    @endif
-
-    <div class="mt-4 flex items-center justify-between">
-        <x-primary-button wire:click="sendVerification">
-            {{ __('Resend Verification Email') }}
-        </x-primary-button>
-
-        <button wire:click="logout" type="submit" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            {{ __('Log Out') }}
-        </button>
     </div>
 </div>

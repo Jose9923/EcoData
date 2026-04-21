@@ -9,9 +9,6 @@ new #[Layout('layouts.guest')] class extends Component
 {
     public string $password = '';
 
-    /**
-     * Confirm the current user's password.
-     */
     public function confirmPassword(): void
     {
         $this->validate([
@@ -33,30 +30,47 @@ new #[Layout('layouts.guest')] class extends Component
     }
 }; ?>
 
-<div>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('This is a secure area of the application. Please confirm your password before continuing.') }}
+<div class="w-full">
+    <div class="mb-6 text-center">
+        <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-sky-50 shadow-sm">
+            <span class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                Logo
+            </span>
+        </div>
+
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
+            EcoData
+        </p>
+        <h1 class="mt-2 text-3xl font-extrabold text-slate-900">
+            Confirmar contraseña
+        </h1>
+        <p class="mt-2 text-sm leading-6 text-slate-600">
+            Esta es un área protegida. Confirma tu contraseña para continuar.
+        </p>
     </div>
 
-    <form wire:submit="confirmPassword">
-        <!-- Password -->
-        <div>
-            <x-input-label for="password" :value="__('Password')" />
+    <div class="rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-200/50 backdrop-blur">
+        <form wire:submit="confirmPassword" class="space-y-5">
+            <div>
+                <x-input-label for="password" value="Contraseña actual" />
+                <x-text-input
+                    wire:model="password"
+                    id="password"
+                    class="mt-1 block w-full"
+                    type="password"
+                    name="password"
+                    required
+                    autocomplete="current-password"
+                    placeholder="Ingresa tu contraseña"
+                />
+                <x-input-error :messages="$errors->get('password')" class="mt-2" />
+            </div>
 
-            <x-text-input wire:model="password"
-                          id="password"
-                          class="block mt-1 w-full"
-                          type="password"
-                          name="password"
-                          required autocomplete="current-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
-
-        <div class="flex justify-end mt-4">
-            <x-primary-button>
-                {{ __('Confirm') }}
-            </x-primary-button>
-        </div>
-    </form>
+            <div class="pt-2">
+                <x-primary-button class="w-full justify-center rounded-2xl bg-emerald-600 py-3 text-sm font-semibold hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800">
+                    Confirmar acceso
+                </x-primary-button>
+            </div>
+        </form>
+    </div>
 </div>
