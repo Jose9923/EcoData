@@ -1,29 +1,31 @@
 <div class="min-h-screen bg-slate-50">
     <div class="space-y-6">
         {{-- Header --}}
-        <section class="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 p-6 shadow-lg">
-            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <p class="text-sm font-medium uppercase tracking-[0.2em] text-slate-300">
-                        Administración
-                    </p>
-                    <h1 class="mt-1 text-3xl font-bold text-white">
-                        Colegios
-                    </h1>
-                    <p class="mt-2 max-w-2xl text-sm text-slate-300">
-                        Gestiona instituciones, branding y estado general del sistema desde un solo módulo.
-                    </p>
-                </div>
+        <div class="overflow-hidden rounded-3xl shadow-lg">
+            <section class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 p-6">
+                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <p class="text-sm font-medium uppercase tracking-[0.2em] text-slate-300">
+                            Administración
+                        </p>
+                        <h1 class="mt-1 text-3xl font-bold text-white">
+                            Colegios
+                        </h1>
+                        <p class="mt-2 max-w-2xl text-sm text-slate-300">
+                            Gestiona instituciones, branding y estado general del sistema desde un solo módulo.
+                        </p>
+                    </div>
 
-                <button
-                    type="button"
-                    wire:click="create"
-                    class="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
-                >
-                    + Nuevo colegio
-                </button>
-            </div>
-        </section>
+                    <button
+                        type="button"
+                        wire:click="create"
+                        class="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
+                    >
+                        + Nuevo colegio
+                    </button>
+                </div>
+            </section>
+        </div>
 
         {{-- Flash message --}}
         @if (session()->has('success'))

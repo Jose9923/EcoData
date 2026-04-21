@@ -35,9 +35,7 @@
             <livewire:layout.navigation />
 
             <div class="flex-1 min-w-0">
-                <div class="h-[230px]" style="background-color: var(--school-primary);"></div>
-
-                <main class="-mt-[185px] px-6 pb-10 lg:px-10">
+                <main class="px-6 py-8 lg:px-10">
                     {{ $slot }}
                 </main>
             </div>
