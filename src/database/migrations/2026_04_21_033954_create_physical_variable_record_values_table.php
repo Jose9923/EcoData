@@ -12,11 +12,17 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('physical_variable_record_id')
-                ->constrained('physical_variable_records')
+                ->constrained(
+                    table: 'physical_variable_records',
+                    indexName: 'phys_rec_val_record_fk'
+                )
                 ->cascadeOnDelete();
 
             $table->foreignId('physical_variable_id')
-                ->constrained('physical_variables')
+                ->constrained(
+                    table: 'physical_variables',
+                    indexName: 'phys_rec_val_variable_fk'
+                )
                 ->restrictOnDelete();
 
             $table->decimal('value_numeric', 15, 4)->nullable();
@@ -28,11 +34,11 @@ return new class extends Migration
 
             $table->unique(
                 ['physical_variable_record_id', 'physical_variable_id'],
-                'physical_record_variable_unique'
+                'phys_rec_val_unique'
             );
 
-            $table->index(['physical_variable_id', 'value_numeric']);
-            $table->index(['physical_variable_id', 'value_date']);
+            $table->index(['physical_variable_id', 'value_numeric'], 'phys_var_num_idx');
+            $table->index(['physical_variable_id', 'value_date'], 'phys_var_date_idx');
         });
     }
 
