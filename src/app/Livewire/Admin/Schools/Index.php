@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Admin\Schools;
 
-use App\Models\School;
 use App\Repositories\Contracts\SchoolRepositoryInterface;
 use App\Services\SchoolService;
 use Illuminate\Validation\Rule;
@@ -12,7 +11,8 @@ use Livewire\WithPagination;
 
 class Index extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithPagination;
+    use WithFileUploads;
 
     public string $search = '';
     public int $perPage = 10;
@@ -24,12 +24,19 @@ class Index extends Component
     public string $secondary_color = '#0f172a';
     public string $accent_color = '#22c55e';
     public bool $is_active = true;
+
     public $shield = null;
+    public ?string $currentShieldPath = null;
 
     public bool $showModal = false;
     public bool $isEditing = false;
 
     public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPerPage(): void
     {
         $this->resetPage();
     }
@@ -53,8 +60,9 @@ class Index extends Component
         $this->primary_color = $school->primary_color;
         $this->secondary_color = $school->secondary_color;
         $this->accent_color = $school->accent_color;
-        $this->is_active = $school->is_active;
+        $this->is_active = (bool) $school->is_active;
         $this->shield = null;
+        $this->currentShieldPath = $school->shield_path;
 
         $this->isEditing = true;
         $this->showModal = true;
@@ -93,9 +101,8 @@ class Index extends Component
 
     public function closeModal(): void
     {
-        $this->resetValidation();
-        $this->showModal = false;
         $this->resetForm();
+        $this->showModal = false;
     }
 
     protected function resetForm(): void
@@ -107,12 +114,14 @@ class Index extends Component
             'name',
             'slug',
             'shield',
+            'currentShieldPath',
         ]);
 
         $this->primary_color = '#1d4ed8';
         $this->secondary_color = '#0f172a';
         $this->accent_color = '#22c55e';
         $this->is_active = true;
+        $this->isEditing = false;
     }
 
     protected function rules(): array
@@ -147,6 +156,6 @@ class Index extends Component
     {
         return view('livewire.admin.schools.index', [
             'schools' => $this->schoolRepository()->paginateWithFilters($this->search, $this->perPage),
-        ]);
+        ])->layout('components.layouts.app');
     }
 }

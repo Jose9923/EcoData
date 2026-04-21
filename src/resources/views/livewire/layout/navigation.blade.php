@@ -47,7 +47,14 @@
             href="{{ route('dashboard') }}"
             class="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('dashboard') ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-300 hover:bg-slate-900 hover:text-white' }}"
         >
-            <svg class="h-5 w-5 {{ request()->routeIs('dashboard') ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-300' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <svg
+                class="h-5 w-5 {{ request()->routeIs('dashboard') ? '' : 'text-slate-500 group-hover:text-slate-300' }}"
+                style="{{ request()->routeIs('dashboard') ? 'color: var(--school-primary);' : '' }}"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+            >
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5 12 4l9 9.5" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 10.75V20h13.5v-9.25" />
             </svg>
@@ -59,7 +66,14 @@
                 href="{{ route('admin.schools.index') }}"
                 class="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('admin.schools.*') ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-300 hover:bg-slate-900 hover:text-white' }}"
             >
-                <svg class="h-5 w-5 {{ request()->routeIs('admin.schools.*') ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-300' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <svg
+                    class="h-5 w-5 {{ request()->routeIs('admin.schools.*') ? '' : 'text-slate-500 group-hover:text-slate-300' }}"
+                    style="{{ request()->routeIs('admin.schools.*') ? 'color: var(--school-primary);' : '' }}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                >
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16" />
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 20V10l6-4 6 4v10" />
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 20v-4h6v4" />
@@ -68,11 +82,83 @@
             </a>
         @endif
 
+        @if (Route::has('admin.users.index'))
+            <a
+                href="{{ route('admin.users.index') }}"
+                class="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('admin.users.*') ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-300 hover:bg-slate-900 hover:text-white' }}"
+            >
+                <svg
+                    class="h-5 w-5 {{ request()->routeIs('admin.users.*') ? '' : 'text-slate-500 group-hover:text-slate-300' }}"
+                    style="{{ request()->routeIs('admin.users.*') ? 'color: var(--school-primary);' : '' }}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5V4H2v16h5" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 20v-2a3 3 0 0 0-3-3H9a3 3 0 0 0-3 3v2" />
+                    <circle cx="10.5" cy="9" r="3.5" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 8h3" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 6.5v3" />
+                </svg>
+                <span>Usuarios</span>
+            </a>
+        @endif
+
+        @if (Route::has('admin.grades.index'))
+            <a
+                href="{{ route('admin.grades.index') }}"
+                class="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('admin.grades.*') ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-300 hover:bg-slate-900 hover:text-white' }}"
+            >
+                <svg
+                    class="h-5 w-5 {{ request()->routeIs('admin.grades.*') ? '' : 'text-slate-500 group-hover:text-slate-300' }}"
+                    style="{{ request()->routeIs('admin.grades.*') ? 'color: var(--school-primary);' : '' }}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h16" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 18h16" />
+                </svg>
+                <span>Grados</span>
+            </a>
+        @endif
+
+        @if (Route::has('admin.courses.index'))
+            <a
+                href="{{ route('admin.courses.index') }}"
+                class="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('admin.courses.*') ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-300 hover:bg-slate-900 hover:text-white' }}"
+            >
+                <svg
+                    class="h-5 w-5 {{ request()->routeIs('admin.courses.*') ? '' : 'text-slate-500 group-hover:text-slate-300' }}"
+                    style="{{ request()->routeIs('admin.courses.*') ? 'color: var(--school-primary);' : '' }}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 9h6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17h4" />
+                </svg>
+                <span>Cursos</span>
+            </a>
+        @endif
         <a
             href="{{ route('profile') }}"
             class="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('profile') ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-300 hover:bg-slate-900 hover:text-white' }}"
         >
-            <svg class="h-5 w-5 {{ request()->routeIs('profile') ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-300' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <svg
+                class="h-5 w-5 {{ request()->routeIs('profile') ? '' : 'text-slate-500 group-hover:text-slate-300' }}"
+                style="{{ request()->routeIs('profile') ? 'color: var(--school-primary);' : '' }}"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+            >
                 <path stroke-linecap="round" stroke-linejoin="round" d="M20 21a8 8 0 1 0-16 0" />
                 <circle cx="12" cy="8" r="4" />
             </svg>

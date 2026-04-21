@@ -10,8 +10,10 @@ class GuestLayout extends Component
     /**
      * Get the view / contents that represents the component.
      */
-    public function render(): View
+    public function render()
     {
-        return view('layouts.guest');
+        return view('livewire.admin.schools.index', [
+            'schools' => $this->schoolRepository()->paginateWithFilters($this->search, $this->perPage),
+        ])->layout('components.layouts.app');
     }
 }

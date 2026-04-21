@@ -8,10 +8,10 @@
                         Administración
                     </p>
                     <h1 class="mt-1 text-3xl font-bold text-white">
-                        Colegios
+                        Cursos
                     </h1>
                     <p class="mt-2 max-w-2xl text-sm text-slate-300">
-                        Gestiona instituciones, branding y estado general del sistema desde un solo módulo.
+                        Gestiona cursos por colegio y grado para estructurar la asignación académica del sistema.
                     </p>
                 </div>
 
@@ -21,7 +21,7 @@
                     class="inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:opacity-90"
                     style="background-color: var(--school-primary);"
                 >
-                    + Nuevo colegio
+                    + Nuevo curso
                 </button>
             </div>
         </section>
@@ -38,8 +38,8 @@
     <section class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
         <div class="grid gap-4 lg:grid-cols-[1fr_auto]">
             <div>
-                <label for="school-search" class="mb-2 block text-sm font-semibold text-slate-700">
-                    Buscar colegio
+                <label for="course-search" class="mb-2 block text-sm font-semibold text-slate-700">
+                    Buscar curso
                 </label>
 
                 <div class="relative">
@@ -50,10 +50,10 @@
                     </span>
 
                     <input
-                        id="school-search"
+                        id="course-search"
                         type="text"
                         wire:model.live.debounce.400ms="search"
-                        placeholder="Buscar por nombre o slug..."
+                        placeholder="Buscar por nombre, etiqueta, grado o colegio..."
                         class="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-200"
                     >
                 </div>
@@ -79,11 +79,7 @@
 
         <div class="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
             <p>
-                @if (method_exists($schools, 'total'))
-                    Mostrando {{ $schools->firstItem() ?? 0 }} - {{ $schools->lastItem() ?? 0 }} de {{ $schools->total() }} colegios
-                @else
-                    {{ $schools->count() }} colegios registrados
-                @endif
+                Mostrando {{ $courses->firstItem() ?? 0 }} - {{ $courses->lastItem() ?? 0 }} de {{ $courses->total() }} cursos
             </p>
 
             @if ($search !== '')
@@ -101,13 +97,16 @@
                 <thead class="bg-slate-100/80">
                     <tr>
                         <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-500">
+                            Curso
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-500">
+                            Etiqueta
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-500">
+                            Grado
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-500">
                             Colegio
-                        </th>
-                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-500">
-                            Slug
-                        </th>
-                        <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-500">
-                            Branding
                         </th>
                         <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-500">
                             Estado
@@ -119,51 +118,63 @@
                 </thead>
 
                 <tbody class="divide-y divide-slate-100">
-                    @forelse ($schools as $school)
+                    @forelse ($courses as $course)
+                        @php
+                            $gradeLabel = $course->grade?->label ?: $course->grade?->name;
+                        @endphp
+
                         <tr class="transition hover:bg-slate-50/70">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-4">
-                                    <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-                                        @if ($school->shield_path)
-                                            <img
-                                                src="{{ asset('storage/' . $school->shield_path) }}"
-                                                alt="Escudo {{ $school->name }}"
-                                                class="h-full w-full object-cover"
-                                            >
-                                        @else
-                                            <span class="text-lg font-bold text-slate-500">
-                                                {{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($school->name, 0, 1)) }}
-                                            </span>
-                                        @endif
+                                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-slate-100">
+                                        <span class="text-base font-bold text-slate-600">
+                                            {{ $course->name }}
+                                        </span>
                                     </div>
 
-                                    <div>
-                                        <p class="text-sm font-semibold text-slate-900">
-                                            {{ $school->name }}
+                                    <div class="min-w-0">
+                                        <p class="truncate text-sm font-semibold text-slate-900">
+                                            {{ $course->name }}
                                         </p>
                                         <p class="text-xs text-slate-500">
-                                            ID: {{ $school->id }}
+                                            ID: {{ $course->id }}
                                         </p>
                                     </div>
                                 </div>
                             </td>
 
                             <td class="px-6 py-4">
-                                <span class="inline-flex rounded-xl bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                                    {{ $school->slug ?: 'Sin slug' }}
-                                </span>
+                                @if ($course->label)
+                                    <span class="inline-flex rounded-xl bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                                        {{ $course->label }}
+                                    </span>
+                                @else
+                                    <span class="text-sm text-slate-400">Sin etiqueta</span>
+                                @endif
                             </td>
 
                             <td class="px-6 py-4">
-                                <div class="flex items-center gap-2">
-                                    <span class="h-7 w-7 rounded-full border border-white shadow" style="background-color: {{ $school->primary_color }}"></span>
-                                    <span class="h-7 w-7 rounded-full border border-white shadow" style="background-color: {{ $school->secondary_color }}"></span>
-                                    <span class="h-7 w-7 rounded-full border border-white shadow" style="background-color: {{ $school->accent_color }}"></span>
-                                </div>
+                                @if ($gradeLabel)
+                                    <p class="text-sm font-medium text-slate-800">
+                                        {{ $gradeLabel }}
+                                    </p>
+                                @else
+                                    <span class="text-sm text-slate-400">Sin asignar</span>
+                                @endif
                             </td>
 
                             <td class="px-6 py-4">
-                                @if ($school->is_active)
+                                @if ($course->school)
+                                    <p class="text-sm font-medium text-slate-800">
+                                        {{ $course->school->name }}
+                                    </p>
+                                @else
+                                    <span class="text-sm text-slate-400">Sin asignar</span>
+                                @endif
+                            </td>
+
+                            <td class="px-6 py-4">
+                                @if ($course->is_active)
                                     <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
                                         Activo
                                     </span>
@@ -178,7 +189,7 @@
                                 <div class="flex items-center justify-end gap-2">
                                     <button
                                         type="button"
-                                        wire:click="edit({{ $school->id }})"
+                                        wire:click="edit({{ $course->id }})"
                                         class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
                                     >
                                         Editar
@@ -186,8 +197,8 @@
 
                                     <button
                                         type="button"
-                                        onclick="confirm('¿Seguro que deseas eliminar este colegio?') || event.stopImmediatePropagation()"
-                                        wire:click="delete({{ $school->id }})"
+                                        onclick="confirm('¿Seguro que deseas eliminar este curso?') || event.stopImmediatePropagation()"
+                                        wire:click="delete({{ $course->id }})"
                                         class="rounded-xl border border-rose-200 bg-white px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50"
                                     >
                                         Eliminar
@@ -197,23 +208,23 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-14 text-center">
+                            <td colspan="6" class="px-6 py-14 text-center">
                                 <div class="mx-auto max-w-md">
                                     <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M9 17v-6m3 6V7m3 10v-4m5 7H4a2 2 0 01-2-2V6a2 2 0 012-2h5.172a2 2 0 011.414.586l1.828 1.828A2 2 0 0013.828 7H20a2 2 0 012 2v9a2 2 0 01-2 2z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
                                         </svg>
                                     </div>
 
                                     <h3 class="mt-4 text-base font-semibold text-slate-900">
-                                        {{ $search !== '' ? 'No se encontraron resultados' : 'No hay colegios registrados' }}
+                                        {{ $search !== '' ? 'No se encontraron resultados' : 'No hay cursos registrados' }}
                                     </h3>
 
                                     <p class="mt-1 text-sm text-slate-500">
                                         @if ($search !== '')
-                                            Ajusta el término de búsqueda o limpia el filtro para ver todos los colegios.
+                                            Ajusta el término de búsqueda o limpia el filtro para ver todos los cursos.
                                         @else
-                                            Crea el primer colegio para comenzar a parametrizar el sistema.
+                                            Crea el primer curso para completar la estructura académica.
                                         @endif
                                     </p>
                                 </div>
@@ -224,21 +235,15 @@
             </table>
         </div>
 
-        @if ($schools->hasPages())
+        @if ($courses->hasPages())
             <div class="border-t border-slate-200 px-6 py-4">
-                {{ $schools->links() }}
+                {{ $courses->links() }}
             </div>
         @endif
     </section>
 
     {{-- Modal --}}
     @if ($showModal)
-        @php
-            $previewShield = $shield
-                ? $shield->temporaryUrl()
-                : ($currentShieldPath ? asset('storage/' . $currentShieldPath) : null);
-        @endphp
-
         <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-screen items-center justify-center px-4 py-8">
                 <div
@@ -250,10 +255,10 @@
                     <div class="flex items-start justify-between border-b border-slate-200 px-6 py-5">
                         <div>
                             <h2 class="text-xl font-bold text-slate-900">
-                                {{ $isEditing ? 'Editar colegio' : 'Nuevo colegio' }}
+                                {{ $isEditing ? 'Editar curso' : 'Nuevo curso' }}
                             </h2>
                             <p class="mt-1 text-sm text-slate-500">
-                                Configura datos básicos y colores institucionales.
+                                Configura el curso, su grado asociado y el colegio al que pertenece.
                             </p>
                         </div>
 
@@ -272,12 +277,52 @@
                         <div class="grid gap-6 md:grid-cols-2">
                             <div>
                                 <label class="mb-2 block text-sm font-semibold text-slate-700">
-                                    Nombre del colegio <span class="text-rose-500">*</span>
+                                    Colegio <span class="text-rose-500">*</span>
+                                </label>
+                                <select
+                                    wire:model.live="school_id"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-200"
+                                >
+                                    <option value="">Seleccionar...</option>
+                                    @foreach ($schools as $school)
+                                        <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('school_id')
+                                    <p class="mt-2 text-xs font-medium text-rose-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label class="mb-2 block text-sm font-semibold text-slate-700">
+                                    Grado <span class="text-rose-500">*</span>
+                                </label>
+                                <select
+                                    wire:model.defer="grade_id"
+                                    class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-200"
+                                >
+                                    <option value="">Seleccionar...</option>
+                                    @foreach ($grades as $grade)
+                                        <option value="{{ $grade->id }}">
+                                            {{ $grade->label ?: $grade->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('grade_id')
+                                    <p class="mt-2 text-xs font-medium text-rose-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="grid gap-6 md:grid-cols-2">
+                            <div>
+                                <label class="mb-2 block text-sm font-semibold text-slate-700">
+                                    Nombre del curso <span class="text-rose-500">*</span>
                                 </label>
                                 <input
                                     type="text"
                                     wire:model.defer="name"
-                                    placeholder="Ej: Institución Educativa Luis Carlos Galán"
+                                    placeholder="Ej: A"
                                     class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-200"
                                 >
                                 @error('name')
@@ -287,167 +332,43 @@
 
                             <div>
                                 <label class="mb-2 block text-sm font-semibold text-slate-700">
-                                    Slug
+                                    Etiqueta visible
                                 </label>
                                 <input
                                     type="text"
-                                    wire:model.defer="slug"
-                                    placeholder="Ej: luis-carlos-galan"
+                                    wire:model.defer="label"
+                                    placeholder="Ej: Sexto A"
                                     class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-200"
                                 >
-                                @error('slug')
+                                @error('label')
                                     <p class="mt-2 text-xs font-medium text-rose-600">{{ $message }}</p>
                                 @enderror
                             </div>
                         </div>
 
-                        <div class="grid gap-6 md:grid-cols-3">
-                            <div>
-                                <label class="mb-2 block text-sm font-semibold text-slate-700">
-                                    Color primario <span class="text-rose-500">*</span>
-                                </label>
-                                <div class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
-                                    <input
-                                        type="color"
-                                        wire:model.defer="primary_color"
-                                        class="h-10 w-12 cursor-pointer rounded-lg border-0 bg-transparent p-0"
-                                    >
-                                    <input
-                                        type="text"
-                                        wire:model.defer="primary_color"
-                                        class="w-full border-0 bg-transparent text-sm text-slate-800 outline-none focus:ring-0"
-                                    >
-                                </div>
-                                @error('primary_color')
-                                    <p class="mt-2 text-xs font-medium text-rose-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+                        <div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                                <h3 class="text-sm font-semibold text-slate-700">
+                                    Consideraciones
+                                </h3>
 
-                            <div>
-                                <label class="mb-2 block text-sm font-semibold text-slate-700">
-                                    Color secundario <span class="text-rose-500">*</span>
-                                </label>
-                                <div class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
-                                    <input
-                                        type="color"
-                                        wire:model.defer="secondary_color"
-                                        class="h-10 w-12 cursor-pointer rounded-lg border-0 bg-transparent p-0"
-                                    >
-                                    <input
-                                        type="text"
-                                        wire:model.defer="secondary_color"
-                                        class="w-full border-0 bg-transparent text-sm text-slate-800 outline-none focus:ring-0"
-                                    >
-                                </div>
-                                @error('secondary_color')
-                                    <p class="mt-2 text-xs font-medium text-rose-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label class="mb-2 block text-sm font-semibold text-slate-700">
-                                    Color acento <span class="text-rose-500">*</span>
-                                </label>
-                                <div class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
-                                    <input
-                                        type="color"
-                                        wire:model.defer="accent_color"
-                                        class="h-10 w-12 cursor-pointer rounded-lg border-0 bg-transparent p-0"
-                                    >
-                                    <input
-                                        type="text"
-                                        wire:model.defer="accent_color"
-                                        class="w-full border-0 bg-transparent text-sm text-slate-800 outline-none focus:ring-0"
-                                    >
-                                </div>
-                                @error('accent_color')
-                                    <p class="mt-2 text-xs font-medium text-rose-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
-                            <div>
-                                <label class="mb-2 block text-sm font-semibold text-slate-700">
-                                    Escudo institucional
-                                </label>
-
-                                <label class="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-center transition hover:border-slate-400 hover:bg-slate-100">
-                                    <input type="file" wire:model="shield" class="hidden" accept="image/*">
-
-                                    <div class="space-y-2">
-                                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999A5.002 5.002 0 006 9a4 4 0 00-3 6z" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M12 12v6m0-6l-3 3m3-3l3 3" />
-                                            </svg>
-                                        </div>
-
-                                        <div>
-                                            <p class="text-sm font-semibold text-slate-700">
-                                                Haz clic para subir una imagen
-                                            </p>
-                                            <p class="text-xs text-slate-500">
-                                                PNG, JPG o JPEG · Máximo 2 MB
-                                            </p>
-                                        </div>
-                                    </div>
-                                </label>
-
-                                <div wire:loading wire:target="shield" class="mt-2 text-xs font-medium" style="color: var(--school-primary);">
-                                    Cargando imagen...
-                                </div>
-
-                                @if ($isEditing && $currentShieldPath && ! $shield)
-                                    <p class="mt-2 text-xs font-medium text-slate-500">
-                                        Se mostrará el escudo actual mientras no cargues una nueva imagen.
+                                <div class="mt-4 space-y-3 text-sm text-slate-600">
+                                    <p>
+                                        El nombre del curso debe ser único dentro de la combinación colegio + grado.
                                     </p>
-                                @endif
-
-                                @error('shield')
-                                    <p class="mt-2 text-xs font-medium text-rose-600">{{ $message }}</p>
-                                @enderror
+                                    <p>
+                                        El grado disponible cambia según el colegio seleccionado.
+                                    </p>
+                                    <p>
+                                        La etiqueta visible es opcional y ayuda a mostrar una forma más clara, por ejemplo “Sexto A”.
+                                    </p>
+                                </div>
                             </div>
 
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <p class="mb-3 text-sm font-semibold text-slate-700">Vista previa</p>
-
-                                <div
-                                    class="rounded-2xl p-5 text-white shadow-sm"
-                                    style="background: linear-gradient(135deg, {{ $primary_color }}, {{ $secondary_color }});"
-                                >
-                                    <div class="flex items-center gap-4">
-                                        <div class="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-white/15 ring-1 ring-white/20">
-                                            @if ($previewShield)
-                                                <img src="{{ $previewShield }}" alt="Preview escudo" class="h-full w-full object-cover">
-                                            @else
-                                                <span class="text-lg font-bold">ESC</span>
-                                            @endif
-                                        </div>
-
-                                        <div class="min-w-0">
-                                            <p class="truncate text-base font-bold">
-                                                {{ $name ?: 'Nombre del colegio' }}
-                                            </p>
-                                            <p class="mt-1 text-xs text-white/80">
-                                                {{ $slug ?: 'slug-del-colegio' }}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-4 flex gap-2">
-                                        <span
-                                            class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
-                                            style="background-color: {{ $accent_color }}; color: #ffffff;"
-                                        >
-                                            Acento
-                                        </span>
-
-                                        <span class="inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
-                                            {{ $is_active ? 'Activo' : 'Inactivo' }}
-                                        </span>
-                                    </div>
-                                </div>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                                <h3 class="text-sm font-semibold text-slate-700">
+                                    Estado y vista rápida
+                                </h3>
 
                                 <div class="mt-4">
                                     <label class="inline-flex items-center gap-3">
@@ -457,12 +378,43 @@
                                             class="h-5 w-5 rounded border-slate-300"
                                             style="accent-color: var(--school-primary);"
                                         >
-                                        <span class="text-sm font-medium text-slate-700">Colegio activo</span>
+                                        <span class="text-sm font-medium text-slate-700">
+                                            Curso activo
+                                        </span>
                                     </label>
 
                                     @error('is_active')
                                         <p class="mt-2 text-xs font-medium text-rose-600">{{ $message }}</p>
                                     @enderror
+                                </div>
+
+                                <div class="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+                                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                        Resumen
+                                    </p>
+
+                                    <div class="mt-3 space-y-2 text-sm">
+                                        <p class="text-slate-800">
+                                            <span class="font-semibold">Curso:</span>
+                                            {{ $name ?: 'Sin definir' }}
+                                        </p>
+                                        <p class="text-slate-800">
+                                            <span class="font-semibold">Etiqueta:</span>
+                                            {{ $label ?: 'Sin definir' }}
+                                        </p>
+                                        <p class="text-slate-800">
+                                            <span class="font-semibold">Colegio:</span>
+                                            {{ optional($schools->firstWhere('id', $school_id))->name ?: 'Sin asignar' }}
+                                        </p>
+                                        <p class="text-slate-800">
+                                            <span class="font-semibold">Grado:</span>
+                                            {{ optional($grades->firstWhere('id', $grade_id))->label ?: optional($grades->firstWhere('id', $grade_id))->name ?: 'Sin asignar' }}
+                                        </p>
+                                        <p class="text-slate-800">
+                                            <span class="font-semibold">Estado:</span>
+                                            {{ $is_active ? 'Activo' : 'Inactivo' }}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -481,7 +433,7 @@
                                 class="inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow transition hover:opacity-90"
                                 style="background-color: var(--school-primary);"
                             >
-                                {{ $isEditing ? 'Guardar cambios' : 'Crear colegio' }}
+                                {{ $isEditing ? 'Guardar cambios' : 'Crear curso' }}
                             </button>
                         </div>
                     </form>
