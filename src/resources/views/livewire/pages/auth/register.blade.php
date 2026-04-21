@@ -35,19 +35,19 @@ new #[Layout('layouts.guest')] class extends Component
 
 <div class="w-full">
     <div class="mb-6 text-center">
-        <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-sky-50 shadow-sm">
+        <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl border border-white/15 bg-white/95 shadow-xl shadow-black/10">
             <span class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
                 Logo
             </span>
         </div>
 
-        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-200">
             EcoData
         </p>
-        <h1 class="mt-2 text-3xl font-extrabold text-slate-900">
+        <h1 class="mt-2 text-3xl font-extrabold text-white drop-shadow-sm">
             Crear cuenta
         </h1>
-        <p class="mt-2 text-sm leading-6 text-slate-600">
+        <p class="mt-2 text-sm leading-6 text-slate-100">
             Registra un nuevo acceso para participar en la gestión y análisis de datos ambientales.
         </p>
     </div>

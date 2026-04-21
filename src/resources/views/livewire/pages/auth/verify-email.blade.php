@@ -35,14 +35,13 @@ new #[Layout('layouts.guest')] class extends Component
                 Logo
             </span>
         </div>
-
-        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-200">
             EcoData
         </p>
-        <h1 class="mt-2 text-3xl font-extrabold text-slate-900">
+        <h1 class="mt-2 text-3xl font-extrabold text-white drop-shadow-sm">
             Verifica tu correo
         </h1>
-        <p class="mt-2 text-sm leading-6 text-slate-600">
+        <p class="mt-2 text-sm leading-6 text-slate-100">
             Antes de continuar, confirma tu dirección de correo usando el enlace que enviamos a tu bandeja de entrada.
         </p>
     </div>
