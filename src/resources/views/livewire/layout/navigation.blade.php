@@ -147,6 +147,94 @@
                 <span>Cursos</span>
             </a>
         @endif
+
+        @if (Route::has('admin.physical-variable-categories.index'))
+            <a
+                href="{{ route('admin.physical-variable-categories.index') }}"
+                class="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('admin.physical-variable-categories.*') ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-300 hover:bg-slate-900 hover:text-white' }}"
+            >
+                <svg
+                    class="h-5 w-5 {{ request()->routeIs('admin.physical-variable-categories.*') ? '' : 'text-slate-500 group-hover:text-slate-300' }}"
+                    style="{{ request()->routeIs('admin.physical-variable-categories.*') ? 'color: var(--school-primary);' : '' }}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 9h6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17h4" />
+                </svg>
+                <span>Categorías de Variables Físicas</span>
+            </a>
+        @endif
+
+        @if (Route::has('admin.physical-variables.index'))
+            <a
+                href="{{ route('admin.physical-variables.index') }}"
+                class="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('admin.physical-variables.*') ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-300 hover:bg-slate-900 hover:text-white' }}"
+            >
+                <svg
+                    class="h-5 w-5 {{ request()->routeIs('admin.physical-variables.*') ? '' : 'text-slate-500 group-hover:text-slate-300' }}"
+                    style="{{ request()->routeIs('admin.physical-variables.*') ? 'color: var(--school-primary);' : '' }}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 9h6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17h4" />
+                </svg>
+                <span>Variables Físicas</span>
+            </a>
+        @endif
+
+        @if (Route::has('admin.physical-variable-records.create'))
+            <a
+                href="{{ route('admin.physical-variable-records.create') }}"
+                class="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('admin.physical-variable-records.create') ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-300 hover:bg-slate-900 hover:text-white' }}"
+            >
+                <svg
+                    class="h-5 w-5 {{ request()->routeIs('admin.physical-variable-records.create') ? '' : 'text-slate-500 group-hover:text-slate-300' }}"
+                    style="{{ request()->routeIs('admin.physical-variable-records.create') ? 'color: var(--school-primary);' : '' }}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 9h6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17h4" />
+                </svg>
+                <span>Registros de Variables Físicas</span>
+            </a>
+        @endif
+
+        @if (Route::has('admin.physical-variable-records.index'))
+            <a
+                href="{{ route('admin.physical-variable-records.index') }}"
+                class="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('admin.physical-variable-records.index') ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-300 hover:bg-slate-900 hover:text-white' }}"
+            >
+                <svg
+                    class="h-5 w-5 {{ request()->routeIs('admin.physical-variable-records.index') ? '' : 'text-slate-500 group-hover:text-slate-300' }}"
+                    style="{{ request()->routeIs('admin.physical-variable-records.index') ? 'color: var(--school-primary);' : '' }}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 9h6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17h4" />
+                </svg>
+                <span>Visualización de Variables Físicas</span>
+            </a>
+        @endif
         <a
             href="{{ route('profile') }}"
             class="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition {{ request()->routeIs('profile') ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-300 hover:bg-slate-900 hover:text-white' }}"
