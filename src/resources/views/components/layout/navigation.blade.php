@@ -70,6 +70,30 @@
                 </a>
             </li>
         @endif
+
+        @if (Route::has('admin.physical-variable-categories.index'))
+            <li class="nav-item">
+                <a href="{{ route('admin.physical-variable-categories.index') }}" class="nav-link {{ request()->routeIs('admin.physical-variable-categories.*') ? 'active' : '' }}">
+                    Categorías de Variables
+                </a>
+            </li>
+        @endif
+
+        @if (Route::has('admin.physical-variables.index'))
+            <li class="nav-item">
+                <a href="{{ route('admin.physical-variables.index') }}" class="nav-link {{ request()->routeIs('admin.physical-variables.*') ? 'active' : '' }}">
+                    Variables Físicas
+                </a>
+            </li>
+        @endif
+
+        @if (Route::has('admin.physical-variable-records.index'))
+            <li class="nav-item">
+                <a href="{{ route('admin.physical-variable-records.index') }}" class="nav-link {{ request()->routeIs('admin.physical-variable-records.*') ? 'active' : '' }}">
+                    Registros Físicos
+                </a>
+            </li>
+        @endif
     </ul>
 
     <div class="mt-auto pt-4">
