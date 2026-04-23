@@ -1,23 +1,31 @@
-<x-layouts.app>
-    <x-slot name="header">Dashboard</x-slot>
+@extends('layouts.app')
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div class="bg-white rounded-xl shadow p-5">
-            <p class="text-sm text-gray-500">Usuarios</p>
-            <h3 class="text-3xl font-bold">120</h3>
+@section('content')
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="admin-card bg-white p-4 h-100">
+                <p class="text-secondary mb-2">Usuarios</p>
+                <h3 class="display-6 fw-bold mb-0">120</h3>
+            </div>
         </div>
-        <div class="bg-white rounded-xl shadow p-5">
-            <p class="text-sm text-gray-500">Registros</p>
-            <h3 class="text-3xl font-bold">580</h3>
+
+        <div class="col-12 col-md-4">
+            <div class="admin-card bg-white p-4 h-100">
+                <p class="text-secondary mb-2">Registros</p>
+                <h3 class="display-6 fw-bold mb-0">580</h3>
+            </div>
         </div>
-        <div class="bg-white rounded-xl shadow p-5">
-            <p class="text-sm text-gray-500">Pendientes</p>
-            <h3 class="text-3xl font-bold">14</h3>
+
+        <div class="col-12 col-md-4">
+            <div class="admin-card bg-white p-4 h-100">
+                <p class="text-secondary mb-2">Pendientes</p>
+                <h3 class="display-6 fw-bold mb-0">14</h3>
+            </div>
         </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow p-5">
-        <h2 class="text-lg font-semibold mb-4">Resumen general</h2>
-        <p class="text-gray-600">Aquí puedes poner tabla, filtros o gráficas.</p>
+    <div class="admin-card bg-white p-4">
+        <h2 class="h5 fw-semibold mb-3">Resumen general</h2>
+        <p class="text-secondary mb-0">Aquí puedes poner tabla, filtros o gráficas.</p>
     </div>
-</x-layouts.app>
+@endsection
