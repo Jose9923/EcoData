@@ -1,0 +1,89 @@
+@import "bootstrap/scss/bootstrap";
+
+:root {
+    --school-primary: #c93a7b;
+    --school-secondary: #2f3b52;
+    --school-accent: #6366f1;
+    --admin-bg: #f5f6fa;
+    --admin-sidebar-bg: #0f172a;
+    --admin-sidebar-bg-soft: #1e293b;
+}
+
+body {
+    background-color: var(--admin-bg);
+}
+
+.admin-sidebar {
+    min-height: 100vh;
+    background: var(--admin-sidebar-bg);
+    color: #e2e8f0;
+}
+
+.admin-sidebar .nav-link {
+    color: #cbd5e1;
+    border-radius: 1rem;
+    padding: .85rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
+
+.admin-sidebar .nav-link:hover,
+.admin-sidebar .nav-link.active {
+    background-color: var(--admin-sidebar-bg-soft);
+    color: #fff;
+}
+
+.admin-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 1.5rem;
+    box-shadow: 0 .25rem 1rem rgba(15, 23, 42, .04);
+}
+
+.admin-hero {
+    border-radius: 1.5rem;
+    overflow: hidden;
+    background: linear-gradient(90deg, #0f172a, #1e293b, #334155);
+    color: white;
+}
+
+.color-dot {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    display: inline-block;
+    border: 2px solid #fff;
+    box-shadow: 0 .125rem .375rem rgba(0,0,0,.15);
+}
+
+.school-avatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 1rem;
+    overflow: hidden;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.school-preview {
+    border-radius: 1.25rem;
+    color: white;
+}
+
+.form-section-title {
+    font-size: .875rem;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: .75rem;
+}
+
+.table thead th {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #64748b;
+}
