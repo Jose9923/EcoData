@@ -413,12 +413,28 @@ class PhysicalVariableRecordController extends Controller
     public function edit(int $physical_variable_record): View
     {
         $record = PhysicalVariableRecord::query()
-            ->with(['values'])
+            ->with(['values.variable.category'])
             ->findOrFail($physical_variable_record);
 
-        $selectedSchoolId = $record->school_id;
-        $selectedGradeId = $record->grade_id;
-        $selectedCategoryId = old('category_id');
+        $selectedSchoolId = old('school_id', $record->school_id);
+        $selectedGradeId = old('grade_id', $record->grade_id);
+        $selectedCourseId = old('course_id', $record->course_id);
+
+        $existingVariableIds = $record->values
+            ->pluck('physical_variable_id')
+            ->filter()
+            ->values();
+
+        $variables = PhysicalVariable::query()
+            ->where('school_id', $selectedSchoolId)
+            ->where('is_active', true)
+            ->where(function ($query) use ($existingVariableIds) {
+                $query->whereIn('id', $existingVariableIds);
+            })
+            ->with('category')
+            ->orderBy('category_id')
+            ->orderBy('name')
+            ->get();
 
         return view('admin.physical-variable-records.edit', [
             'record' => $record,
@@ -439,13 +455,7 @@ class PhysicalVariableRecordController extends Controller
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name']),
-            'variables' => PhysicalVariable::query()
-                ->where('school_id', $selectedSchoolId)
-                ->where('is_active', true)
-                ->when($selectedCategoryId, fn ($q) => $q->where('category_id', $selectedCategoryId))
-                ->orderBy('category_id')
-                ->orderBy('name')
-                ->get(),
+            'variables' => $variables,
             'recordedAt' => optional($record->recorded_at)->format('Y-m-d\TH:i'),
         ]);
     }

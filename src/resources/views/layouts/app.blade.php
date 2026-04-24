@@ -41,5 +41,15 @@
             </div>
         </div>
     </div>
+    @if ($errors->any())
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Hay errores en el formulario',
+            text: 'Revisa los campos marcados y corrige los valores fuera de rango.',
+            confirmButtonText: 'Entendido'
+        });
+    </script>
+    @endif
 </body>
 </html>

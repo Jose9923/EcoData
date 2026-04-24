@@ -35,4 +35,57 @@ class UpdatePhysicalVariableRequest extends FormRequest
             'is_active' => ['required', 'boolean'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'school_id.required' => 'Debes seleccionar un colegio.',
+            'school_id.integer' => 'El colegio seleccionado no es válido.',
+            'school_id.exists' => 'El colegio seleccionado no existe.',
+
+            'category_id.required' => 'Debes seleccionar una categoría.',
+            'category_id.integer' => 'La categoría seleccionada no es válida.',
+            'category_id.exists' => 'La categoría seleccionada no existe.',
+
+            'name.required' => 'El nombre de la variable es obligatorio.',
+            'name.string' => 'El nombre de la variable debe ser un texto válido.',
+            'name.max' => 'El nombre de la variable no puede superar los 255 caracteres.',
+
+            'slug.string' => 'El slug debe ser un texto válido.',
+            'slug.max' => 'El slug no puede superar los 255 caracteres.',
+            'slug.unique' => 'Ya existe una variable con ese slug.',
+
+            'unit.string' => 'La unidad debe ser un texto válido.',
+            'unit.max' => 'La unidad no puede superar los 255 caracteres.',
+
+            'data_type.required' => 'Debes seleccionar un tipo de dato.',
+            'data_type.in' => 'El tipo de dato seleccionado no es válido.',
+
+            'decimals.integer' => 'Los decimales deben ser un número entero.',
+            'decimals.min' => 'Los decimales no pueden ser menores que 0.',
+            'decimals.max' => 'Los decimales no pueden ser mayores que 10.',
+
+            'description.string' => 'La descripción debe ser un texto válido.',
+
+            'is_active.required' => 'Debes indicar el estado de la variable.',
+            'is_active.boolean' => 'El estado de la variable no es válido.',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'school_id' => 'colegio',
+            'category_id' => 'categoría',
+            'name' => 'nombre de la variable',
+            'slug' => 'slug',
+            'unit' => 'unidad',
+            'data_type' => 'tipo de dato',
+            'min_value' => 'valor mínimo',
+            'max_value' => 'valor máximo',
+            'decimals' => 'decimales',
+            'description' => 'descripción',
+            'is_active' => 'estado',
+        ];
+    }
 }

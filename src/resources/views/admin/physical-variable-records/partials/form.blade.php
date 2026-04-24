@@ -121,6 +121,25 @@
     </button>
 </div>
 
+   @php
+    $existingVariablesJson = ($variables ?? collect())
+        ->map(function ($variable) {
+            return [
+                'id' => $variable->id,
+                'name' => $variable->name,
+                'category' => $variable->category?->name,
+                'data_type' => $variable->data_type,
+                'unit' => $variable->unit,
+                'min_value' => $variable->min_value,
+                'max_value' => $variable->max_value,
+                'decimals' => $variable->decimals,
+                'description' => $variable->description,
+            ];
+        })
+        ->values()
+        ->toArray();
+@endphp
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const schoolSelect = document.getElementById('school_id');
@@ -134,8 +153,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const variablesUrl = @json(route('admin.physical-variable-records.ajax.variables'));
 
     const oldValues = @json($oldValues);
+    const existingVariables = @json($existingVariablesJson);
     const selectedGradeId = @json((string) old('grade_id', $record->grade_id ?? ''));
     const selectedCourseId = @json((string) old('course_id', $record->course_id ?? ''));
+    const validationErrors = @json($errors->toArray());
+
+    console.log('existingVariables', existingVariables);
+    console.log('oldValues', oldValues);
 
     function optionHTML(items, placeholder, selectedValue = '') {
         let html = `<option value="">${placeholder}</option>`;
@@ -153,7 +177,9 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const res = await fetch(`${gradesUrl}?school_id=${schoolSelect.value}`, { headers: { 'Accept': 'application/json' }});
+        const res = await fetch(`${gradesUrl}?school_id=${schoolSelect.value}`, {
+            headers: { 'Accept': 'application/json' }
+        });
         const data = await res.json();
         gradeSelect.innerHTML = optionHTML(data, 'Todos / Sin asignar', selected);
     }
@@ -164,31 +190,69 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const params = new URLSearchParams({ school_id: schoolSelect.value, grade_id: gradeSelect.value });
-        const res = await fetch(`${coursesUrl}?${params.toString()}`, { headers: { 'Accept': 'application/json' }});
+        const params = new URLSearchParams({
+            school_id: schoolSelect.value,
+            grade_id: gradeSelect.value
+        });
+
+        const res = await fetch(`${coursesUrl}?${params.toString()}`, {
+            headers: { 'Accept': 'application/json' }
+        });
         const data = await res.json();
         courseSelect.innerHTML = optionHTML(data, 'Todos / Sin asignar', selected);
     }
 
     function renderVariableField(variable) {
-        const oldValue = oldValues[variable.id] ?? '';
+        let oldValue = oldValues[variable.id] ?? '';
+
+        if (variable.data_type === 'integer' && oldValue !== '' && oldValue !== null) {
+            oldValue = parseInt(oldValue, 10);
+        }
+
+        if (variable.data_type === 'decimal' && oldValue !== '' && oldValue !== null) {
+            oldValue = Number(oldValue);
+        }
+        const fieldError = validationErrors[`values.${variable.id}`]?.[0] ?? '';
 
         let input = '';
 
         if (variable.data_type === 'integer' || variable.data_type === 'decimal') {
-            input = `<input type="number" step="any" name="values[${variable.id}]" value="${oldValue ?? ''}" class="form-control rounded-4">`;
+            input = `
+                <input
+                    type="number"
+                    step="any"
+                    name="values[${variable.id}]"
+                    value="${oldValue ?? ''}"
+                    class="form-control rounded-4 ${fieldError ? 'is-invalid' : ''}"
+                    ${variable.min_value !== null ? `min="${variable.min_value}"` : ''}
+                    ${variable.max_value !== null ? `max="${variable.max_value}"` : ''}
+                >
+            `;
         } else if (variable.data_type === 'text') {
-            input = `<textarea name="values[${variable.id}]" rows="3" class="form-control rounded-4">${oldValue ?? ''}</textarea>`;
+            input = `
+                <textarea
+                    name="values[${variable.id}]"
+                    rows="3"
+                    class="form-control rounded-4 ${fieldError ? 'is-invalid' : ''}"
+                >${oldValue ?? ''}</textarea>
+            `;
         } else if (variable.data_type === 'boolean') {
             input = `
-                <select name="values[${variable.id}]" class="form-select rounded-4">
+                <select name="values[${variable.id}]" class="form-select rounded-4 ${fieldError ? 'is-invalid' : ''}">
                     <option value="">Selecciona</option>
                     <option value="1" ${String(oldValue) === '1' || oldValue === true ? 'selected' : ''}>Sí</option>
                     <option value="0" ${String(oldValue) === '0' || oldValue === false ? 'selected' : ''}>No</option>
                 </select>
             `;
         } else if (variable.data_type === 'date') {
-            input = `<input type="date" name="values[${variable.id}]" value="${oldValue ?? ''}" class="form-control rounded-4">`;
+            input = `
+                <input
+                    type="date"
+                    name="values[${variable.id}]"
+                    value="${oldValue ?? ''}"
+                    class="form-control rounded-4 ${fieldError ? 'is-invalid' : ''}"
+                >
+            `;
         }
 
         return `
@@ -207,6 +271,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     ${input}
+
+                    ${fieldError ? `<div class="invalid-feedback d-block">${fieldError}</div>` : ''}
 
                     <div class="small text-secondary mt-2">
                         Mín: ${variable.min_value ?? '—'} | Máx: ${variable.max_value ?? '—'}
@@ -231,7 +297,9 @@ document.addEventListener('DOMContentLoaded', function () {
             params.append('category_id', categorySelect.value);
         }
 
-        const res = await fetch(`${variablesUrl}?${params.toString()}`, { headers: { 'Accept': 'application/json' }});
+        const res = await fetch(`${variablesUrl}?${params.toString()}`, {
+            headers: { 'Accept': 'application/json' }
+        });
         const data = await res.json();
 
         if (!data.length) {
@@ -260,8 +328,12 @@ document.addEventListener('DOMContentLoaded', function () {
         await loadVariables();
     });
 
+    if (existingVariables.length > 0) {
+        container.innerHTML = existingVariables.map(renderVariableField).join('');
+    }
+
     if (schoolSelect.value) {
-        loadGrades(selectedGradeId).then(() => loadCourses(selectedCourseId)).then(() => loadVariables());
+        loadGrades(selectedGradeId).then(() => loadCourses(selectedCourseId));
     }
 });
 </script>
