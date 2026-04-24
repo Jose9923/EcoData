@@ -158,9 +158,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const selectedCourseId = @json((string) old('course_id', $record->course_id ?? ''));
     const validationErrors = @json($errors->toArray());
 
-    console.log('existingVariables', existingVariables);
-    console.log('oldValues', oldValues);
-
     function optionHTML(items, placeholder, selectedValue = '') {
         let html = `<option value="">${placeholder}</option>`;
         items.forEach(item => {
@@ -211,6 +208,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (variable.data_type === 'decimal' && oldValue !== '' && oldValue !== null) {
             oldValue = Number(oldValue);
+        }
+
+        if (variable.data_type === 'text' && oldValue !== null && oldValue !== undefined) {
+            oldValue = String(oldValue);
+        }
+
+        if (variable.data_type === 'boolean' && oldValue !== '' && oldValue !== null && oldValue !== undefined) {
+            oldValue = (oldValue === true || oldValue === 1 || oldValue === '1') ? '1' : '0';
+        }
+
+        if (variable.data_type === 'date' && oldValue !== '' && oldValue !== null) {
+            oldValue = String(oldValue).substring(0, 10);
         }
         const fieldError = validationErrors[`values.${variable.id}`]?.[0] ?? '';
 

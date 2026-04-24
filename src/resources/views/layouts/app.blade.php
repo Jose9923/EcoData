@@ -41,15 +41,20 @@
             </div>
         </div>
     </div>
-    @if ($errors->any())
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- @if ($errors->any())
     <script>
-        Swal.fire({
-            icon: 'error',
-            title: 'Hay errores en el formulario',
-            text: 'Revisa los campos marcados y corrige los valores fuera de rango.',
-            confirmButtonText: 'Entendido'
-        });
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Hay errores en el formulario',
+                text: 'Revisa los campos marcados y corrige los valores.',
+                confirmButtonText: 'Entendido'
+            });
+        } else {
+            alert('Hay errores en el formulario. Revisa los campos marcados.');
+        }
     </script>
-    @endif
+    @endif -->
 </body>
 </html>

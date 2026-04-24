@@ -96,50 +96,8 @@ class PhysicalVariableRecordController extends Controller
             ->orderBy('name')
             ->get();
 
-        $rules = [
-            'school_id' => ['required', 'integer', 'exists:schools,id'],
-            'grade_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('grades', 'id')->where(function ($query) use ($schoolId) {
-                    if ($schoolId) {
-                        $query->where('school_id', $schoolId);
-                    }
-                }),
-            ],
-            'course_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('courses', 'id')->where(function ($query) use ($schoolId, $request) {
-                    if ($schoolId) {
-                        $query->where('school_id', $schoolId);
-                    }
-                    if ($request->filled('grade_id')) {
-                        $query->where('grade_id', $request->integer('grade_id'));
-                    }
-                }),
-            ],
-            'category_id' => ['nullable', 'integer', 'exists:physical_variable_categories,id'],
-            'recorded_at' => ['required', 'date'],
-            'observations' => ['nullable', 'string'],
-        ];
-
-        foreach ($variables as $variable) {
-            $key = 'values.' . $variable->id;
-
-            $rules[$key] = match ($variable->data_type) {
-                'integer' => ['nullable', 'integer'],
-                'decimal' => ['nullable', 'numeric'],
-                'text' => ['nullable', 'string'],
-                'boolean' => ['nullable'],
-                'date' => ['nullable', 'date'],
-                default => ['nullable'],
-            };
-        }
-
-        $validator = Validator::make($request->all(), $rules);
+        $validator = $this->makeDynamicValidator($request, $variables);
         $validated = $validator->validate();
-
         $normalizedValues = $this->normalizeValuesForSave($variables, $request->input('values', []));
         $filledValues = array_filter($normalizedValues, fn ($item) => $item !== null);
 
@@ -478,48 +436,7 @@ class PhysicalVariableRecordController extends Controller
             ->orderBy('name')
             ->get();
 
-        $rules = [
-            'school_id' => ['required', 'integer', 'exists:schools,id'],
-            'grade_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('grades', 'id')->where(function ($query) use ($schoolId) {
-                    if ($schoolId) {
-                        $query->where('school_id', $schoolId);
-                    }
-                }),
-            ],
-            'course_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('courses', 'id')->where(function ($query) use ($schoolId, $request) {
-                    if ($schoolId) {
-                        $query->where('school_id', $schoolId);
-                    }
-                    if ($request->filled('grade_id')) {
-                        $query->where('grade_id', $request->integer('grade_id'));
-                    }
-                }),
-            ],
-            'category_id' => ['nullable', 'integer', 'exists:physical_variable_categories,id'],
-            'recorded_at' => ['required', 'date'],
-            'observations' => ['nullable', 'string'],
-        ];
-
-        foreach ($variables as $variable) {
-            $key = 'values.' . $variable->id;
-
-            $rules[$key] = match ($variable->data_type) {
-                'integer' => ['nullable', 'integer'],
-                'decimal' => ['nullable', 'numeric'],
-                'text' => ['nullable', 'string'],
-                'boolean' => ['nullable'],
-                'date' => ['nullable', 'date'],
-                default => ['nullable'],
-            };
-        }
-
-        $validator = Validator::make($request->all(), $rules);
+        $validator = $this->makeDynamicValidator($request, $variables);
         $validated = $validator->validate();
 
         $normalizedValues = $this->normalizeValuesForSave($variables, $request->input('values', []));
@@ -565,5 +482,61 @@ class PhysicalVariableRecordController extends Controller
         return redirect()
             ->route('admin.physical-variable-records.show', $record->id)
             ->with('success', 'Registro físico actualizado correctamente.');
+    }
+
+    protected function makeDynamicValidator(Request $request, $variables)
+    {
+        $schoolId = $request->integer('school_id') ?: null;
+
+        $rules = [
+            'school_id' => ['required', 'integer', 'exists:schools,id'],
+            'grade_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('grades', 'id')->where(function ($query) use ($schoolId) {
+                    if ($schoolId) {
+                        $query->where('school_id', $schoolId);
+                    }
+                }),
+            ],
+            'course_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('courses', 'id')->where(function ($query) use ($schoolId, $request) {
+                    if ($schoolId) {
+                        $query->where('school_id', $schoolId);
+                    }
+                    if ($request->filled('grade_id')) {
+                        $query->where('grade_id', $request->integer('grade_id'));
+                    }
+                }),
+            ],
+            'category_id' => ['nullable', 'integer', 'exists:physical_variable_categories,id'],
+            'recorded_at' => ['required', 'date'],
+            'observations' => ['nullable', 'string'],
+        ];
+
+        $attributes = [];
+        $messages = [];
+
+        foreach ($variables as $variable) {
+            $key = 'values.' . $variable->id;
+
+            $rules[$key] = match ($variable->data_type) {
+                'integer' => ['nullable', 'integer'],
+                'decimal' => ['nullable', 'numeric'],
+                'text' => ['nullable', 'string'],
+                'boolean' => ['nullable', 'boolean'],
+                'date' => ['nullable', 'date'],
+                default => ['nullable'],
+            };
+
+            $attributes[$key] = $variable->name;
+        }
+
+        $validator = Validator::make($request->all(), $rules);
+        $validator->setAttributeNames($attributes);
+
+        return $validator;
     }
 }
