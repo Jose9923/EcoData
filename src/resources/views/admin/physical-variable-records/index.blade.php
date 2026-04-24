@@ -140,6 +140,7 @@
                         <th>Registrado por</th>
                         <th>Variables capturadas</th>
                         <th>Observaciones</th>
+                        <th class="text-end">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -191,10 +192,22 @@
                                     {{ $record->observations ?: 'Sin observaciones' }}
                                 </small>
                             </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{{ route('admin.physical-variable-records.show', $record->id) }}"
+                                    class="btn btn-outline-secondary rounded-4">
+                                        Ver detalle
+                                    </a>
+                                    <a href="{{ route('admin.physical-variable-records.edit', $record->id) }}"
+                                    class="btn btn-outline-primary rounded-4">
+                                        Editar
+                                    </a>
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-5">
+                            <td colspan="6" class="text-center py-5">
                                 <h5 class="fw-semibold mb-2">No hay registros físicos</h5>
                                 <p class="text-secondary mb-0">Ajusta los filtros o crea un nuevo registro.</p>
                             </td>

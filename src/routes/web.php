@@ -29,7 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('physical-variable-categories', PhysicalVariableCategoryController::class)->except(['show']);
             Route::resource('physical-variables', PhysicalVariableController::class)->except(['show']);
             Route::resource('physical-variable-records', PhysicalVariableRecordController::class)
-                ->only(['index', 'create', 'store']);
+                ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
 
             Route::get('physical-variable-records-export', [PhysicalVariableRecordController::class, 'export'])
                 ->name('physical-variable-records.export');

@@ -394,4 +394,166 @@ class PhysicalVariableRecordController extends Controller
 
         return $raw === null || $raw === '';
     }
+
+    public function show(int $physical_variable_record): View
+    {
+        $record = PhysicalVariableRecord::query()
+            ->with([
+                'school',
+                'grade',
+                'course',
+                'user',
+                'values.variable.category',
+            ])
+            ->findOrFail($physical_variable_record);
+
+        return view('admin.physical-variable-records.show', compact('record'));
+    }
+
+    public function edit(int $physical_variable_record): View
+    {
+        $record = PhysicalVariableRecord::query()
+            ->with(['values'])
+            ->findOrFail($physical_variable_record);
+
+        $selectedSchoolId = $record->school_id;
+        $selectedGradeId = $record->grade_id;
+        $selectedCategoryId = old('category_id');
+
+        return view('admin.physical-variable-records.edit', [
+            'record' => $record,
+            'schools' => School::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'grades' => Grade::query()
+                ->when($selectedSchoolId, fn ($q) => $q->where('school_id', $selectedSchoolId))
+                ->where('is_active', true)
+                ->orderByRaw('CAST(name AS UNSIGNED) ASC')
+                ->orderBy('name')
+                ->get(['id', 'name', 'label']),
+            'courses' => Course::query()
+                ->when($selectedSchoolId, fn ($q) => $q->where('school_id', $selectedSchoolId))
+                ->when($selectedGradeId, fn ($q) => $q->where('grade_id', $selectedGradeId))
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'label']),
+            'categories' => PhysicalVariableCategory::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'variables' => PhysicalVariable::query()
+                ->where('school_id', $selectedSchoolId)
+                ->where('is_active', true)
+                ->when($selectedCategoryId, fn ($q) => $q->where('category_id', $selectedCategoryId))
+                ->orderBy('category_id')
+                ->orderBy('name')
+                ->get(),
+            'recordedAt' => optional($record->recorded_at)->format('Y-m-d\TH:i'),
+        ]);
+    }
+
+    public function update(Request $request, int $physical_variable_record): RedirectResponse
+    {
+        $record = PhysicalVariableRecord::query()
+            ->with('values')
+            ->findOrFail($physical_variable_record);
+
+        $schoolId = $request->integer('school_id') ?: null;
+        $categoryId = $request->integer('category_id') ?: null;
+
+        $variables = PhysicalVariable::query()
+            ->where('school_id', $schoolId)
+            ->where('is_active', true)
+            ->when($categoryId, fn ($q) => $q->where('category_id', $categoryId))
+            ->with('category')
+            ->orderBy('category_id')
+            ->orderBy('name')
+            ->get();
+
+        $rules = [
+            'school_id' => ['required', 'integer', 'exists:schools,id'],
+            'grade_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('grades', 'id')->where(function ($query) use ($schoolId) {
+                    if ($schoolId) {
+                        $query->where('school_id', $schoolId);
+                    }
+                }),
+            ],
+            'course_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('courses', 'id')->where(function ($query) use ($schoolId, $request) {
+                    if ($schoolId) {
+                        $query->where('school_id', $schoolId);
+                    }
+                    if ($request->filled('grade_id')) {
+                        $query->where('grade_id', $request->integer('grade_id'));
+                    }
+                }),
+            ],
+            'category_id' => ['nullable', 'integer', 'exists:physical_variable_categories,id'],
+            'recorded_at' => ['required', 'date'],
+            'observations' => ['nullable', 'string'],
+        ];
+
+        foreach ($variables as $variable) {
+            $key = 'values.' . $variable->id;
+
+            $rules[$key] = match ($variable->data_type) {
+                'integer' => ['nullable', 'integer'],
+                'decimal' => ['nullable', 'numeric'],
+                'text' => ['nullable', 'string'],
+                'boolean' => ['nullable'],
+                'date' => ['nullable', 'date'],
+                default => ['nullable'],
+            };
+        }
+
+        $validator = Validator::make($request->all(), $rules);
+        $validated = $validator->validate();
+
+        $normalizedValues = $this->normalizeValuesForSave($variables, $request->input('values', []));
+        $filledValues = array_filter($normalizedValues, fn ($item) => $item !== null);
+
+        if (count($filledValues) === 0) {
+            return back()
+                ->withErrors(['values' => 'Debes registrar al menos una variable física.'])
+                ->withInput();
+        }
+
+        $rangeError = $this->validateRanges($variables, $normalizedValues);
+        if ($rangeError !== null) {
+            return back()
+                ->withErrors($rangeError)
+                ->withInput();
+        }
+
+        DB::transaction(function () use ($record, $validated, $filledValues) {
+            $record->update([
+                'school_id' => $validated['school_id'],
+                'grade_id' => $validated['grade_id'] ?: null,
+                'course_id' => $validated['course_id'] ?: null,
+                'recorded_at' => $validated['recorded_at'],
+                'observations' => filled($validated['observations'] ?? null)
+                    ? trim($validated['observations'])
+                    : null,
+            ]);
+
+            $record->values()->delete();
+
+            foreach ($filledValues as $variableId => $payload) {
+                $record->values()->create([
+                    'physical_variable_id' => $variableId,
+                    'value_numeric' => $payload['value_numeric'],
+                    'value_text' => $payload['value_text'],
+                    'value_boolean' => $payload['value_boolean'],
+                    'value_date' => $payload['value_date'],
+                ]);
+            }
+        });
+
+        return redirect()
+            ->route('admin.physical-variable-records.show', $record->id)
+            ->with('success', 'Registro físico actualizado correctamente.');
+    }
 }
