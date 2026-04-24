@@ -8,15 +8,18 @@ use App\Http\Requests\Admin\UpdateCourseRequest;
 use App\Models\Course;
 use App\Models\Grade;
 use App\Models\School;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\JsonResponse;
 
 class CourseController extends Controller
 {
     public function index(Request $request): View
     {
+        $authUser = $request->user();
+
         $search = (string) $request->string('search')->toString();
         $perPage = (int) $request->integer('per_page', 10);
 
@@ -26,6 +29,9 @@ class CourseController extends Controller
 
         $courses = Course::query()
             ->with(['school', 'grade'])
+            ->when(! $authUser->hasRole('super_admin'), function ($query) use ($authUser) {
+                $query->where('school_id', $authUser->school_id);
+            })
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery->where('name', 'like', '%' . $search . '%')
@@ -46,26 +52,30 @@ class CourseController extends Controller
 
     public function create(Request $request): View
     {
-        $selectedSchoolId = $request->integer('school_id') ?: null;
+        $authUser = $request->user();
+
+        $selectedSchoolId = $this->resolveSelectedSchoolId($request);
 
         return view('admin.courses.create', [
-            'schools' => School::query()->orderBy('name')->get(['id', 'name']),
-            'grades' => Grade::query()
-                ->when($selectedSchoolId, fn ($q) => $q->where('school_id', $selectedSchoolId))
-                ->where('is_active', true)
-                ->orderBy('name')
-                ->get(['id', 'name', 'label']),
+            'schools' => $this->visibleSchools($authUser),
+            'grades' => $this->visibleGrades($selectedSchoolId),
             'selectedSchoolId' => $selectedSchoolId,
+            'selectedGradeId' => $request->integer('grade_id') ?: null,
         ]);
     }
 
     public function store(StoreCourseRequest $request): RedirectResponse
     {
+        $authUser = $request->user();
         $data = $request->validated();
 
+        $schoolId = $authUser->hasRole('super_admin')
+            ? (int) $data['school_id']
+            : (int) $authUser->school_id;
+
         Course::create([
-            'school_id' => $data['school_id'],
-            'grade_id' => $data['grade_id'],
+            'school_id' => $schoolId,
+            'grade_id' => (int) $data['grade_id'],
             'name' => trim($data['name']),
             'label' => filled($data['label'] ?? null) ? trim($data['label']) : null,
             'is_active' => (bool) $data['is_active'],
@@ -78,30 +88,44 @@ class CourseController extends Controller
 
     public function edit(Request $request, int $course): View
     {
+        $authUser = $request->user();
+
         $course = Course::findOrFail($course);
 
-        $selectedSchoolId = old('school_id', $request->integer('school_id') ?: $course->school_id);
+        $this->authorizeSchoolScope($authUser, $course->school_id);
+
+        $selectedSchoolId = $authUser->hasRole('super_admin')
+            ? old('school_id', $request->integer('school_id') ?: $course->school_id)
+            : $authUser->school_id;
+
+        $selectedGradeId = old('grade_id', $request->integer('grade_id') ?: $course->grade_id);
 
         return view('admin.courses.edit', [
             'course' => $course,
-            'schools' => School::query()->orderBy('name')->get(['id', 'name']),
-            'grades' => Grade::query()
-                ->when($selectedSchoolId, fn ($q) => $q->where('school_id', $selectedSchoolId))
-                ->where('is_active', true)
-                ->orderBy('name')
-                ->get(['id', 'name', 'label']),
+            'schools' => $this->visibleSchools($authUser),
+            'grades' => $this->visibleGrades((int) $selectedSchoolId),
             'selectedSchoolId' => $selectedSchoolId,
+            'selectedGradeId' => $selectedGradeId,
         ]);
     }
 
     public function update(UpdateCourseRequest $request, int $course): RedirectResponse
     {
+        $authUser = $request->user();
+
         $course = Course::findOrFail($course);
+
+        $this->authorizeSchoolScope($authUser, $course->school_id);
+
         $data = $request->validated();
 
+        $schoolId = $authUser->hasRole('super_admin')
+            ? (int) $data['school_id']
+            : (int) $authUser->school_id;
+
         $course->update([
-            'school_id' => $data['school_id'],
-            'grade_id' => $data['grade_id'],
+            'school_id' => $schoolId,
+            'grade_id' => (int) $data['grade_id'],
             'name' => trim($data['name']),
             'label' => filled($data['label'] ?? null) ? trim($data['label']) : null,
             'is_active' => (bool) $data['is_active'],
@@ -112,9 +136,14 @@ class CourseController extends Controller
             ->with('success', 'Curso actualizado correctamente.');
     }
 
-    public function destroy(int $course): RedirectResponse
+    public function destroy(Request $request, int $course): RedirectResponse
     {
+        $authUser = $request->user();
+
         $course = Course::findOrFail($course);
+
+        $this->authorizeSchoolScope($authUser, $course->school_id);
+
         $course->delete();
 
         return redirect()
@@ -124,13 +153,9 @@ class CourseController extends Controller
 
     public function getGrades(Request $request): JsonResponse
     {
-        $schoolId = $request->integer('school_id');
+        $schoolId = $this->resolveSelectedSchoolId($request);
 
-        $grades = Grade::query()
-            ->when($schoolId, fn ($q) => $q->where('school_id', $schoolId))
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name', 'label'])
+        $grades = $this->visibleGrades($schoolId)
             ->map(fn ($grade) => [
                 'id' => $grade->id,
                 'label' => $grade->label ?: $grade->name,
@@ -138,5 +163,50 @@ class CourseController extends Controller
             ->values();
 
         return response()->json($grades);
+    }
+
+    private function visibleSchools(User $authUser)
+    {
+        return School::query()
+            ->when(! $authUser->hasRole('super_admin'), fn ($query) => $query->where('id', $authUser->school_id))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
+    private function visibleGrades(?int $schoolId)
+    {
+        return Grade::query()
+            ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'label']);
+    }
+
+    private function resolveSelectedSchoolId(Request $request): ?int
+    {
+        $authUser = $request->user();
+
+        if (! $authUser->hasRole('super_admin')) {
+            abort_if(! $authUser->school_id, 403, 'Tu usuario no tiene un colegio asignado.');
+
+            return (int) $authUser->school_id;
+        }
+
+        return $request->integer('school_id') ?: null;
+    }
+
+    private function authorizeSchoolScope(User $authUser, ?int $schoolId): void
+    {
+        if ($authUser->hasRole('super_admin')) {
+            return;
+        }
+
+        abort_if(! $authUser->school_id, 403, 'Tu usuario no tiene un colegio asignado.');
+
+        abort_if(
+            (int) $schoolId !== (int) $authUser->school_id,
+            403,
+            'No tienes autorización para gestionar información de otro colegio.'
+        );
     }
 }

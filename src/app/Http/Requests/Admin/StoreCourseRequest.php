@@ -9,26 +9,47 @@ class StoreCourseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->hasAnyRole(['super_admin', 'admin_colegio']) ?? false;
     }
 
     public function rules(): array
     {
+        $authUser = $this->user();
+
+        $isSuperAdmin = $authUser?->hasRole('super_admin') ?? false;
+
+        $effectiveSchoolId = $isSuperAdmin
+            ? $this->input('school_id')
+            : $authUser?->school_id;
+
         return [
-            'school_id' => ['required', 'integer', 'exists:schools,id'],
+            'school_id' => [
+                'required',
+                'integer',
+                $isSuperAdmin
+                    ? Rule::exists('schools', 'id')
+                    : Rule::in([(int) $authUser?->school_id]),
+            ],
+
             'grade_id' => [
                 'required',
                 'integer',
-                Rule::exists('grades', 'id')->where(fn ($query) => $query->where('school_id', $this->school_id)),
+                Rule::exists('grades', 'id')->where(function ($query) use ($effectiveSchoolId) {
+                    $query->where('school_id', $effectiveSchoolId)
+                        ->where('is_active', true);
+                }),
             ],
+
             'name' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('courses', 'name')->where(fn ($query) => $query
-                    ->where('school_id', $this->school_id)
-                    ->where('grade_id', $this->grade_id)),
+                Rule::unique('courses', 'name')->where(function ($query) use ($effectiveSchoolId) {
+                    $query->where('school_id', $effectiveSchoolId)
+                        ->where('grade_id', $this->input('grade_id'));
+                }),
             ],
+
             'label' => ['nullable', 'string', 'max:255'],
             'is_active' => ['required', 'boolean'],
         ];
@@ -40,10 +61,11 @@ class StoreCourseRequest extends FormRequest
             'school_id.required' => 'Debes seleccionar un colegio.',
             'school_id.integer' => 'El colegio seleccionado no es válido.',
             'school_id.exists' => 'El colegio seleccionado no existe.',
+            'school_id.in' => 'No puedes gestionar cursos de un colegio diferente al tuyo.',
 
             'grade_id.required' => 'Debes seleccionar un grado.',
             'grade_id.integer' => 'El grado seleccionado no es válido.',
-            'grade_id.exists' => 'El grado seleccionado no pertenece al colegio indicado.',
+            'grade_id.exists' => 'El grado seleccionado no pertenece al colegio indicado o está inactivo.',
 
             'name.required' => 'El nombre del curso es obligatorio.',
             'name.string' => 'El nombre del curso debe ser un texto válido.',
