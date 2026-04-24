@@ -4,12 +4,12 @@
 
     $isSuperAdmin = $authUser?->hasRole('super_admin') ?? false;
     $isSchoolAdmin = $authUser?->hasRole('admin_colegio') ?? false;
-    $isTeacher = $authUser?->hasRole('teacher') ?? false;
-    $isStudent = $authUser?->hasRole('student') ?? false;
+    $isdocente = $authUser?->hasRole('docente') ?? false;
+    $isestudiante = $authUser?->hasRole('estudiante') ?? false;
 
     $canManageSchoolCatalogs = $isSuperAdmin || $isSchoolAdmin;
-    $canManagePhysicalRecords = $isSuperAdmin || $isSchoolAdmin || $isTeacher;
-    $canManageLaboratoryGuides = $isSuperAdmin || $isSchoolAdmin || $isTeacher;
+    $canManagePhysicalRecords = $isSuperAdmin || $isSchoolAdmin || $isdocente;
+    $canManageLaboratoryGuides = $isSuperAdmin || $isSchoolAdmin || $isdocente;
 @endphp
 
 <div class="admin-sidebar d-flex flex-column p-3 p-md-4">
@@ -154,10 +154,10 @@
             </li>
         @endif
 
-        @if ($isStudent && Route::has('student.laboratory-guides.index'))
+        @if ($isestudiante && Route::has('estudiante.laboratory-guides.index'))
             <li class="nav-item">
-                <a href="{{ route('student.laboratory-guides.index') }}"
-                   class="nav-link {{ request()->routeIs('student.laboratory-guides.*') ? 'active' : '' }}">
+                <a href="{{ route('estudiante.laboratory-guides.index') }}"
+                   class="nav-link {{ request()->routeIs('estudiante.laboratory-guides.*') ? 'active' : '' }}">
                     Mis guías de laboratorio
                 </a>
             </li>

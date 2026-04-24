@@ -83,8 +83,8 @@ class SuperAdminSeeder extends Seeder
 
         $schoolAdmin->syncRoles(['admin_colegio']);
 
-        $teacher = User::updateOrCreate(
-            ['email' => 'teacher@ecodata.test'],
+        $docente = User::updateOrCreate(
+            ['email' => 'docente@ecodata.test'],
             [
                 'name' => 'Docente Demo',
                 'document_type' => 'CC',
@@ -98,10 +98,10 @@ class SuperAdminSeeder extends Seeder
             ]
         );
 
-        $teacher->syncRoles(['docente']);
+        $docente->syncRoles(['docente']);
 
-        $student = User::updateOrCreate(
-            ['email' => 'student@ecodata.test'],
+        $estudiante = User::updateOrCreate(
+            ['email' => 'estudiante@ecodata.test'],
             [
                 'name' => 'Estudiante Demo',
                 'document_type' => 'TI',
@@ -115,6 +115,6 @@ class SuperAdminSeeder extends Seeder
             ]
         );
 
-        $student->syncRoles(['estudiante']);
+        $estudiante->syncRoles(['estudiante']);
     }
 }

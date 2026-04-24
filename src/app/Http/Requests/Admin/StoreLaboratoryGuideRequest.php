@@ -9,7 +9,7 @@ class StoreLaboratoryGuideRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasAnyRole(['super_admin', 'admin_colegio', 'teacher']) ?? false;
+        return $this->user()?->hasAnyRole(['super_admin', 'admin_colegio', 'docente']) ?? false;
     }
 
     public function rules(): array

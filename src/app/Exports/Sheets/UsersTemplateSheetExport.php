@@ -49,7 +49,7 @@ class UsersTemplateSheetExport implements FromArray, WithTitle, WithStyles, With
                 'juan.perez@ecodata.test',
                 'TI',
                 '123456789',
-                'student',
+                'estudiante',
                 $this->school?->name ?? 'Nombre exacto del colegio',
                 '6',
                 '6-1',

@@ -34,7 +34,7 @@ class InstructionsSheetExport implements FromArray, WithTitle, WithStyles, WithD
             ['email', 'Obligatorio y válido', 'juan@ecodata.test', 'Debe ser único'],
             ['document_type', 'Usar catálogo', 'TI', 'Consulta la hoja tipos_documento'],
             ['document_number', 'Obligatorio', '123456789', 'Debe ser único'],
-            ['role', 'Usar catálogo', 'student', 'Consulta la hoja roles. No escribas roles que no aparezcan allí.'],
+            ['role', 'Usar catálogo', 'estudiante', 'Consulta la hoja roles. No escribas roles que no aparezcan allí.'],
             ['school', 'Usar catálogo', $this->school?->name ?? 'Nombre exacto del colegio', 'Consulta la hoja schools. Si eres admin de colegio, usa únicamente tu colegio.'],
             ['grade', 'Opcional según contexto', '6', 'Consulta la hoja grades'],
             ['course', 'Opcional según contexto', '6-1', 'Consulta la hoja courses'],

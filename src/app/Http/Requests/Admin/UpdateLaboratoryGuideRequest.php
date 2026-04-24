@@ -12,7 +12,7 @@ class UpdateLaboratoryGuideRequest extends FormRequest
     {
         $authUser = $this->user();
 
-        if (! $authUser?->hasAnyRole(['super_admin', 'admin_colegio', 'teacher'])) {
+        if (! $authUser?->hasAnyRole(['super_admin', 'admin_colegio', 'docente'])) {
             return false;
         }
 

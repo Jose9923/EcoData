@@ -61,19 +61,23 @@
             </div>
 
             <div class="row g-3">
-                <div class="col-12 col-md-6 col-xl-3">
-                    <a href="{{ route('admin.users.create') }}" class="btn btn-outline-dark rounded-4 w-100 py-3">
-                        Nuevo usuario
-                    </a>
-                </div>
+                @if(($isSuperAdmin || $isSchoolAdmin) && Route::has('admin.users.create'))
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <a href="{{ route('admin.users.create') }}" class="btn btn-outline-dark rounded-4 w-100 py-3">
+                            Nuevo usuario
+                        </a>
+                    </div>
+                @endif
 
-                <div class="col-12 col-md-6 col-xl-3">
-                    <a href="{{ route('admin.physical-variable-records.create') }}" class="btn btn-outline-dark rounded-4 w-100 py-3">
-                        Nuevo registro físico
-                    </a>
-                </div>
+                @if(($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.physical-variable-records.create'))
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <a href="{{ route('admin.physical-variable-records.create') }}" class="btn btn-outline-dark rounded-4 w-100 py-3">
+                            Nuevo registro físico
+                        </a>
+                    </div>
+                @endif
 
-                @if (Route::has('admin.laboratory-guides.create'))
+                @if(($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.laboratory-guides.create'))
                     <div class="col-12 col-md-6 col-xl-3">
                         <a href="{{ route('admin.laboratory-guides.create') }}" class="btn btn-outline-dark rounded-4 w-100 py-3">
                             Nueva guía de laboratorio
@@ -81,17 +85,42 @@
                     </div>
                 @endif
 
-                <div class="col-12 col-md-6 col-xl-3">
-                    <a href="{{ route('admin.users.index') }}" class="btn btn-outline-dark rounded-4 w-100 py-3">
-                        Gestionar usuarios
-                    </a>
-                </div>
+                @if(($isSuperAdmin || $isSchoolAdmin) && Route::has('admin.users.index'))
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <a href="{{ route('admin.users.index') }}" class="btn btn-outline-dark rounded-4 w-100 py-3">
+                            Gestionar usuarios
+                        </a>
+                    </div>
+                @endif
 
-                <div class="col-12 col-md-6 col-xl-3">
-                    <a href="{{ route('admin.users.import') }}" class="btn btn-outline-dark rounded-4 w-100 py-3">
-                        Cargue masivo Excel
-                    </a>
-                </div>
+                @if(($isSuperAdmin || $isSchoolAdmin) && Route::has('admin.users.import'))
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <a href="{{ route('admin.users.import') }}" class="btn btn-outline-dark rounded-4 w-100 py-3">
+                            Cargue masivo Excel
+                        </a>
+                    </div>
+                @endif
+
+                @if($isestudiante && Route::has('estudiante.laboratory-guides.index'))
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <a href="{{ route('estudiante.laboratory-guides.index') }}" class="btn btn-outline-dark rounded-4 w-100 py-3">
+                            Ver mis guías
+                        </a>
+                    </div>
+                @endif
+
+                @if(
+                    ! (($isSuperAdmin || $isSchoolAdmin) && Route::has('admin.users.create')) &&
+                    ! (($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.physical-variable-records.create')) &&
+                    ! (($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.laboratory-guides.create')) &&
+                    ! ($isestudiante && Route::has('estudiante.laboratory-guides.index'))
+                )
+                    <div class="col-12">
+                        <div class="text-secondary small">
+                            No hay accesos rápidos disponibles para tu rol.
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </section>

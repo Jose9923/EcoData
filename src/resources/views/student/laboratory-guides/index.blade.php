@@ -41,7 +41,7 @@
                             Ver PDF
                         </button>
 
-                        <a href="{{ route('student.laboratory-guides.download', $guide) }}"
+                        <a href="{{ route('estudiante.laboratory-guides.download', $guide) }}"
                            class="btn btn-dark rounded-4">
                             Descargar PDF
                         </a>
@@ -59,7 +59,7 @@
 
                         <div class="modal-body p-0" style="height: 75vh;">
                             <iframe
-                                src="{{ route('student.laboratory-guides.view', $guide) }}"
+                                src="{{ route('estudiante.laboratory-guides.view', $guide) }}"
                                 width="100%"
                                 height="100%"
                                 style="border: 0;"
@@ -68,13 +68,13 @@
                         </div>
 
                         <div class="modal-footer">
-                            <a href="{{ route('student.laboratory-guides.view', $guide) }}"
+                            <a href="{{ route('estudiante.laboratory-guides.view', $guide) }}"
                                target="_blank"
                                class="btn btn-outline-secondary rounded-4">
                                 Abrir en otra pestaña
                             </a>
 
-                            <a href="{{ route('student.laboratory-guides.download', $guide) }}"
+                            <a href="{{ route('estudiante.laboratory-guides.download', $guide) }}"
                                class="btn btn-dark rounded-4">
                                 Descargar PDF
                             </a>

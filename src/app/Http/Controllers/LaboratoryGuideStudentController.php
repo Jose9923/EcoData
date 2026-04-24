@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class LaboratoryGuideStudentController extends Controller
+class LaboratoryGuideestudianteController extends Controller
 {
     public function index(Request $request): View
     {
@@ -37,12 +37,12 @@ class LaboratoryGuideStudentController extends Controller
             ->paginate(10)
             ->appends($request->query());
 
-        return view('student.laboratory-guides.index', compact('guides'));
+        return view('estudiante.laboratory-guides.index', compact('guides'));
     }
 
     public function view(Request $request, LaboratoryGuide $laboratory_guide): StreamedResponse
     {
-        $this->authorizeGuideForStudent($request, $laboratory_guide);
+        $this->authorizeGuideForestudiante($request, $laboratory_guide);
 
         $fileName = Str::slug($laboratory_guide->title) . '.pdf';
 
@@ -58,7 +58,7 @@ class LaboratoryGuideStudentController extends Controller
 
     public function download(Request $request, LaboratoryGuide $laboratory_guide): StreamedResponse
     {
-        $this->authorizeGuideForStudent($request, $laboratory_guide);
+        $this->authorizeGuideForestudiante($request, $laboratory_guide);
 
         $fileName = Str::slug($laboratory_guide->title) . '.pdf';
 
@@ -68,7 +68,7 @@ class LaboratoryGuideStudentController extends Controller
         );
     }
 
-    private function authorizeGuideForStudent(Request $request, LaboratoryGuide $guide): void
+    private function authorizeGuideForestudiante(Request $request, LaboratoryGuide $guide): void
     {
         $user = $request->user();
 

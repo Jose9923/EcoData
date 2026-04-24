@@ -78,8 +78,8 @@ class RolesSheetExport implements FromArray, WithTitle, WithStyles, WithEvents, 
         return match ($role) {
             'super_admin' => 'Acceso total al sistema',
             'admin_colegio' => 'Administrador del colegio asignado',
-            'teacher' => 'Docente',
-            'student' => 'Estudiante',
+            'docente' => 'Docente',
+            'estudiante' => 'Estudiante',
             default => 'Rol del sistema',
         };
     }
