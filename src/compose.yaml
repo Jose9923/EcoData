@@ -47,6 +47,14 @@ services:
     ports:
       - "6380:6379"
 
+  adminer:
+    image: adminer:latest
+    restart: unless-stopped
+    ports:
+      - "8082:8080"
+    depends_on:
+      - mysql
+
   queue:
     build:
       context: .
