@@ -1,6 +1,13 @@
 @php
     $user = $user ?? null;
+
     $selectedRole = old('role', $user?->roles->first()?->name ?? '');
+
+    $selectedSchoolId = old('school_id', $selectedSchoolId ?? $user->school_id ?? auth()->user()?->school_id);
+    $selectedGradeId = old('grade_id', $selectedGradeId ?? $user->grade_id ?? '');
+    $selectedCourseId = old('course_id', $selectedCourseId ?? $user->course_id ?? '');
+
+    $selectedSchool = $schools->firstWhere('id', (int) $selectedSchoolId);
 @endphp
 
 <div class="row g-4">
@@ -31,7 +38,7 @@
                 <div class="col-12 col-md-6">
                     <label class="form-label fw-semibold">Número de identificación</label>
                     <input type="text" name="document_number" class="form-control rounded-4"
-                        value="{{ old('document_number', $user->document_number ?? '') }}">
+                           value="{{ old('document_number', $user->document_number ?? '') }}">
                     @error('document_number') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>
                 
@@ -63,37 +70,29 @@
                             <option value="">Sin asignar</option>
                             @foreach($schools as $schoolOption)
                                 <option value="{{ $schoolOption->id }}"
-                                    @selected((string) old('school_id', $selectedSchoolId ?? $user->school_id ?? '') === (string) $schoolOption->id)>
+                                    @selected((string) $selectedSchoolId === (string) $schoolOption->id)>
                                     {{ $schoolOption->name }}
                                 </option>
                             @endforeach
                         </select>
                     @else
-                        @php
-                            $forcedSchool = $schools->first();
-                            $forcedSchoolId = old('school_id', $selectedSchoolId ?? $forcedSchool?->id ?? auth()->user()?->school_id);
-                        @endphp
-
-                        <input type="hidden" name="school_id" id="school_id" value="{{ $forcedSchoolId }}">
+                        <input type="hidden" name="school_id" id="school_id" value="{{ $selectedSchoolId }}">
 
                         <input type="text"
-                            class="form-control rounded-4 bg-light"
-                            value="{{ $forcedSchool?->name ?? auth()->user()?->school?->name ?? 'Colegio asignado' }}"
-                            disabled>
+                               class="form-control rounded-4 bg-light"
+                               value="{{ $selectedSchool?->name ?? auth()->user()?->school?->name ?? 'Colegio asignado' }}"
+                               disabled>
 
                         <div class="form-text">
-                            Tu rol solo permite crear o editar usuarios del colegio asignado.
+                            Tu rol solo permite gestionar usuarios del colegio asignado.
                         </div>
                     @endif
 
-                    @error('school_id')
-                        <div class="text-danger small mt-1">{{ $message }}</div>
-                    @enderror
+                    @error('school_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="col-12 col-md-6">
                     <label class="form-label fw-semibold">Rol</label>
-
                     <select name="role" class="form-select rounded-4">
                         <option value="">Selecciona un rol</option>
 
@@ -107,10 +106,7 @@
                             </option>
                         @endforeach
                     </select>
-
-                    @error('role')
-                        <div class="text-danger small mt-1">{{ $message }}</div>
-                    @enderror
+                    @error('role') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="col-12 col-md-6">
@@ -119,7 +115,7 @@
                         <option value="">Sin asignar</option>
                         @foreach($grades as $grade)
                             <option value="{{ $grade->id }}"
-                                @selected((string) old('grade_id', $selectedGradeId ?? $user->grade_id ?? '') === (string) $grade->id)>
+                                @selected((string) $selectedGradeId === (string) $grade->id)>
                                 {{ $grade->label ?: $grade->name }}
                             </option>
                         @endforeach
@@ -133,7 +129,7 @@
                         <option value="">Sin asignar</option>
                         @foreach($courses as $course)
                             <option value="{{ $course->id }}"
-                                @selected((string) old('course_id', $user->course_id ?? '') === (string) $course->id)>
+                                @selected((string) $selectedCourseId === (string) $course->id)>
                                 {{ $course->label ?: $course->name }}
                             </option>
                         @endforeach
@@ -160,7 +156,8 @@
             <div class="small text-secondary d-flex flex-column gap-2">
                 <div><strong>Nombre:</strong> {{ old('name', $user->name ?? 'Sin definir') }}</div>
                 <div><strong>Correo:</strong> {{ old('email', $user->email ?? 'Sin definir') }}</div>
-                <div><strong>Rol:</strong> {{ $selectedRole ?: 'Sin definir' }}</div>
+                <div><strong>Rol:</strong> {{ $selectedRole ? str_replace('_', ' ', \Illuminate\Support\Str::title($selectedRole)) : 'Sin definir' }}</div>
+                <div><strong>Colegio:</strong> {{ $selectedSchool?->name ?? auth()->user()?->school?->name ?? 'Sin definir' }}</div>
                 <div><strong>Estado:</strong> {{ old('is_active', $user->is_active ?? true) ? 'Activo' : 'Inactivo' }}</div>
             </div>
         </div>
@@ -173,9 +170,6 @@
         {{ $buttonText ?? 'Guardar' }}
     </button>
 </div>
-@php
-    $selectedCourseId = old('course_id', $user->course_id ?? '');
-@endphp
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -186,8 +180,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const gradesUrl = @json(route('admin.users.ajax.grades'));
     const coursesUrl = @json(route('admin.users.ajax.courses'));
 
-    const selectedGradeId = @json((string) old('grade_id', $selectedGradeId ?? $user->grade_id ?? ''));
+    const selectedSchoolId = @json((string) $selectedSchoolId);
+    const selectedGradeId = @json((string) $selectedGradeId);
     const selectedCourseId = @json((string) $selectedCourseId);
+
+    function currentSchoolId() {
+        return schoolSelect?.value || selectedSchoolId;
+    }
 
     function setLoading(select, placeholder = 'Cargando...') {
         select.innerHTML = `<option value="">${placeholder}</option>`;
@@ -200,9 +199,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const option = document.createElement('option');
             option.value = item.id;
             option.textContent = item.label;
+
             if (String(item.id) === String(selectedValue)) {
                 option.selected = true;
             }
+
             select.appendChild(option);
         });
     }
@@ -271,37 +272,34 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     schoolSelect?.addEventListener('change', async function () {
-        const schoolId = this.value;
-
         setOptions(gradeSelect, [], 'Sin asignar');
         setOptions(courseSelect, [], 'Sin asignar');
 
-        if (schoolId) {
-            await fetchGrades(schoolId);
+        if (this.value) {
+            await fetchGrades(this.value);
         }
     });
 
     gradeSelect?.addEventListener('change', async function () {
-        const schoolId = schoolSelect.value;
-        const gradeId = this.value;
-
         setOptions(courseSelect, [], 'Sin asignar');
 
-        if (schoolId && gradeId) {
-            await fetchCourses(schoolId, gradeId);
+        const schoolId = currentSchoolId();
+
+        if (schoolId && this.value) {
+            await fetchCourses(schoolId, this.value);
         }
     });
 
-    // Solo útil si quieres rehidratar en edición con datos cargados por backend o errores de validación.
-    // Si los arrays ya llegan llenos desde el controller, esto no estorba.
-    if (schoolSelect?.value && selectedGradeId && gradeSelect.options.length <= 1) {
-        fetchGrades(schoolSelect.value, selectedGradeId).then(() => {
-            if (gradeSelect.value && selectedCourseId && courseSelect.options.length <= 1) {
-                fetchCourses(schoolSelect.value, gradeSelect.value, selectedCourseId);
+    const initialSchoolId = currentSchoolId();
+
+    if (initialSchoolId && selectedGradeId && gradeSelect.options.length <= 1) {
+        fetchGrades(initialSchoolId, selectedGradeId).then(() => {
+            if (selectedCourseId) {
+                fetchCourses(initialSchoolId, selectedGradeId, selectedCourseId);
             }
         });
-    } else if (schoolSelect?.value && gradeSelect?.value && selectedCourseId && courseSelect.options.length <= 1) {
-        fetchCourses(schoolSelect.value, gradeSelect.value, selectedCourseId);
+    } else if (initialSchoolId && selectedGradeId && selectedCourseId && courseSelect.options.length <= 1) {
+        fetchCourses(initialSchoolId, selectedGradeId, selectedCourseId);
     }
 });
 </script>

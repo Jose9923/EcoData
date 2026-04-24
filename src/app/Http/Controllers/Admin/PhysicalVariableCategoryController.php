@@ -15,6 +15,8 @@ class PhysicalVariableCategoryController extends Controller
 {
     public function index(Request $request): View
     {
+        $this->authorizeSuperAdmin($request);
+
         $search = (string) $request->string('search')->toString();
         $perPage = (int) $request->integer('per_page', 10);
 
@@ -38,8 +40,10 @@ class PhysicalVariableCategoryController extends Controller
         return view('admin.physical-variable-categories.index', compact('categories', 'search', 'perPage'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
+        $this->authorizeSuperAdmin($request);
+
         return view('admin.physical-variable-categories.create');
     }
 
@@ -59,8 +63,10 @@ class PhysicalVariableCategoryController extends Controller
             ->with('success', 'Categoría creada correctamente.');
     }
 
-    public function edit(int $physical_variable_category): View
+    public function edit(Request $request, int $physical_variable_category): View
     {
+        $this->authorizeSuperAdmin($request);
+
         $category = PhysicalVariableCategory::findOrFail($physical_variable_category);
 
         return view('admin.physical-variable-categories.edit', compact('category'));
@@ -83,13 +89,24 @@ class PhysicalVariableCategoryController extends Controller
             ->with('success', 'Categoría actualizada correctamente.');
     }
 
-    public function destroy(int $physical_variable_category): RedirectResponse
+    public function destroy(Request $request, int $physical_variable_category): RedirectResponse
     {
+        $this->authorizeSuperAdmin($request);
+
         $category = PhysicalVariableCategory::findOrFail($physical_variable_category);
         $category->delete();
 
         return redirect()
             ->route('admin.physical-variable-categories.index')
             ->with('success', 'Categoría eliminada correctamente.');
+    }
+
+    private function authorizeSuperAdmin(Request $request): void
+    {
+        abort_unless(
+            $request->user()?->hasRole('super_admin'),
+            403,
+            'Solo el superadministrador puede gestionar categorías globales de variables físicas.'
+        );
     }
 }

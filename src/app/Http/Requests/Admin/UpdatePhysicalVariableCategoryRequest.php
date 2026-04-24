@@ -9,7 +9,7 @@ class UpdatePhysicalVariableCategoryRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->hasRole('super_admin') ?? false;
     }
 
     public function rules(): array

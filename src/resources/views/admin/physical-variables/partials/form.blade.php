@@ -1,5 +1,8 @@
 @php
     $variable = $variable ?? null;
+
+    $selectedSchoolId = old('school_id', $selectedSchoolId ?? $variable->school_id ?? auth()->user()?->school_id);
+    $selectedSchool = $schools->firstWhere('id', (int) $selectedSchoolId);
 @endphp
 
 <div class="row g-4">
@@ -8,16 +11,33 @@
             <div class="row g-3">
                 <div class="col-12 col-md-6">
                     <label class="form-label fw-semibold">Colegio</label>
-                    <select name="school_id" class="form-select rounded-4">
-                        <option value="">Selecciona un colegio</option>
-                        @foreach($schools as $school)
-                            <option value="{{ $school->id }}"
-                                @selected((string) old('school_id', $variable->school_id ?? '') === (string) $school->id)>
-                                {{ $school->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('school_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+
+                    @if(auth()->user()?->hasRole('super_admin'))
+                        <select name="school_id" class="form-select rounded-4">
+                            <option value="">Selecciona un colegio</option>
+                            @foreach($schools as $school)
+                                <option value="{{ $school->id }}"
+                                    @selected((string) $selectedSchoolId === (string) $school->id)>
+                                    {{ $school->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    @else
+                        <input type="hidden" name="school_id" value="{{ $selectedSchoolId }}">
+
+                        <input type="text"
+                               class="form-control rounded-4 bg-light"
+                               value="{{ $selectedSchool?->name ?? auth()->user()?->school?->name ?? 'Colegio asignado' }}"
+                               disabled>
+
+                        <div class="form-text">
+                            Tu rol solo permite gestionar variables físicas del colegio asignado.
+                        </div>
+                    @endif
+
+                    @error('school_id')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="col-12 col-md-6">
@@ -31,7 +51,9 @@
                             </option>
                         @endforeach
                     </select>
-                    @error('category_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    @error('category_id')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="col-12 col-md-6">
@@ -39,7 +61,9 @@
                     <input type="text" name="name" class="form-control rounded-4"
                            value="{{ old('name', $variable->name ?? '') }}"
                            placeholder="Ej: Temperatura ambiental">
-                    @error('name') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    @error('name')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="col-12 col-md-6">
@@ -47,7 +71,9 @@
                     <input type="text" name="slug" class="form-control rounded-4"
                            value="{{ old('slug', $variable->slug ?? '') }}"
                            placeholder="Ej: temperatura-ambiental">
-                    @error('slug') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    @error('slug')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="col-12 col-md-4">
@@ -55,7 +81,9 @@
                     <input type="text" name="unit" class="form-control rounded-4"
                            value="{{ old('unit', $variable->unit ?? '') }}"
                            placeholder="Ej: °C">
-                    @error('unit') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    @error('unit')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="col-12 col-md-4">
@@ -68,7 +96,9 @@
                             </option>
                         @endforeach
                     </select>
-                    @error('data_type') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    @error('data_type')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="col-12 col-md-4">
@@ -76,7 +106,9 @@
                     <input type="number" min="0" max="10" name="decimals" id="decimals"
                            class="form-control rounded-4"
                            value="{{ old('decimals', $variable->decimals ?? 2) }}">
-                    @error('decimals') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    @error('decimals')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="col-12 col-md-6 range-field">
@@ -84,7 +116,9 @@
                     <input type="number" step="any" name="min_value" id="min_value"
                         class="form-control rounded-4"
                         value="{{ old('min_value', isset($variable) && $variable->min_value !== null ? number_format((float) $variable->min_value, $variable->decimals ?? 0, '.', '') : '') }}">
-                    @error('min_value') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    @error('min_value')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="col-12 col-md-6 range-field">
@@ -92,14 +126,18 @@
                     <input type="number" step="any" name="max_value" id="max_value"
                         class="form-control rounded-4"
                         value="{{ old('max_value', isset($variable) && $variable->max_value !== null ? number_format((float) $variable->max_value, $variable->decimals ?? 0, '.', '') : '') }}">
-                    @error('max_value') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    @error('max_value')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="col-12">
                     <label class="form-label fw-semibold">Descripción</label>
                     <textarea name="description" rows="4" class="form-control rounded-4"
                               placeholder="Descripción opcional de la variable">{{ old('description', $variable->description ?? '') }}</textarea>
-                    @error('description') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    @error('description')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="col-12">
@@ -109,7 +147,9 @@
                                @checked(old('is_active', $variable->is_active ?? true))>
                         <label class="form-check-label" for="is_active">Variable activa</label>
                     </div>
-                    @error('is_active') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    @error('is_active')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
         </div>
@@ -119,6 +159,7 @@
         <div class="admin-card bg-white p-4 h-100">
             <h6 class="fw-bold mb-3">Resumen</h6>
             <div class="small text-secondary d-flex flex-column gap-2">
+                <div><strong>Colegio:</strong> {{ $selectedSchool?->name ?? auth()->user()?->school?->name ?? 'Sin definir' }}</div>
                 <div><strong>Nombre:</strong> {{ old('name', $variable->name ?? 'Sin definir') }}</div>
                 <div><strong>Slug:</strong> {{ old('slug', $variable->slug ?? 'Sin definir') }}</div>
                 <div><strong>Unidad:</strong> {{ old('unit', $variable->unit ?? 'Sin definir') }}</div>
