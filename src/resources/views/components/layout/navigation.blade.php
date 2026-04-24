@@ -38,7 +38,13 @@
                 Dashboard
             </a>
         </li>
+        <hr class="my-3">
 
+        <li class="nav-item">
+            <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}">
+                Mi perfil
+            </a>
+        </li>
         @if (Route::has('admin.schools.index'))
             <li class="nav-item">
                 <a href="{{ route('admin.schools.index') }}" class="nav-link {{ request()->routeIs('admin.schools.*') ? 'active' : '' }}">

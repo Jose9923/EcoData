@@ -10,14 +10,15 @@ use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\PhysicalVariableCategoryController;
 use App\Http\Controllers\Admin\PhysicalVariableController;
 use App\Http\Controllers\Admin\PhysicalVariableRecordController;
+use App\Http\Controllers\ProfileController;
 
 Route::view('/', 'welcome');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
-
-    Route::view('/profile', 'profile')->name('profile');
-
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
     Route::prefix('admin')
         ->name('admin.')
         ->middleware('role:super_admin')
