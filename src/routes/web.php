@@ -13,11 +13,13 @@ use App\Http\Controllers\Admin\PhysicalVariableRecordController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\LaboratoryGuideController;
 use App\Http\Controllers\LaboratoryGuideStudentController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Admin\UserImportController;
 
 Route::view('/', 'welcome');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('/dashboard', 'dashboard')->name('dashboard');
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
@@ -31,6 +33,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('courses', CourseController::class)->except(['show']);
             Route::resource('physical-variable-categories', PhysicalVariableCategoryController::class)->except(['show']);
             Route::resource('physical-variables', PhysicalVariableController::class)->except(['show']);
+            Route::get('users/import', [UserImportController::class, 'create'])->name('users.import');
+            Route::post('users/import', [UserImportController::class, 'store'])->name('users.import.store');
+            Route::get('users/import/template', [UserImportController::class, 'template'])->name('users.import.template');
             Route::resource('physical-variable-records', PhysicalVariableRecordController::class)
                 ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
 

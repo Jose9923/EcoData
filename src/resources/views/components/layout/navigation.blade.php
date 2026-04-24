@@ -118,6 +118,14 @@
                 </a>
             </li>
         @endif
+
+        @if (Route::has('admin.users.import'))
+            <li class="nav-item">
+                <a href="{{ route('admin.users.import') }}" class="nav-link {{ request()->routeIs('admin.users.import*') ? 'active' : '' }}">
+                    Cargue masivo de usuarios
+                </a>
+            </li>
+        @endif
     </ul>
 
     <div class="mt-auto pt-4">
