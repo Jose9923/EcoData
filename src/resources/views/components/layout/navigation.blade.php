@@ -53,7 +53,7 @@
             </li>
         @endif
 
-        @if (Route::has('admin.users.index'))
+        @if (auth()->user()?->hasAnyRole(['super_admin', 'admin_colegio']) && Route::has('admin.users.index'))
             <li class="nav-item">
                 <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                     Usuarios
@@ -119,7 +119,7 @@
             </li>
         @endif
 
-        @if (Route::has('admin.users.import'))
+        @if (auth()->user()?->hasAnyRole(['super_admin', 'admin_colegio']) && Route::has('admin.users.import'))
             <li class="nav-item">
                 <a href="{{ route('admin.users.import') }}" class="nav-link {{ request()->routeIs('admin.users.import*') ? 'active' : '' }}">
                     Cargue masivo de usuarios

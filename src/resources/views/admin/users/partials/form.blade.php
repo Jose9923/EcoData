@@ -57,29 +57,60 @@
 
                 <div class="col-12 col-md-6">
                     <label class="form-label fw-semibold">Colegio</label>
-                    <select name="school_id" id="school_id" class="form-select rounded-4">
-                        <option value="">Sin asignar</option>
-                        @foreach($schools as $schoolOption)
-                            <option value="{{ $schoolOption->id }}"
-                                @selected((string) old('school_id', $selectedSchoolId ?? $user->school_id ?? '') === (string) $schoolOption->id)>
-                                {{ $schoolOption->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('school_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+
+                    @if(auth()->user()?->hasRole('super_admin'))
+                        <select name="school_id" id="school_id" class="form-select rounded-4">
+                            <option value="">Sin asignar</option>
+                            @foreach($schools as $schoolOption)
+                                <option value="{{ $schoolOption->id }}"
+                                    @selected((string) old('school_id', $selectedSchoolId ?? $user->school_id ?? '') === (string) $schoolOption->id)>
+                                    {{ $schoolOption->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    @else
+                        @php
+                            $forcedSchool = $schools->first();
+                            $forcedSchoolId = old('school_id', $selectedSchoolId ?? $forcedSchool?->id ?? auth()->user()?->school_id);
+                        @endphp
+
+                        <input type="hidden" name="school_id" id="school_id" value="{{ $forcedSchoolId }}">
+
+                        <input type="text"
+                            class="form-control rounded-4 bg-light"
+                            value="{{ $forcedSchool?->name ?? auth()->user()?->school?->name ?? 'Colegio asignado' }}"
+                            disabled>
+
+                        <div class="form-text">
+                            Tu rol solo permite crear o editar usuarios del colegio asignado.
+                        </div>
+                    @endif
+
+                    @error('school_id')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="col-12 col-md-6">
                     <label class="form-label fw-semibold">Rol</label>
+
                     <select name="role" class="form-select rounded-4">
                         <option value="">Selecciona un rol</option>
+
                         @foreach($roles as $roleOption)
+                            @if(! auth()->user()?->hasRole('super_admin') && $roleOption->name === 'super_admin')
+                                @continue
+                            @endif
+
                             <option value="{{ $roleOption->name }}" @selected($selectedRole === $roleOption->name)>
-                                {{ \Illuminate\Support\Str::title($roleOption->name) }}
+                                {{ str_replace('_', ' ', \Illuminate\Support\Str::title($roleOption->name)) }}
                             </option>
                         @endforeach
                     </select>
-                    @error('role') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+
+                    @error('role')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="col-12 col-md-6">

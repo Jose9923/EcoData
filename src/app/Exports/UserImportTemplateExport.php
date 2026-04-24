@@ -9,28 +9,31 @@ use App\Exports\Sheets\InstructionsSheetExport;
 use App\Exports\Sheets\RolesSheetExport;
 use App\Exports\Sheets\SchoolsSheetExport;
 use App\Exports\Sheets\UsersTemplateSheetExport;
-use App\Models\School;
-use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 class UserImportTemplateExport implements WithMultipleSheets
 {
     public function __construct(
-        protected ?School $school = null
+        protected User $authUser
     ) {}
 
     public function sheets(): array
     {
-        $generatedBy = Auth::user()?->name;
+        $school = $this->authUser->hasRole('super_admin')
+            ? null
+            : $this->authUser->school;
+
+        $generatedBy = $this->authUser->name;
 
         return [
-            new UsersTemplateSheetExport($this->school, $generatedBy),
-            new InstructionsSheetExport($this->school, $generatedBy),
-            new DocumentTypesSheetExport($this->school),
-            new RolesSheetExport($this->school),
-            new SchoolsSheetExport($this->school),
-            new GradesSheetExport($this->school),
-            new CoursesSheetExport($this->school),
+            new UsersTemplateSheetExport($this->authUser, $school, $generatedBy),
+            new InstructionsSheetExport($school, $generatedBy),
+            new DocumentTypesSheetExport($school),
+            new RolesSheetExport($this->authUser, $school),
+            new SchoolsSheetExport($this->authUser, $school),
+            new GradesSheetExport($this->authUser, $school),
+            new CoursesSheetExport($this->authUser, $school),
         ];
     }
 }

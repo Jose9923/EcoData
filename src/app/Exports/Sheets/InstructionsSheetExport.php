@@ -31,14 +31,14 @@ class InstructionsSheetExport implements FromArray, WithTitle, WithStyles, WithD
         return [
             ['Campo', 'Regla', 'Ejemplo', 'Observación'],
             ['name', 'Obligatorio', 'Juan Pérez', 'Nombre completo del usuario'],
-            ['email', 'Obligatorio y válido', 'juan@ecodata.test', 'Debe ser único si aplica'],
+            ['email', 'Obligatorio y válido', 'juan@ecodata.test', 'Debe ser único'],
             ['document_type', 'Usar catálogo', 'TI', 'Consulta la hoja tipos_documento'],
             ['document_number', 'Obligatorio', '123456789', 'Debe ser único'],
-            ['role', 'Usar catálogo', 'student', 'Consulta la hoja roles'],
-            ['school', 'Usar catálogo', 'EcoData Demo', 'Consulta la hoja schools'],
+            ['role', 'Usar catálogo', 'student', 'Consulta la hoja roles. No escribas roles que no aparezcan allí.'],
+            ['school', 'Usar catálogo', $this->school?->name ?? 'Nombre exacto del colegio', 'Consulta la hoja schools. Si eres admin de colegio, usa únicamente tu colegio.'],
             ['grade', 'Opcional según contexto', '6', 'Consulta la hoja grades'],
             ['course', 'Opcional según contexto', '6-1', 'Consulta la hoja courses'],
-            ['password', 'Opcional', 'Cambio123*', 'Si no se informa, puede autogenerarse'],
+            ['password', 'Opcional', 'Cambio123*', 'Si no se informa, el sistema asignará una contraseña temporal'],
             ['is_active', '1 o 0', '1', '1 = activo, 0 = inactivo'],
         ];
     }
@@ -69,7 +69,8 @@ class InstructionsSheetExport implements FromArray, WithTitle, WithStyles, WithD
             $sheet,
             $this->school,
             'Instrucciones de diligenciamiento',
-            'Lee esta hoja antes de completar la plantilla.'
+            'Lee esta hoja antes de completar la plantilla.',
+            $this->generatedBy
         );
 
         $this->applyAuxiliaryHeaderStyle($sheet, 'A8:D8', $this->school);

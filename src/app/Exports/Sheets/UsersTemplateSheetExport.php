@@ -4,6 +4,7 @@ namespace App\Exports\Sheets;
 
 use App\Exports\Concerns\AppliesSchoolExcelBranding;
 use App\Models\School;
+use App\Models\User;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithCustomStartCell;
@@ -20,6 +21,7 @@ class UsersTemplateSheetExport implements FromArray, WithTitle, WithStyles, With
     use AppliesSchoolExcelBranding;
 
     public function __construct(
+        protected User $authUser,
         protected ?School $school = null,
         protected ?string $generatedBy = null
     ) {}
@@ -36,9 +38,24 @@ class UsersTemplateSheetExport implements FromArray, WithTitle, WithStyles, With
 
     public function array(): array
     {
+        $exampleSchool = $this->authUser->hasRole('super_admin')
+            ? 'Nombre exacto del colegio'
+            : ($this->authUser->school?->name ?? 'Colegio asignado');
+
         return [
             ['name', 'email', 'document_type', 'document_number', 'role', 'school', 'grade', 'course', 'password', 'is_active'],
-            ['Juan Pérez', 'juan.perez@ecodata.test', 'TI', '123456789', 'student', 'EcoData Demo', '6', '6-1', 'Cambio123*', '1'],
+            [
+                'Juan Pérez',
+                'juan.perez@ecodata.test',
+                'TI',
+                '123456789',
+                'student',
+                $this->school?->name ?? 'Nombre exacto del colegio',
+                '6',
+                '6-1',
+                'Cambio123*',
+                '1',
+            ],
         ];
     }
 
@@ -97,7 +114,7 @@ class UsersTemplateSheetExport implements FromArray, WithTitle, WithStyles, With
                 $sheet->getRowDimension(9)->setRowHeight(22);
 
                 $sheet->setCellValue('J4', 'Modo de uso');
-                $sheet->setCellValue('K4', 'Completa desde la fila 10 usando las hojas auxiliares.');
+                $sheet->setCellValue('K4', 'Completa desde la fila 10 usando las hojas auxiliares. No modifiques los encabezados.');
 
                 $this->applyInfoPanelStyle($sheet, 'J2:K4', $this->school);
                 $this->applyExampleRowStyle($sheet, 'B9:K9', $this->school);

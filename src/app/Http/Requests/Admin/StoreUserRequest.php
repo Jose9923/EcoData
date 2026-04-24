@@ -9,11 +9,24 @@ class StoreUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->hasAnyRole(['super_admin', 'admin_colegio']) ?? false;
     }
 
     public function rules(): array
     {
+        $authUser = $this->user();
+
+        $isSuperAdmin = $authUser?->hasRole('super_admin') ?? false;
+        $effectiveSchoolId = $isSuperAdmin
+            ? $this->input('school_id')
+            : $authUser?->school_id;
+
+        $allowedRolesRule = Rule::exists('roles', 'name');
+
+        if (! $isSuperAdmin) {
+            $allowedRolesRule = Rule::exists('roles', 'name')->where(fn ($query) => $query->where('name', '!=', 'super_admin'));
+        }
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
@@ -22,25 +35,34 @@ class StoreUserRequest extends FormRequest
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('users', 'document_number')
+                Rule::unique('users', 'document_number'),
             ],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'school_id' => ['nullable', 'integer', 'exists:schools,id'],
+
+            'school_id' => [
+                $isSuperAdmin ? 'nullable' : 'required',
+                'integer',
+                $isSuperAdmin
+                    ? Rule::exists('schools', 'id')
+                    : Rule::in([(int) $authUser?->school_id]),
+            ],
+
             'grade_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('grades', 'id')->where(function ($query) {
-                    if ($this->school_id) {
-                        $query->where('school_id', $this->school_id);
+                Rule::exists('grades', 'id')->where(function ($query) use ($effectiveSchoolId) {
+                    if ($effectiveSchoolId) {
+                        $query->where('school_id', $effectiveSchoolId);
                     }
                 }),
             ],
+
             'course_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('courses', 'id')->where(function ($query) {
-                    if ($this->school_id) {
-                        $query->where('school_id', $this->school_id);
+                Rule::exists('courses', 'id')->where(function ($query) use ($effectiveSchoolId) {
+                    if ($effectiveSchoolId) {
+                        $query->where('school_id', $effectiveSchoolId);
                     }
 
                     if ($this->grade_id) {
@@ -48,7 +70,8 @@ class StoreUserRequest extends FormRequest
                     }
                 }),
             ],
-            'role' => ['required', 'string', Rule::exists('roles', 'name')],
+
+            'role' => ['required', 'string', $allowedRolesRule],
             'is_active' => ['required', 'boolean'],
         ];
     }
@@ -75,8 +98,10 @@ class StoreUserRequest extends FormRequest
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
             'password.confirmed' => 'La confirmación de la contraseña no coincide.',
 
+            'school_id.required' => 'Debes seleccionar el colegio.',
             'school_id.integer' => 'El colegio seleccionado no es válido.',
             'school_id.exists' => 'El colegio seleccionado no existe.',
+            'school_id.in' => 'No puedes asignar usuarios a un colegio diferente al tuyo.',
 
             'grade_id.integer' => 'El grado seleccionado no es válido.',
             'grade_id.exists' => 'El grado seleccionado no pertenece al colegio indicado.',
@@ -86,7 +111,7 @@ class StoreUserRequest extends FormRequest
 
             'role.required' => 'Debes seleccionar un rol.',
             'role.string' => 'El rol seleccionado no es válido.',
-            'role.exists' => 'El rol seleccionado no existe.',
+            'role.exists' => 'El rol seleccionado no existe o no está permitido para tu usuario.',
 
             'is_active.required' => 'Debes indicar el estado del usuario.',
             'is_active.boolean' => 'El estado del usuario no es válido.',

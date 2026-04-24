@@ -128,7 +128,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center py-5">
+                        <td colspan="7" class="text-center py-5">
                             <h5 class="fw-semibold mb-2">
                                 {{ $search !== '' ? 'No se encontraron resultados' : 'No hay usuarios registrados' }}
                             </h5>
