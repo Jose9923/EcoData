@@ -41,20 +41,33 @@
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- @if ($errors->any())
-    <script>
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Hay errores en el formulario',
-                text: 'Revisa los campos marcados y corrige los valores.',
-                confirmButtonText: 'Entendido'
-            });
-        } else {
-            alert('Hay errores en el formulario. Revisa los campos marcados.');
-        }
-    </script>
-    @endif -->
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+@if (session('success'))
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    Swal.fire({
+        icon: 'success',
+        title: 'Proceso completado',
+        text: @json(session('success')),
+        confirmButtonText: 'Aceptar'
+    });
+});
+</script>
+@endif
+
+@if ($errors->any())
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    Swal.fire({
+        icon: 'error',
+        title: 'Hay errores en el formulario',
+        html: `{!! collect($errors->all())->map(fn($e) => '<div class="text-start mb-1">• '.e($e).'</div>')->implode('') !!}`,
+        confirmButtonText: 'Revisar'
+    });
+});
+</script>
+@endif
 </body>
 </html>

@@ -35,13 +35,13 @@ class PhysicalVariableRecordsExport implements FromCollection, WithHeadings
 
                         if ($variable?->data_type === 'boolean') {
                             $resolved = $resolved === true ? 'Sí' : ($resolved === false ? 'No' : '—');
-                        }
-
-                        if ($variable?->data_type === 'date' && $resolved) {
+                        } elseif ($variable?->data_type === 'date' && $resolved) {
                             $resolved = \Illuminate\Support\Carbon::parse($resolved)->format('Y-m-d');
+                        } elseif (in_array($variable?->data_type, ['integer', 'decimal'], true) && $resolved !== null) {
+                            $resolved = number_format((float) $resolved, $variable->decimals ?? 0, '.', '');
                         }
 
-                        if ($resolved !== null && $variable?->unit) {
+                        if ($resolved !== null && $resolved !== '—' && $variable?->unit) {
                             $resolved .= ' ' . $variable->unit;
                         }
 

@@ -82,16 +82,16 @@
                 <div class="col-12 col-md-6 range-field">
                     <label class="form-label fw-semibold">Valor mínimo</label>
                     <input type="number" step="any" name="min_value" id="min_value"
-                           class="form-control rounded-4"
-                           value="{{ old('min_value', $variable->min_value ?? '') }}">
+                        class="form-control rounded-4"
+                        value="{{ old('min_value', isset($variable) && $variable->min_value !== null ? number_format((float) $variable->min_value, $variable->decimals ?? 0, '.', '') : '') }}">
                     @error('min_value') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="col-12 col-md-6 range-field">
                     <label class="form-label fw-semibold">Valor máximo</label>
                     <input type="number" step="any" name="max_value" id="max_value"
-                           class="form-control rounded-4"
-                           value="{{ old('max_value', $variable->max_value ?? '') }}">
+                        class="form-control rounded-4"
+                        value="{{ old('max_value', isset($variable) && $variable->max_value !== null ? number_format((float) $variable->max_value, $variable->decimals ?? 0, '.', '') : '') }}">
                     @error('max_value') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>
 

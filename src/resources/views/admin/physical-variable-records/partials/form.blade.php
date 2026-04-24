@@ -284,7 +284,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     ${fieldError ? `<div class="invalid-feedback d-block">${fieldError}</div>` : ''}
 
                     <div class="small text-secondary mt-2">
-                        Mín: ${variable.min_value ?? '—'} | Máx: ${variable.max_value ?? '—'}
+                        Mín: ${formatNumber(variable.min_value, variable.decimals ?? 0)}${variable.unit ? ' ' + variable.unit : ''} |
+                        Máx: ${formatNumber(variable.max_value, variable.decimals ?? 0)}${variable.unit ? ' ' + variable.unit : ''}
                     </div>
                 </div>
             </div>
@@ -343,6 +344,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (schoolSelect.value) {
         loadGrades(selectedGradeId).then(() => loadCourses(selectedCourseId));
+    }
+
+    function formatNumber(value, decimals = 0) {
+        if (value === null || value === undefined || value === '') return '—';
+
+        const num = Number(value);
+
+        if (Number.isNaN(num)) return '—';
+
+        return num.toFixed(Number(decimals ?? 0));
     }
 });
 </script>

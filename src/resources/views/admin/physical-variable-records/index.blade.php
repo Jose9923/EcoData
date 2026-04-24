@@ -167,18 +167,22 @@
                             </td>
                             <td class="small text-secondary">
                                 @foreach($previewValues as $value)
-                                    @php
-                                        $resolved = $value->resolved_value;
-                                        if ($value->variable?->data_type === 'boolean') {
-                                            $resolved = $resolved === true ? 'Sí' : ($resolved === false ? 'No' : '—');
-                                        }
-                                        if ($value->variable?->data_type === 'date' && $resolved) {
-                                            $resolved = \Illuminate\Support\Carbon::parse($resolved)->format('Y-m-d');
-                                        }
-                                        if ($resolved !== null && $value->variable?->unit) {
-                                            $resolved .= ' ' . $value->variable->unit;
-                                        }
-                                    @endphp
+                                @php
+                                    $variable = $value->variable;
+                                    $resolved = $value->resolved_value;
+
+                                    if ($variable?->data_type === 'boolean') {
+                                        $resolved = $resolved === true ? 'Sí' : ($resolved === false ? 'No' : '—');
+                                    } elseif ($variable?->data_type === 'date' && $resolved) {
+                                        $resolved = \Illuminate\Support\Carbon::parse($resolved)->format('Y-m-d');
+                                    } elseif (in_array($variable?->data_type, ['integer', 'decimal'], true) && $resolved !== null) {
+                                        $resolved = number_format((float) $resolved, $variable->decimals ?? 0, '.', '');
+                                    }
+
+                                    if ($resolved !== null && $resolved !== '—' && $variable?->unit) {
+                                        $resolved .= ' ' . $variable->unit;
+                                    }
+                                @endphp
                                     <div>
                                         <strong>{{ $value->variable?->name }}:</strong> {{ $resolved ?? '—' }}
                                     </div>

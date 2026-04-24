@@ -108,6 +108,13 @@ class PhysicalVariableRecordController extends Controller
         }
 
         $rangeError = $this->validateRanges($variables, $normalizedValues);
+        $precisionError = $this->validatePrecision($variables, $normalizedValues);
+        if ($precisionError !== null) {
+            return back()
+                ->withErrors($precisionError)
+                ->withInput();
+        }
+
         if ($rangeError !== null) {
             return back()
                 ->withErrors($rangeError)
@@ -283,7 +290,7 @@ class PhysicalVariableRecordController extends Controller
 
             $normalized[$variable->id] = match ($variable->data_type) {
                 'integer', 'decimal' => [
-                    'value_numeric' => (float) $raw,
+                    'value_numeric' => (float) (is_string($raw) ? str_replace(',', '.', $raw) : $raw),
                     'value_text' => null,
                     'value_boolean' => null,
                     'value_date' => null,
@@ -449,6 +456,13 @@ class PhysicalVariableRecordController extends Controller
         }
 
         $rangeError = $this->validateRanges($variables, $normalizedValues);
+        $precisionError = $this->validatePrecision($variables, $normalizedValues);
+        if ($precisionError !== null) {
+            return back()
+                ->withErrors($precisionError)
+                ->withInput();
+        }
+
         if ($rangeError !== null) {
             return back()
                 ->withErrors($rangeError)
@@ -538,5 +552,42 @@ class PhysicalVariableRecordController extends Controller
         $validator->setAttributeNames($attributes);
 
         return $validator;
+    }
+
+    protected function validatePrecision($variables, array $normalizedValues): ?array
+    {
+        foreach ($variables as $variable) {
+            $payload = $normalizedValues[$variable->id] ?? null;
+
+            if ($payload === null) {
+                continue;
+            }
+
+            if ($variable->data_type !== 'decimal') {
+                continue;
+            }
+
+            $value = $payload['value_numeric'];
+
+            if ($value === null) {
+                continue;
+            }
+
+            $allowedDecimals = (int) ($variable->decimals ?? 0);
+
+            $stringValue = rtrim(rtrim((string) $value, '0'), '.');
+
+            if (str_contains($stringValue, '.')) {
+                $actualDecimals = strlen(substr(strrchr($stringValue, '.'), 1));
+
+                if ($actualDecimals > $allowedDecimals) {
+                    return [
+                        'values.' . $variable->id => "El valor de {$variable->name} solo permite {$allowedDecimals} decimales."
+                    ];
+                }
+            }
+        }
+
+        return null;
     }
 }
