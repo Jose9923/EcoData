@@ -11,6 +11,8 @@ use App\Http\Controllers\Admin\PhysicalVariableCategoryController;
 use App\Http\Controllers\Admin\PhysicalVariableController;
 use App\Http\Controllers\Admin\PhysicalVariableRecordController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\LaboratoryGuideController;
+use App\Http\Controllers\LaboratoryGuideStudentController;
 
 Route::view('/', 'welcome');
 
@@ -52,7 +54,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('courses/ajax/grades', [CourseController::class, 'getGrades'])
                 ->name('courses.ajax.grades');
         });
-    
+    Route::prefix('admin')
+    ->name('admin.')
+    ->middleware('role:super_admin|teacher')
+    ->group(function () {
+        Route::resource('laboratory-guides', LaboratoryGuideController::class)->except(['show']);
+    });
+
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('/student/laboratory-guides', [LaboratoryGuideStudentController::class, 'index'])
+            ->name('student.laboratory-guides.index');
+
+        Route::get('/student/laboratory-guides/{laboratory_guide}/download', [LaboratoryGuideStudentController::class, 'download'])
+            ->name('student.laboratory-guides.download');
+    });
 });
 
 Route::post('/logout', function (Request $request) {

@@ -100,6 +100,24 @@
                 </a>
             </li>
         @endif
+
+        @if (Route::has('admin.laboratory-guides.index'))
+            <li class="nav-item">
+                <a href="{{ route('admin.laboratory-guides.index') }}"
+                class="nav-link {{ request()->routeIs('admin.laboratory-guides.*') ? 'active' : '' }}">
+                    Guías de laboratorio
+                </a>
+            </li>
+        @endif
+
+        @if (Route::has('student.laboratory-guides.index'))
+            <li class="nav-item">
+                <a href="{{ route('student.laboratory-guides.index') }}"
+                class="nav-link {{ request()->routeIs('student.laboratory-guides.*') ? 'active' : '' }}">
+                    Mis guías de laboratorio
+                </a>
+            </li>
+        @endif
     </ul>
 
     <div class="mt-auto pt-4">
