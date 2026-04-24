@@ -17,6 +17,13 @@ class StoreUserRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'document_type' => ['required', 'string', 'max:20'],
+            'document_number' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('users', 'document_number')
+            ],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'school_id' => ['nullable', 'integer', 'exists:schools,id'],
             'grade_id' => [
@@ -59,6 +66,10 @@ class StoreUserRequest extends FormRequest
             'email.max' => 'El correo electrónico no puede superar los 255 caracteres.',
             'email.unique' => 'Ya existe un usuario con ese correo electrónico.',
 
+            'document_type.required' => 'Debes seleccionar el tipo de identificación.',
+            'document_number.required' => 'El número de identificación es obligatorio.',
+            'document_number.unique' => 'Ya existe un usuario con ese número de identificación.',
+
             'password.required' => 'La contraseña es obligatoria.',
             'password.string' => 'La contraseña debe ser un texto válido.',
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
@@ -87,6 +98,8 @@ class StoreUserRequest extends FormRequest
         return [
             'name' => 'nombre',
             'email' => 'correo electrónico',
+            'document_type' => 'tipo de identificación',
+            'document_number' => 'número de identificación',
             'password' => 'contraseña',
             'password_confirmation' => 'confirmación de contraseña',
             'school_id' => 'colegio',

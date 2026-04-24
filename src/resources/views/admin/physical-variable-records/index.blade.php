@@ -32,7 +32,7 @@
                     <label class="form-label fw-semibold">Buscar</label>
                     <input type="text" name="search" value="{{ $filters['search'] }}"
                            class="form-control form-control-lg rounded-4"
-                           placeholder="Buscar por observaciones, usuario, colegio o variable...">
+                           placeholder="Buscar por observaciones, usuario, correo, documento, colegio o variable...">
                 </div>
 
                 <div class="col-6 col-md-4 col-xl-2">
@@ -163,7 +163,11 @@
                             </td>
                             <td>
                                 <div class="fw-semibold">{{ $record->user?->name ?? '—' }}</div>
-                                <small class="text-secondary">{{ $record->user?->email }}</small>
+                                <small class="text-secondary d-block">{{ $record->user?->email }}</small>
+                                <small class="text-secondary">
+                                    {{ $record->user?->document_type ?: '—' }}
+                                    {{ $record->user?->document_number ?: '' }}
+                                </small>
                             </td>
                             <td class="small text-secondary">
                                 @foreach($previewValues as $value)

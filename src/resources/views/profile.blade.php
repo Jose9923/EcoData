@@ -17,6 +17,8 @@
                 <div class="small text-secondary d-flex flex-column gap-2">
                     <div><strong>Nombre:</strong> {{ $user->name }}</div>
                     <div><strong>Correo:</strong> {{ $user->email }}</div>
+                    <div><strong>Tipo de identificación:</strong> {{ $user->document_type ?? 'Sin asignar' }}</div>
+                    <div><strong>Número de identificación:</strong> {{ $user->document_number ?? 'Sin asignar' }}</div>
                     <div><strong>Rol:</strong> {{ \Illuminate\Support\Str::title($user->roles->first()?->name ?? 'Sin rol') }}</div>
                     <div><strong>Colegio:</strong> {{ $user->school?->name ?? 'Sin asignar' }}</div>
                     <div><strong>Grado:</strong> {{ $user->grade?->label ?: $user->grade?->name ?: 'Sin asignar' }}</div>
@@ -47,7 +49,36 @@
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
-
+                            <div class="col-12 col-md-6">
+                                <label class="form-label fw-semibold">Tipo de identificación</label>
+                                <select
+                                    name="document_type"
+                                    class="form-select rounded-4 @error('document_type') is-invalid @enderror"
+                                >
+                                    <option value="">Selecciona</option>
+                                    <option value="CC" @selected(old('document_type', $user->document_type) === 'CC')>CC</option>
+                                    <option value="TI" @selected(old('document_type', $user->document_type) === 'TI')>TI</option>
+                                    <option value="CE" @selected(old('document_type', $user->document_type) === 'CE')>CE</option>
+                                    <option value="PPT" @selected(old('document_type', $user->document_type) === 'PPT')>PPT</option>
+                                    <option value="NIT" @selected(old('document_type', $user->document_type) === 'NIT')>NIT</option>
+                                    <option value="PAS" @selected(old('document_type', $user->document_type) === 'PAS')>PAS</option>
+                                </select>
+                                @error('document_type')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label fw-semibold">Número de identificación</label>
+                                <input
+                                    type="text"
+                                    name="document_number"
+                                    class="form-control rounded-4 @error('document_number') is-invalid @enderror"
+                                    value="{{ old('document_number', $user->document_number) }}"
+                                >
+                                @error('document_number')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label fw-semibold">Correo electrónico</label>
                                 <input

@@ -15,6 +15,27 @@
                 </div>
 
                 <div class="col-12 col-md-6">
+                    <label class="form-label fw-semibold">Tipo de identificación</label>
+                    <select name="document_type" class="form-select rounded-4">
+                        <option value="">Selecciona</option>
+                        <option value="CC" @selected(old('document_type', $user->document_type ?? '') === 'CC')>CC</option>
+                        <option value="TI" @selected(old('document_type', $user->document_type ?? '') === 'TI')>TI</option>
+                        <option value="CE" @selected(old('document_type', $user->document_type ?? '') === 'CE')>CE</option>
+                        <option value="PPT" @selected(old('document_type', $user->document_type ?? '') === 'PPT')>PPT</option>
+                        <option value="NIT" @selected(old('document_type', $user->document_type ?? '') === 'NIT')>NIT</option>
+                        <option value="PAS" @selected(old('document_type', $user->document_type ?? '') === 'PAS')>PAS</option>
+                    </select>
+                    @error('document_type') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label class="form-label fw-semibold">Número de identificación</label>
+                    <input type="text" name="document_number" class="form-control rounded-4"
+                        value="{{ old('document_number', $user->document_number ?? '') }}">
+                    @error('document_number') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                </div>
+                
+                <div class="col-12 col-md-6">
                     <label class="form-label fw-semibold">Correo electrónico</label>
                     <input type="email" name="email" class="form-control rounded-4"
                            value="{{ old('email', $user->email ?? '') }}">

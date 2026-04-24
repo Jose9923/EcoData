@@ -64,6 +64,7 @@
                 <thead class="table-light">
                     <tr>
                         <th>Usuario</th>
+                        <th>Identificación</th>
                         <th>Rol</th>
                         <th>Colegio</th>
                         <th>Asignación</th>
@@ -84,6 +85,9 @@
                                 <div class="fw-semibold">{{ $user->name }}</div>
                                 <small class="text-secondary">{{ $user->email }}</small>
                             </div>
+                        </td>
+                        <td>
+                            {{ $user->document_type ?: '—' }} {{ $user->document_number ?: '' }}
                         </td>
                         <td>
                             <span class="badge text-bg-light rounded-pill px-3 py-2">

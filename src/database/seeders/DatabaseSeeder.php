@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             PhysicalVariablesCatalogSeeder::class,
             SchoolSeeder::class,
             SuperAdminSeeder::class,
+            GradeSeeder::class,
+            CourseSeeder::class,
         ]);
         // User::factory()->create([
         //     'name' => 'Test User',

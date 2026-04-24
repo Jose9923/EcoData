@@ -258,8 +258,14 @@ class PhysicalVariableRecordController extends Controller
                         ->orWhereHas('school', fn ($q) => $q->where('name', 'like', '%' . $search . '%'))
                         ->orWhereHas('grade', fn ($q) => $q->where('name', 'like', '%' . $search . '%')->orWhere('label', 'like', '%' . $search . '%'))
                         ->orWhereHas('course', fn ($q) => $q->where('name', 'like', '%' . $search . '%')->orWhere('label', 'like', '%' . $search . '%'))
-                        ->orWhereHas('user', fn ($q) => $q->where('name', 'like', '%' . $search . '%')->orWhere('email', 'like', '%' . $search . '%'))
+                        ->orWhereHas('user', function ($q) use ($search) {
+                            $q->where('name', 'like', '%' . $search . '%')
+                                ->orWhere('email', 'like', '%' . $search . '%')
+                                ->orWhere('document_type', 'like', '%' . $search . '%')
+                                ->orWhere('document_number', 'like', '%' . $search . '%');
+                        })
                         ->orWhereHas('values.variable', fn ($q) => $q->where('name', 'like', '%' . $search . '%'));
+                        
                 });
             })
             ->when($filters['school_id'], fn ($q) => $q->where('school_id', $filters['school_id']))

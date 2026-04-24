@@ -26,6 +26,13 @@ class UpdateUserRequest extends FormRequest
                 Rule::unique('users', 'email')->ignore($userId),
             ],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'document_type' => ['required', 'string', 'max:20'],
+            'document_number' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('users', 'document_number')->ignore($userId)
+            ],
             'school_id' => ['nullable', 'integer', 'exists:schools,id'],
             'grade_id' => [
                 'nullable',
@@ -67,6 +74,10 @@ class UpdateUserRequest extends FormRequest
             'email.max' => 'El correo electrónico no puede superar los 255 caracteres.',
             'email.unique' => 'Ya existe un usuario con ese correo electrónico.',
 
+            'document_type.required' => 'Debes seleccionar el tipo de identificación.',
+            'document_number.required' => 'El número de identificación es obligatorio.',
+            'document_number.unique' => 'Ya existe un usuario con ese número de identificación.',
+
             'password.string' => 'La contraseña debe ser un texto válido.',
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
             'password.confirmed' => 'La confirmación de la contraseña no coincide.',
@@ -95,6 +106,8 @@ class UpdateUserRequest extends FormRequest
             'name' => 'nombre',
             'email' => 'correo electrónico',
             'password' => 'contraseña',
+            'document_type' => 'tipo de identificación',
+            'document_number' => 'número de identificación',
             'password_confirmation' => 'confirmación de contraseña',
             'school_id' => 'colegio',
             'grade_id' => 'grado',

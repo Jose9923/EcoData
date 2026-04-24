@@ -28,7 +28,9 @@ class SuperAdminSeeder extends Seeder
             ['email' => 'admin@ecodata.test'],
             [
                 'name' => 'Super Admin',
-                'password' => Hash::make('Admin123*'),
+                'document_type' => 'CC',
+                'document_number' => '1234567890',
+                'password' => Hash::make('1234567890'),
                 'school_id' => $school->id,
                 'is_active' => true,
                 'email_verified_at' => now(),

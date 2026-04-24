@@ -77,6 +77,8 @@ class UserController extends Controller
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
+            'document_type' => $data['document_type'],
+            'document_number' => trim($data['document_number']),
             'password' => Hash::make($data['password']),
             'school_id' => $data['school_id'] ?: null,
             'grade_id' => $data['grade_id'] ?: null,
@@ -126,6 +128,8 @@ class UserController extends Controller
         $payload = [
             'name' => $data['name'],
             'email' => $data['email'],
+            'document_type' => $data['document_type'],
+            'document_number' => trim($data['document_number']),
             'school_id' => $data['school_id'] ?: null,
             'grade_id' => $data['grade_id'] ?: null,
             'course_id' => $data['course_id'] ?: null,
