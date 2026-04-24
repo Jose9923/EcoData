@@ -66,7 +66,9 @@
                             </td>
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2">
-                                    <a href="{{ asset('storage/' . $guide->pdf_path) }}" target="_blank" class="btn btn-outline-secondary rounded-4">Ver PDF</a>
+                                    <a href="{{ route('admin.laboratory-guides.download', $guide) }}" target="_blank" class="btn btn-outline-secondary rounded-4">
+                                        Ver PDF
+                                    </a>
                                     <a href="{{ route('admin.laboratory-guides.edit', $guide) }}" class="btn btn-outline-primary rounded-4">Editar</a>
                                     <form method="POST" action="{{ route('admin.laboratory-guides.destroy', $guide) }}" onsubmit="return confirm('¿Eliminar esta guía?')">
                                         @csrf

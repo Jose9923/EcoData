@@ -65,12 +65,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     /*
     |--------------------------------------------------------------------------
     | Registros físicos
-    | super_admin + admin_colegio + teacher
+    | super_admin + admin_colegio + docente
     |--------------------------------------------------------------------------
     */
     Route::prefix('admin')
         ->name('admin.')
-        ->middleware('role:super_admin|admin_colegio|teacher')
+        ->middleware('role:super_admin|admin_colegio|docente')
         ->group(function () {
             Route::resource('physical-variable-records', PhysicalVariableRecordController::class)
                 ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
@@ -91,13 +91,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     /*
     |--------------------------------------------------------------------------
     | Guías de laboratorio admin
-    | super_admin + admin_colegio + teacher
+    | super_admin + admin_colegio + docente
     |--------------------------------------------------------------------------
     */
     Route::prefix('admin')
         ->name('admin.')
-        ->middleware('role:super_admin|admin_colegio|teacher')
+        ->middleware('role:super_admin|admin_colegio|docente')
         ->group(function () {
+            Route::get('laboratory-guides/ajax/grades', [LaboratoryGuideController::class, 'getGrades'])
+            ->name('laboratory-guides.ajax.grades');
+
+            Route::get('laboratory-guides/ajax/courses', [LaboratoryGuideController::class, 'getCourses'])
+                ->name('laboratory-guides.ajax.courses');
+
+            Route::get('laboratory-guides/{laboratory_guide}/download', [LaboratoryGuideController::class, 'download'])
+                ->name('laboratory-guides.download');
+
             Route::resource('laboratory-guides', LaboratoryGuideController::class)->except(['show']);
         });
 
@@ -107,13 +116,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     | student
     |--------------------------------------------------------------------------
     */
-    Route::middleware('role:student')->group(function () {
+    Route::middleware('role:estudiante')->group(function () {
         Route::get('/student/laboratory-guides', [LaboratoryGuideStudentController::class, 'index'])
             ->name('student.laboratory-guides.index');
 
+        Route::get('/student/laboratory-guides/{laboratory_guide}/view', [LaboratoryGuideStudentController::class, 'view'])
+            ->name('student.laboratory-guides.view');
+
         Route::get('/student/laboratory-guides/{laboratory_guide}/download', [LaboratoryGuideStudentController::class, 'download'])
             ->name('student.laboratory-guides.download');
-    });
+            });
 });
 
 Route::post('/logout', function (Request $request) {

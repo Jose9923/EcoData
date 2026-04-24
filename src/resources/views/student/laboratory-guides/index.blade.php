@@ -17,8 +17,19 @@
                         {{ $guide->description ?: 'Sin descripción.' }}
                     </p>
 
+                    <div class="small text-secondary mb-2">
+                        <strong>Grado:</strong>
+                        {{ $guide->grade?->label ?: $guide->grade?->name ?: 'Todos los grados' }}
+                    </div>
+
+                    <div class="small text-secondary mb-2">
+                        <strong>Curso:</strong>
+                        {{ $guide->course?->label ?: $guide->course?->name ?: 'Todos los cursos' }}
+                    </div>
+
                     <div class="small text-secondary mb-3">
-                        Publicado: {{ optional($guide->published_at)->format('Y-m-d') }}
+                        <strong>Publicado:</strong>
+                        {{ optional($guide->published_at)->format('Y-m-d') ?? 'Disponible' }}
                     </div>
 
                     <div class="d-flex gap-2 flex-wrap">
@@ -48,7 +59,7 @@
 
                         <div class="modal-body p-0" style="height: 75vh;">
                             <iframe
-                                src="{{ asset('storage/' . $guide->pdf_path) }}"
+                                src="{{ route('student.laboratory-guides.view', $guide) }}"
                                 width="100%"
                                 height="100%"
                                 style="border: 0;"
@@ -57,7 +68,7 @@
                         </div>
 
                         <div class="modal-footer">
-                            <a href="{{ asset('storage/' . $guide->pdf_path) }}"
+                            <a href="{{ route('student.laboratory-guides.view', $guide) }}"
                                target="_blank"
                                class="btn btn-outline-secondary rounded-4">
                                 Abrir en otra pestaña
@@ -74,7 +85,7 @@
         @empty
             <div class="col-12">
                 <div class="admin-card bg-white p-5 text-center">
-                    No hay guías de laboratorio disponibles.
+                    No hay guías de laboratorio disponibles para tu grupo.
                 </div>
             </div>
         @endforelse
