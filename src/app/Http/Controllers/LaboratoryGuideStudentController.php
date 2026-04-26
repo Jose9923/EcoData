@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class LaboratoryGuideestudianteController extends Controller
+class LaboratoryGuideStudentController extends Controller
 {
     public function index(Request $request): View
     {

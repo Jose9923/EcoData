@@ -10,7 +10,7 @@ use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserImportController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\LaboratoryGuideestudianteController;
+use App\Http\Controllers\LaboratoryGuideStudentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -117,13 +117,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware('role:estudiante')->group(function () {
-        Route::get('/estudiante/laboratory-guides', [LaboratoryGuideestudianteController::class, 'index'])
+        Route::get('/estudiante/laboratory-guides', [LaboratoryGuideStudentController::class, 'index'])
             ->name('estudiante.laboratory-guides.index');
 
-        Route::get('/estudiante/laboratory-guides/{laboratory_guide}/view', [LaboratoryGuideestudianteController::class, 'view'])
+        Route::get('/estudiante/laboratory-guides/{laboratory_guide}/view', [LaboratoryGuideStudentController::class, 'view'])
             ->name('estudiante.laboratory-guides.view');
 
-        Route::get('/estudiante/laboratory-guides/{laboratory_guide}/download', [LaboratoryGuideestudianteController::class, 'download'])
+        Route::get('/estudiante/laboratory-guides/{laboratory_guide}/download', [LaboratoryGuideStudentController::class, 'download'])
             ->name('estudiante.laboratory-guides.download');
             });
 });
