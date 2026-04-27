@@ -13,6 +13,21 @@
 @endphp
 
 <div class="admin-sidebar d-flex flex-column p-3 p-md-4">
+    <div class="d-lg-none mb-3">
+        <button
+            class="btn btn-outline-light w-100 rounded-4 d-flex align-items-center justify-content-between"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#adminSidebarMenu"
+            aria-expanded="false"
+            aria-controls="adminSidebarMenu"
+        >
+            <span>Menú de navegación</span>
+            <span>☰</span>
+        </button>
+    </div>
+
+    <div id="adminSidebarMenu" class="collapse d-lg-flex flex-column flex-grow-1">
     <div class="border-bottom border-secondary-subtle pb-4 mb-4">
         <div class="d-flex align-items-center gap-3">
             <div class="school-avatar bg-dark text-white">
@@ -171,5 +186,6 @@
                 Cerrar sesión
             </button>
         </form>
+    </div>
     </div>
 </div>

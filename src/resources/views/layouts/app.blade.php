@@ -28,18 +28,79 @@
     @vite(['resources/scss/app.scss', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.4/css/responsive.bootstrap5.min.css">
+    <style>
+        html,
+        body {
+            min-height: 100%;
+            overflow-x: hidden;
+        }
 
+        .admin-shell {
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .admin-layout {
+            min-height: 100vh;
+            align-items: stretch;
+        }
+
+        .admin-sidebar-col {
+            background: var(--school-secondary);
+            min-width: 0;
+        }
+
+        .admin-sidebar {
+            min-height: 100vh;
+            height: 100%;
+            background: var(--school-secondary);
+        }
+
+        .admin-content-col {
+            min-width: 0;
+            overflow-x: hidden;
+        }
+
+        .admin-main {
+            min-width: 0;
+            width: 100%;
+        }
+
+        @media (min-width: 992px) {
+            .admin-sidebar {
+                position: sticky;
+                top: 0;
+                max-height: 100vh;
+                overflow-y: auto;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .admin-layout {
+                min-height: auto;
+            }
+
+            .admin-sidebar {
+                min-height: auto;
+                height: auto;
+            }
+
+            .admin-main {
+                padding-top: 1rem !important;
+            }
+        }
+    </style>
     @stack('styles')
 </head>
 <body>
-    <div class="container-fluid" style="padding: 0;">
-        <div class="row g-0">
-            <aside class="col-12 col-lg-3 col-xl-2">
+    <div class="container-fluid admin-shell px-0">
+        <div class="row g-0 admin-layout">
+            <aside class="col-12 col-lg-3 col-xl-2 admin-sidebar-col">
                 @include('components.layout.navigation')
             </aside>
 
-            <div class="col-12 col-lg-9 col-xl-10">
-                <main class="p-3 p-md-4 p-xl-5">
+            <div class="col-12 col-lg-9 col-xl-10 admin-content-col">
+                <main class="admin-main p-3 p-md-4 p-xl-5">
                     @yield('content')
                 </main>
             </div>
@@ -81,5 +142,31 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="https://cdn.datatables.net/responsive/3.0.4/js/responsive.bootstrap5.min.js"></script>
 
 @stack('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    function recalculateResponsiveTables() {
+        if (!window.jQuery || !$.fn.dataTable) {
+            return;
+        }
+
+        setTimeout(function () {
+            $.fn.dataTable
+                .tables({ visible: true, api: true })
+                .columns.adjust()
+                .responsive.recalc();
+        }, 300);
+    }
+
+    window.addEventListener('resize', recalculateResponsiveTables);
+
+    document.addEventListener('shown.bs.collapse', recalculateResponsiveTables);
+    document.addEventListener('hidden.bs.collapse', recalculateResponsiveTables);
+
+    document.addEventListener('shown.bs.offcanvas', recalculateResponsiveTables);
+    document.addEventListener('hidden.bs.offcanvas', recalculateResponsiveTables);
+
+    recalculateResponsiveTables();
+});
+</script>
 </body>
 </html>
