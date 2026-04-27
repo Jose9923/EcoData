@@ -52,9 +52,25 @@
         }
 
         .admin-sidebar {
-            min-height: 100vh;
-            height: 100%;
-            background: var(--school-secondary);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, .35) transparent;
+        }
+
+        .admin-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .admin-sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .admin-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .35);
+            border-radius: 999px;
+        }
+
+        .admin-sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, .55);
         }
 
         .admin-content-col {
@@ -66,17 +82,15 @@
             min-width: 0;
             width: 100%;
         }
-
-        @media (min-width: 992px) {
-            .admin-sidebar {
-                position: sticky;
-                top: 0;
-                max-height: 100vh;
-                overflow-y: auto;
-            }
-        }
-
-        @media (max-width: 991.98px) {
+@media (min-width: 992px) {
+    .admin-sidebar {
+        min-height: 100vh;
+        height: 100%;
+        max-height: none;
+        overflow-y: visible;
+    }
+}
+        @media (max-width: 992px) {
             .admin-shell,
             .admin-layout {
                 min-height: auto;
