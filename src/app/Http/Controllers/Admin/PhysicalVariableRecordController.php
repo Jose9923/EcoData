@@ -297,9 +297,20 @@ class PhysicalVariableRecordController extends Controller
 
         $query = $this->buildQuery($filters, $authUser);
 
+        $user = auth()->user();
+
+        $school = $user->hasRole('super_admin')
+            ? null
+            : $user->school;
+
         return Excel::download(
-            new PhysicalVariableRecordsExport($query),
-            'registros-fisicos-' . now()->format('Ymd_His') . '.xlsx'
+            new PhysicalVariableRecordsExport(
+                $query,
+                $school,
+                $user->name,
+                $filtersText ?? null
+            ),
+            'registros_variables_fisicas.xlsx'
         );
     }
 
