@@ -131,8 +131,8 @@
     </section>
 
     <section class="admin-card bg-white overflow-hidden">
-        <div class="table-responsive">
-            <table class="table align-middle mb-0">
+        <div class="p-3 p-md-4">
+            <table id="physicalVariableRecordsTable" class="table table-striped table-hover align-middle nowrap w-100 mb-0">
                 <thead class="table-light">
                     <tr>
                         <th>Fecha</th>
@@ -232,66 +232,176 @@
         @endif
     </section>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const schoolSelect = document.getElementById('filter_school_id');
-    const gradeSelect = document.getElementById('filter_grade_id');
-    const courseSelect = document.getElementById('filter_course_id');
-
-    const gradesUrl = @json(route('admin.physical-variable-records.ajax.grades'));
-    const coursesUrl = @json(route('admin.physical-variable-records.ajax.courses'));
-
-    async function updateGrades() {
-        if (!schoolSelect.value) {
-            gradeSelect.innerHTML = '<option value="">Todos</option>';
-            courseSelect.innerHTML = '<option value="">Todos</option>';
-            return;
-        }
-
-        const res = await fetch(`${gradesUrl}?school_id=${schoolSelect.value}`, { headers: { 'Accept': 'application/json' }});
-        const data = await res.json();
-
-        const selected = @json((string) $filters['grade_id']);
-        gradeSelect.innerHTML = '<option value="">Todos</option>';
-        data.forEach(item => {
-            const option = document.createElement('option');
-            option.value = item.id;
-            option.textContent = item.label;
-            if (String(item.id) === String(selected)) option.selected = true;
-            gradeSelect.appendChild(option);
-        });
-    }
-
-    async function updateCourses() {
-        if (!schoolSelect.value || !gradeSelect.value) {
-            courseSelect.innerHTML = '<option value="">Todos</option>';
-            return;
-        }
-
-        const params = new URLSearchParams({ school_id: schoolSelect.value, grade_id: gradeSelect.value });
-        const res = await fetch(`${coursesUrl}?${params.toString()}`, { headers: { 'Accept': 'application/json' }});
-        const data = await res.json();
-
-        const selected = @json((string) $filters['course_id']);
-        courseSelect.innerHTML = '<option value="">Todos</option>';
-        data.forEach(item => {
-            const option = document.createElement('option');
-            option.value = item.id;
-            option.textContent = item.label;
-            if (String(item.id) === String(selected)) option.selected = true;
-            courseSelect.appendChild(option);
-        });
-    }
-
-    schoolSelect?.addEventListener('change', async function () {
-        await updateGrades();
-        await updateCourses();
-    });
-
-    gradeSelect?.addEventListener('change', async function () {
-        await updateCourses();
-    });
-});
-</script>
 @endsection
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const schoolSelect = document.getElementById('filter_school_id');
+            const gradeSelect = document.getElementById('filter_grade_id');
+            const courseSelect = document.getElementById('filter_course_id');
+
+            const gradesUrl = @json(route('admin.physical-variable-records.ajax.grades'));
+            const coursesUrl = @json(route('admin.physical-variable-records.ajax.courses'));
+
+            async function updateGrades() {
+                if (!schoolSelect.value) {
+                    gradeSelect.innerHTML = '<option value="">Todos</option>';
+                    courseSelect.innerHTML = '<option value="">Todos</option>';
+                    return;
+                }
+
+                const res = await fetch(`${gradesUrl}?school_id=${schoolSelect.value}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                const data = await res.json();
+
+                const selected = @json((string) $filters['grade_id']);
+                gradeSelect.innerHTML = '<option value="">Todos</option>';
+
+                data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = item.label;
+
+                    if (String(item.id) === String(selected)) {
+                        option.selected = true;
+                    }
+
+                    gradeSelect.appendChild(option);
+                });
+            }
+
+            async function updateCourses() {
+                if (!schoolSelect.value || !gradeSelect.value) {
+                    courseSelect.innerHTML = '<option value="">Todos</option>';
+                    return;
+                }
+
+                const params = new URLSearchParams({
+                    school_id: schoolSelect.value,
+                    grade_id: gradeSelect.value
+                });
+
+                const res = await fetch(`${coursesUrl}?${params.toString()}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                const data = await res.json();
+
+                const selected = @json((string) $filters['course_id']);
+                courseSelect.innerHTML = '<option value="">Todos</option>';
+
+                data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = item.label;
+
+                    if (String(item.id) === String(selected)) {
+                        option.selected = true;
+                    }
+
+                    courseSelect.appendChild(option);
+                });
+            }
+
+            schoolSelect?.addEventListener('change', async function () {
+                await updateGrades();
+                await updateCourses();
+            });
+
+            gradeSelect?.addEventListener('change', async function () {
+                await updateCourses();
+            });
+
+            const table = $('#physicalVariableRecordsTable');
+
+            if ($.fn.DataTable.isDataTable(table)) {
+                table.DataTable().destroy();
+            }
+
+            table.DataTable({
+                responsive: true,
+                autoWidth: false,
+                paging: false,
+                searching: false,
+                info: false,
+                ordering: true,
+                columnDefs: [
+                    {
+                        targets: -1,
+                        orderable: false,
+                        searchable: false,
+                        responsivePriority: 1
+                    },
+                    {
+                        targets: 0,
+                        responsivePriority: 2
+                    },
+                    {
+                        targets: 1,
+                        responsivePriority: 3
+                    },
+                    {
+                        targets: 2,
+                        responsivePriority: 4
+                    },
+                    {
+                        targets: 3,
+                        responsivePriority: 5
+                    },
+                    {
+                        targets: 4,
+                        responsivePriority: 6
+                    }
+                ],
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/2.2.2/i18n/es-ES.json'
+                }
+            });
+        });
+    </script>
+@endpush
+
+@push('styles')
+    <style>
+        table.dataTable > tbody > tr.child ul.dtr-details {
+            width: 100%;
+        }
+
+        table.dataTable > tbody > tr.child ul.dtr-details > li {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .75rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, .075);
+        }
+
+        table.dataTable > tbody > tr.child span.dtr-title {
+            font-weight: 700;
+            color: var(--school-secondary);
+        }
+
+        #physicalVariableRecordsTable td:nth-child(4),
+        #physicalVariableRecordsTable td:nth-child(5) {
+            min-width: 260px;
+            white-space: normal;
+        }
+
+        #physicalVariableRecordsTable td:last-child {
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            #physicalVariableRecordsTable td:last-child .d-flex {
+                flex-wrap: wrap;
+                justify-content: flex-start !important;
+            }
+
+            #physicalVariableRecordsTable td:last-child .btn {
+                padding: .35rem .65rem;
+                font-size: .875rem;
+            }
+        }
+    </style>
+@endpush

@@ -30,8 +30,8 @@
     </div>
 
     <div class="admin-card bg-white overflow-hidden">
-        <div class="table-responsive">
-            <table class="table align-middle mb-0">
+        <div class="p-3 p-md-4">
+            <table id="laboratoryGuidesTable" class="table table-striped table-hover align-middle nowrap w-100 mb-0">
                 <thead class="table-light">
                     <tr>
                         <th>Título</th>
@@ -95,3 +95,100 @@
     </div>
 </div>
 @endsection
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.4/css/responsive.bootstrap5.min.css">
+
+    <style>
+        table.dataTable > tbody > tr.child ul.dtr-details {
+            width: 100%;
+        }
+
+        table.dataTable > tbody > tr.child ul.dtr-details > li {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .75rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, .075);
+        }
+
+        table.dataTable > tbody > tr.child span.dtr-title {
+            font-weight: 700;
+            color: var(--school-secondary);
+        }
+
+        .dt-container .dt-search input,
+        .dt-container .dt-length select {
+            border-radius: 1rem;
+            border: 1px solid rgba(0, 0, 0, .15);
+            padding: .45rem .75rem;
+        }
+
+        .dt-container .dt-paging .dt-paging-button {
+            border-radius: .75rem !important;
+        }
+
+        #laboratoryGuidesTable td:last-child {
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            #laboratoryGuidesTable td:last-child .d-flex {
+                flex-wrap: wrap;
+            }
+
+            #laboratoryGuidesTable td:last-child .btn {
+                padding: .35rem .65rem;
+                font-size: .875rem;
+            }
+        }
+    </style>
+@endpush
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const table = $('#laboratoryGuidesTable');
+
+            if ($.fn.DataTable.isDataTable(table)) {
+                table.DataTable().destroy();
+            }
+
+            table.DataTable({
+                responsive: true,
+                autoWidth: false,
+                paging: false,
+                searching: false,
+                info: false,
+                ordering: true,
+                columnDefs: [
+                    {
+                        targets: -1,
+                        orderable: false,
+                        searchable: false,
+                        responsivePriority: 1
+                    },
+                    {
+                        targets: 0,
+                        responsivePriority: 2
+                    },
+                    {
+                        targets: 3,
+                        responsivePriority: 3
+                    },
+                    {
+                        targets: 1,
+                        responsivePriority: 4
+                    },
+                    {
+                        targets: 2,
+                        responsivePriority: 5
+                    }
+                ],
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/2.2.2/i18n/es-ES.json'
+                }
+            });
+        });
+    </script>
+@endpush
