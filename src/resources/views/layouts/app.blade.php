@@ -48,6 +48,7 @@
         .admin-sidebar-col {
             background: var(--school-secondary);
             min-width: 0;
+            z-index: 20;
         }
 
         .admin-sidebar {
@@ -76,17 +77,32 @@
         }
 
         @media (max-width: 991.98px) {
+            .admin-shell,
             .admin-layout {
                 min-height: auto;
+            }
+
+            .admin-sidebar-col {
+                position: sticky;
+                top: 0;
+                z-index: 1030;
             }
 
             .admin-sidebar {
                 min-height: auto;
                 height: auto;
+                max-height: 100vh;
+                overflow-y: auto;
             }
 
             .admin-main {
                 padding-top: 1rem !important;
+            }
+
+            #adminSidebarMenu.show {
+                max-height: calc(100vh - 5rem);
+                overflow-y: auto;
+                padding-bottom: 1rem;
             }
         }
     </style>
