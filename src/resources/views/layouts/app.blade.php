@@ -105,6 +105,41 @@
                 padding-bottom: 1rem;
             }
         }
+        .pagination {
+            margin-bottom: 0;
+            gap: .25rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .page-item .page-link {
+            border-radius: .75rem;
+            border: 1px solid rgba(15, 23, 42, .12);
+            color: var(--school-secondary);
+            min-width: 2.35rem;
+            min-height: 2.35rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .page-item.active .page-link {
+            background: var(--school-secondary);
+            border-color: var(--school-secondary);
+            color: #fff;
+        }
+
+        .page-item.disabled .page-link {
+            color: #94a3b8;
+            background: #f8fafc;
+        }
+
+        .page-link:hover {
+            color: #fff;
+            background: var(--school-primary);
+            border-color: var(--school-primary);
+        }
     </style>
     @stack('styles')
 </head>

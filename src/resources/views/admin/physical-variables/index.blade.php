@@ -138,8 +138,8 @@
         </div>
 
         @if($variables->hasPages())
-            <div class="p-4 border-top">
-                {{ $variables->links() }}
+            <div class="p-4 border-top d-flex justify-content-center overflow-auto">
+                {{ $variables->onEachSide(1)->links() }}
             </div>
         @endif
     </section>

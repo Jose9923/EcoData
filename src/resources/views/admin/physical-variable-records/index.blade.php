@@ -226,8 +226,8 @@
         </div>
 
         @if($records->hasPages())
-            <div class="p-4 border-top">
-                {{ $records->links() }}
+            <div class="p-4 border-top d-flex justify-content-center overflow-auto">
+                {{ $records->onEachSide(1)->links() }}
             </div>
         @endif
     </section>

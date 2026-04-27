@@ -164,8 +164,8 @@
         </div>
 
         @if($schools->hasPages())
-            <div class="p-4 border-top">
-                {{ $schools->links() }}
+            <div class="p-4 border-top d-flex justify-content-center overflow-auto">
+                {{ $schools->onEachSide(1)->links() }}
             </div>
         @endif
     </section>

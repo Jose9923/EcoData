@@ -88,8 +88,8 @@
         </div>
 
         @if($guides->hasPages())
-            <div class="p-4 border-top">
-                {{ $guides->links() }}
+            <div class="p-4 border-top d-flex justify-content-center overflow-auto">
+                {{ $guides->onEachSide(1)->links() }}
             </div>
         @endif
     </div>

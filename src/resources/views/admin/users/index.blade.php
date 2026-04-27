@@ -143,8 +143,8 @@
         </div>
 
         @if($users->hasPages())
-            <div class="p-4 border-top">
-                {{ $users->links() }}
+            <div class="p-4 border-top d-flex justify-content-center overflow-auto">
+                {{ $users->onEachSide(1)->links() }}
             </div>
         @endif
     </section>
