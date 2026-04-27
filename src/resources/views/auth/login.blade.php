@@ -3,12 +3,12 @@
 @section('content')
 <div class="mx-auto" style="max-width: 32rem;">
     <div class="text-center mb-4">
-        <div class="mx-auto mb-4 d-flex align-items-center justify-content-center rounded-4 border shadow"
-             style="width: 5rem; height: 5rem; background: rgba(255,255,255,.95); border-color: rgba(255,255,255,.15) !important;">
-            <span class="small fw-semibold text-uppercase text-secondary" style="letter-spacing: .22em;">
-                Logo
-            </span>
-        </div>
+<div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
+     style="width: 9rem; height: auto; overflow: hidden; border-radius: 1.5rem;">
+    <img src="{{ asset('img/logo-login.jpeg') }}"
+         alt="Logo EcoData"
+         style="width: 100%; height: auto; object-fit: contain; border-radius: 1.5rem;">
+</div>
 
         <p class="small fw-semibold text-uppercase mb-2" style="letter-spacing: .24em; color: #86efac;">
             EcoData

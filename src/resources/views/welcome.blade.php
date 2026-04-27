@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/jpeg" href="{{ asset('img/favicon.ico') }}">
     <title>EcoData</title>
     @vite(['resources/scss/app.scss', 'resources/js/app.js'])
 </head>
