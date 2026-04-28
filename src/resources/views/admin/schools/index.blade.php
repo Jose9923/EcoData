@@ -87,15 +87,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($schools as $school)
+                    @foreach($schools as $school)
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="school-avatar">
                                         @if ($school->shield_path)
                                             <img src="{{ asset('storage/' . $school->shield_path) }}"
-                                                 alt="Escudo {{ $school->name }}"
-                                                 class="w-100 h-100 object-fit-cover">
+                                                alt="Escudo {{ $school->name }}"
+                                                class="w-100 h-100 object-fit-cover">
                                         @else
                                             <span>{{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($school->name, 0, 1)) }}</span>
                                         @endif
@@ -136,8 +136,8 @@
                                     </a>
 
                                     <form method="POST"
-                                          action="{{ route('admin.schools.destroy', $school->id) }}"
-                                          onsubmit="return confirm('¿Seguro que deseas eliminar este colegio?')">
+                                        action="{{ route('admin.schools.destroy', $school->id) }}"
+                                        onsubmit="return confirm('¿Seguro que deseas eliminar este colegio?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-outline-danger rounded-4">
@@ -147,18 +147,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="text-center py-5">
-                                <h5 class="fw-semibold mb-2">
-                                    {{ $search !== '' ? 'No se encontraron resultados' : 'No hay colegios registrados' }}
-                                </h5>
-                                <p class="text-secondary mb-0">
-                                    {{ $search !== '' ? 'Ajusta el término de búsqueda o limpia el filtro.' : 'Crea el primer colegio para comenzar.' }}
-                                </p>
-                            </td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
@@ -212,7 +201,21 @@
                 }
             ],
             language: {
-                url: 'https://cdn.datatables.net/plug-ins/2.2.2/i18n/es-ES.json'
+                emptyTable: "No hay registros disponibles.",
+                zeroRecords: "No se encontraron resultados",
+                loadingRecords: "Cargando...",
+                processing: "Procesando...",
+                search: "Buscar:",
+                lengthMenu: "Mostrar _MENU_ registros",
+                info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                infoEmpty: "Mostrando 0 a 0 de 0 registros",
+                infoFiltered: "(filtrado de _MAX_ registros totales)",
+                paginate: {
+                    first: "Primero",
+                    last: "Último",
+                    next: "Siguiente",
+                    previous: "Anterior"
+                }
             }
         });
     });

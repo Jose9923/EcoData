@@ -70,7 +70,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($variables as $variable)
+                    @foreach($variables as $variable)
                         <tr>
                             <td>
                                 <div class="fw-semibold">{{ $variable->name }}</div>
@@ -105,13 +105,13 @@
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2">
                                     <a href="{{ route('admin.physical-variables.edit', $variable->id) }}"
-                                       class="btn btn-outline-secondary rounded-4">
+                                    class="btn btn-outline-secondary rounded-4">
                                         Editar
                                     </a>
 
                                     <form method="POST"
-                                          action="{{ route('admin.physical-variables.destroy', $variable->id) }}"
-                                          onsubmit="return confirm('¿Seguro que deseas eliminar esta variable?')">
+                                        action="{{ route('admin.physical-variables.destroy', $variable->id) }}"
+                                        onsubmit="return confirm('¿Seguro que deseas eliminar esta variable?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-outline-danger rounded-4">
@@ -121,18 +121,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center py-5">
-                                <h5 class="fw-semibold mb-2">
-                                    {{ $search !== '' ? 'No se encontraron resultados' : 'No hay variables registradas' }}
-                                </h5>
-                                <p class="text-secondary mb-0">
-                                    {{ $search !== '' ? 'Ajusta el término de búsqueda o limpia el filtro.' : 'Crea la primera variable para comenzar.' }}
-                                </p>
-                            </td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
@@ -187,13 +176,12 @@
         }
     </style>
 @endpush
-
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const table = $('#physicalVariablesTable');
 
-            if ($.fn.DataTable.isDataTable(table)) {
+            if ($.fn.DataTable.isDataTable('#physicalVariablesTable')) {
                 table.DataTable().destroy();
             }
 
@@ -237,7 +225,21 @@
                     }
                 ],
                 language: {
-                    url: 'https://cdn.datatables.net/plug-ins/2.2.2/i18n/es-ES.json'
+                    emptyTable: "No hay variables registradas.",
+                    zeroRecords: "No se encontraron resultados",
+                    loadingRecords: "Cargando...",
+                    processing: "Procesando...",
+                    search: "Buscar:",
+                    lengthMenu: "Mostrar _MENU_ registros",
+                    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    infoEmpty: "Mostrando 0 a 0 de 0 registros",
+                    infoFiltered: "(filtrado de _MAX_ registros totales)",
+                    paginate: {
+                        first: "Primero",
+                        last: "Último",
+                        next: "Siguiente",
+                        previous: "Anterior"
+                    }
                 }
             });
         });

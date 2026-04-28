@@ -79,7 +79,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($grades as $grade)
+                    @foreach($grades as $grade)
                         <tr>
                             <td>
                                 <div class="fw-semibold">{{ $grade->name }}</div>
@@ -110,7 +110,7 @@
                                     </a>
 
                                     <form method="POST" action="{{ route('admin.grades.destroy', $grade->id) }}"
-                                          onsubmit="return confirm('¿Seguro que deseas eliminar este grado?')">
+                                        onsubmit="return confirm('¿Seguro que deseas eliminar este grado?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-outline-danger rounded-4">
@@ -120,18 +120,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="text-center py-5">
-                                <h5 class="fw-semibold mb-2">
-                                    {{ $search !== '' ? 'No se encontraron resultados' : 'No hay grados registrados' }}
-                                </h5>
-                                <p class="text-secondary mb-0">
-                                    {{ $search !== '' ? 'Ajusta el término de búsqueda o limpia el filtro.' : 'Crea el primer grado para comenzar.' }}
-                                </p>
-                            </td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
@@ -178,7 +167,6 @@
         }
     </style>
 @endpush
-
 @push('scripts')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
@@ -190,7 +178,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             const table = $('#gradesTable');
 
-            if ($.fn.DataTable.isDataTable(table)) {
+            if ($.fn.DataTable.isDataTable('#gradesTable')) {
                 table.DataTable().destroy();
             }
 
@@ -222,7 +210,21 @@
                     }
                 ],
                 language: {
-                    url: 'https://cdn.datatables.net/plug-ins/2.2.2/i18n/es-ES.json'
+                    emptyTable: "No hay grados registrados.",
+                    zeroRecords: "No se encontraron resultados",
+                    loadingRecords: "Cargando...",
+                    processing: "Procesando...",
+                    search: "Buscar:",
+                    lengthMenu: "Mostrar _MENU_ registros",
+                    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    infoEmpty: "Mostrando 0 a 0 de 0 registros",
+                    infoFiltered: "(filtrado de _MAX_ registros totales)",
+                    paginate: {
+                        first: "Primero",
+                        last: "Último",
+                        next: "Siguiente",
+                        previous: "Anterior"
+                    }
                 }
             });
         });

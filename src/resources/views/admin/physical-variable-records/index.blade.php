@@ -144,7 +144,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($records as $record)
+                    @foreach($records as $record)
                         @php
                             $gradeLabel = $record->grade?->label ?: $record->grade?->name;
                             $courseLabel = $record->course?->label ?: $record->course?->name;
@@ -171,26 +171,27 @@
                             </td>
                             <td class="small text-secondary">
                                 @foreach($previewValues as $value)
-                                @php
-                                    $variable = $value->variable;
-                                    $resolved = $value->resolved_value;
+                                    @php
+                                        $variable = $value->variable;
+                                        $resolved = $value->resolved_value;
 
-                                    if ($variable?->data_type === 'boolean') {
-                                        $resolved = $resolved === true ? 'Sí' : ($resolved === false ? 'No' : '—');
-                                    } elseif ($variable?->data_type === 'date' && $resolved) {
-                                        $resolved = \Illuminate\Support\Carbon::parse($resolved)->format('Y-m-d');
-                                    } elseif (in_array($variable?->data_type, ['integer', 'decimal'], true) && $resolved !== null) {
-                                        $resolved = number_format((float) $resolved, $variable->decimals ?? 0, '.', '');
-                                    }
+                                        if ($variable?->data_type === 'boolean') {
+                                            $resolved = $resolved === true ? 'Sí' : ($resolved === false ? 'No' : '—');
+                                        } elseif ($variable?->data_type === 'date' && $resolved) {
+                                            $resolved = \Illuminate\Support\Carbon::parse($resolved)->format('Y-m-d');
+                                        } elseif (in_array($variable?->data_type, ['integer', 'decimal'], true) && $resolved !== null) {
+                                            $resolved = number_format((float) $resolved, $variable->decimals ?? 0, '.', '');
+                                        }
 
-                                    if ($resolved !== null && $resolved !== '—' && $variable?->unit) {
-                                        $resolved .= ' ' . $variable->unit;
-                                    }
-                                @endphp
+                                        if ($resolved !== null && $resolved !== '—' && $variable?->unit) {
+                                            $resolved .= ' ' . $variable->unit;
+                                        }
+                                    @endphp
                                     <div>
                                         <strong>{{ $value->variable?->name }}:</strong> {{ $resolved ?? '—' }}
                                     </div>
                                 @endforeach
+
                                 @if($remainingValues > 0)
                                     <div class="mt-1 text-muted">+ {{ $remainingValues }} más</div>
                                 @endif
@@ -213,14 +214,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center py-5">
-                                <h5 class="fw-semibold mb-2">No hay registros físicos</h5>
-                                <p class="text-secondary mb-0">Ajusta los filtros o crea un nuevo registro.</p>
-                            </td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
@@ -316,7 +310,7 @@
 
             const table = $('#physicalVariableRecordsTable');
 
-            if ($.fn.DataTable.isDataTable(table)) {
+            if ($.fn.DataTable.isDataTable('#physicalVariableRecordsTable')) {
                 table.DataTable().destroy();
             }
 
@@ -356,7 +350,21 @@
                     }
                 ],
                 language: {
-                    url: 'https://cdn.datatables.net/plug-ins/2.2.2/i18n/es-ES.json'
+                    emptyTable: "No hay registros físicos.",
+                    zeroRecords: "No se encontraron resultados",
+                    loadingRecords: "Cargando...",
+                    processing: "Procesando...",
+                    search: "Buscar:",
+                    lengthMenu: "Mostrar _MENU_ registros",
+                    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    infoEmpty: "Mostrando 0 a 0 de 0 registros",
+                    infoFiltered: "(filtrado de _MAX_ registros totales)",
+                    paginate: {
+                        first: "Primero",
+                        last: "Último",
+                        next: "Siguiente",
+                        previous: "Anterior"
+                    }
                 }
             });
         });

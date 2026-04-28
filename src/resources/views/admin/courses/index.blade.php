@@ -80,7 +80,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($courses as $course)
+                    @foreach($courses as $course)
                         <tr>
                             <td>
                                 <div class="fw-semibold">{{ $course->name }}</div>
@@ -110,7 +110,7 @@
                                     </a>
 
                                     <form method="POST" action="{{ route('admin.courses.destroy', $course->id) }}"
-                                          onsubmit="return confirm('¿Seguro que deseas eliminar este curso?')">
+                                        onsubmit="return confirm('¿Seguro que deseas eliminar este curso?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-outline-danger rounded-4">
@@ -120,18 +120,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center py-5">
-                                <h5 class="fw-semibold mb-2">
-                                    {{ $search !== '' ? 'No se encontraron resultados' : 'No hay cursos registrados' }}
-                                </h5>
-                                <p class="text-secondary mb-0">
-                                    {{ $search !== '' ? 'Ajusta el término de búsqueda o limpia el filtro.' : 'Crea el primer curso para comenzar.' }}
-                                </p>
-                            </td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
@@ -190,7 +179,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             const table = $('#coursesTable');
 
-            if ($.fn.DataTable.isDataTable(table)) {
+            if ($.fn.DataTable.isDataTable('#coursesTable')) {
                 table.DataTable().destroy();
             }
 
@@ -218,7 +207,21 @@
                     }
                 ],
                 language: {
-                    url: 'https://cdn.datatables.net/plug-ins/2.2.2/i18n/es-ES.json'
+                    emptyTable: "No hay cursos registrados.",
+                    zeroRecords: "No se encontraron resultados",
+                    loadingRecords: "Cargando...",
+                    processing: "Procesando...",
+                    search: "Buscar:",
+                    lengthMenu: "Mostrar _MENU_ registros",
+                    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    infoEmpty: "Mostrando 0 a 0 de 0 registros",
+                    infoFiltered: "(filtrado de _MAX_ registros totales)",
+                    paginate: {
+                        first: "Primero",
+                        last: "Último",
+                        next: "Siguiente",
+                        previous: "Anterior"
+                    }
                 }
             });
         });

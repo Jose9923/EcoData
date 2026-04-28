@@ -42,7 +42,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($guides as $guide)
+                    @foreach($guides as $guide)
                         <tr>
                             <td>
                                 <div class="fw-semibold">{{ $guide->title }}</div>
@@ -69,7 +69,9 @@
                                     <a href="{{ route('admin.laboratory-guides.download', $guide) }}" target="_blank" class="btn btn-outline-secondary rounded-4">
                                         Ver PDF
                                     </a>
-                                    <a href="{{ route('admin.laboratory-guides.edit', $guide) }}" class="btn btn-outline-primary rounded-4">Editar</a>
+                                    <a href="{{ route('admin.laboratory-guides.edit', $guide) }}" class="btn btn-outline-primary rounded-4">
+                                        Editar
+                                    </a>
                                     <form method="POST" action="{{ route('admin.laboratory-guides.destroy', $guide) }}" onsubmit="return confirm('¿Eliminar esta guía?')">
                                         @csrf
                                         @method('DELETE')
@@ -78,11 +80,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="text-center py-5">No hay guías registradas.</td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
@@ -150,7 +148,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             const table = $('#laboratoryGuidesTable');
 
-            if ($.fn.DataTable.isDataTable(table)) {
+            if ($.fn.DataTable.isDataTable('#laboratoryGuidesTable')) {
                 table.DataTable().destroy();
             }
 
@@ -186,7 +184,21 @@
                     }
                 ],
                 language: {
-                    url: 'https://cdn.datatables.net/plug-ins/2.2.2/i18n/es-ES.json'
+                    emptyTable: "No hay guías registradas.",
+                    zeroRecords: "No se encontraron resultados",
+                    loadingRecords: "Cargando...",
+                    processing: "Procesando...",
+                    search: "Buscar:",
+                    lengthMenu: "Mostrar _MENU_ registros",
+                    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    infoEmpty: "Mostrando 0 a 0 de 0 registros",
+                    infoFiltered: "(filtrado de _MAX_ registros totales)",
+                    paginate: {
+                        first: "Primero",
+                        last: "Último",
+                        next: "Siguiente",
+                        previous: "Anterior"
+                    }
                 }
             });
         });

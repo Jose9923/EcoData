@@ -73,7 +73,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                @forelse($users as $user)
+                @foreach($users as $user)
                     @php
                         $roleLabel = $user->roles->first()?->name ?? 'Sin rol';
                         $gradeLabel = $user->grade?->label ?: $user->grade?->name;
@@ -116,7 +116,7 @@
                                     Editar
                                 </a>
                                 <form method="POST" action="{{ route('admin.users.destroy', $user->id) }}"
-                                      onsubmit="return confirm('¿Seguro que deseas eliminar este usuario?')">
+                                    onsubmit="return confirm('¿Seguro que deseas eliminar este usuario?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-outline-danger rounded-4">
@@ -126,18 +126,7 @@
                             </div>
                         </td>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="text-center py-5">
-                            <h5 class="fw-semibold mb-2">
-                                {{ $search !== '' ? 'No se encontraron resultados' : 'No hay usuarios registrados' }}
-                            </h5>
-                            <p class="text-secondary mb-0">
-                                {{ $search !== '' ? 'Ajusta el término de búsqueda o limpia el filtro.' : 'Crea el primer usuario para comenzar.' }}
-                            </p>
-                        </td>
-                    </tr>
-                @endforelse
+                @endforeach
                 </tbody>
             </table>
         </div>
@@ -203,7 +192,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             const table = $('#usersTable');
 
-            if ($.fn.DataTable.isDataTable(table)) {
+            if ($.fn.DataTable.isDataTable('#usersTable')) {
                 table.DataTable().destroy();
             }
 
@@ -247,7 +236,21 @@
                     }
                 ],
                 language: {
-                    url: 'https://cdn.datatables.net/plug-ins/2.2.2/i18n/es-ES.json'
+                    emptyTable: "No hay usuarios registrados.",
+                    zeroRecords: "No se encontraron resultados",
+                    loadingRecords: "Cargando...",
+                    processing: "Procesando...",
+                    search: "Buscar:",
+                    lengthMenu: "Mostrar _MENU_ registros",
+                    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    infoEmpty: "Mostrando 0 a 0 de 0 registros",
+                    infoFiltered: "(filtrado de _MAX_ registros totales)",
+                    paginate: {
+                        first: "Primero",
+                        last: "Último",
+                        next: "Siguiente",
+                        previous: "Anterior"
+                    }
                 }
             });
         });
