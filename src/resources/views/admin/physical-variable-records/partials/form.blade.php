@@ -102,6 +102,41 @@
                 </div>
 
                 <div class="col-12 col-md-6">
+                    <label class="form-label fw-semibold">Estación meteorológica</label>
+                    <select name="weather_station_id"
+                            id="weather_station_id"
+                            class="form-select rounded-4">
+                        <option value="">Sin estación / Registro manual general</option>
+                        @foreach($weatherStations as $station)
+                            <option value="{{ $station->id }}"
+                                @selected((string) old('weather_station_id', $selectedWeatherStationId ?? $record?->weather_station_id ?? '') === (string) $station->id)>
+                                {{ $station->name }} · {{ $station->code }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('weather_station_id')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label class="form-label fw-semibold">Origen del dato</label>
+                    <select name="source_type"
+                            id="source_type"
+                            class="form-select rounded-4">
+                        @foreach($sourceTypes as $value => $label)
+                            <option value="{{ $value }}"
+                                @selected(old('source_type', $selectedSourceType ?? $record?->source_type ?? 'manual') === $value)>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('source_type')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="col-12 col-md-6">
                     <label class="form-label fw-semibold">Fecha y hora</label>
                     <input type="datetime-local"
                            name="recorded_at"

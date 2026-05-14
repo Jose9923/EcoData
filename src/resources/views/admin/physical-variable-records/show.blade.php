@@ -116,6 +116,29 @@
                         @endif
                     </div>
                 </div>
+
+                <div class="col-12 col-md-6">
+                    <div class="border rounded-4 p-3 h-100">
+                        <div class="text-muted small fw-semibold mb-1">Estación meteorológica</div>
+                        <div class="fs-5 fw-semibold">
+                            {{ $record->weatherStation?->name ?? 'Sin estación asociada' }}
+                        </div>
+                        @if($record->weatherStation?->code)
+                            <div class="text-muted small mt-1">
+                                Código: {{ $record->weatherStation->code }}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <div class="border rounded-4 p-3 h-100">
+                        <div class="text-muted small fw-semibold mb-1">Origen del dato</div>
+                        <div class="fs-5 fw-semibold">
+                            {{ $sourceTypes[$record->source_type] ?? 'Manual' }}
+                        </div>
+                    </div>
+                </div>
             @empty
                 <div class="col-12">
                     <div class="text-secondary">Este registro no tiene valores asociados.</div>

@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Models\WeatherStation;
+
 
 class PhysicalVariableRecordController extends Controller
 {
@@ -36,6 +38,7 @@ class PhysicalVariableRecordController extends Controller
                 'school',
                 'grade',
                 'course',
+                'weatherStation',
                 'user',
                 'values.variable.category',
             ])
@@ -51,6 +54,8 @@ class PhysicalVariableRecordController extends Controller
             'courses' => $this->visibleCourses($filters['school_id'], $filters['grade_id']),
             'categories' => $this->visibleCategories(),
             'variables' => $this->visibleVariables($filters['school_id'], $filters['category_id']),
+            'weatherStations' => $this->visibleWeatherStations($authUser, $filters['school_id']),
+            'sourceTypes' => $this->sourceTypes(),
         ]);
     }
 
@@ -74,6 +79,10 @@ class PhysicalVariableRecordController extends Controller
             'selectedCourseId' => $selectedCourseId,
             'selectedCategoryId' => $selectedCategoryId,
             'recordedAt' => now()->format('Y-m-d\TH:i'),
+            'weatherStations' => $this->visibleWeatherStations($authUser, $selectedSchoolId),
+            'sourceTypes' => $this->sourceTypes(),
+            'selectedWeatherStationId' => $request->integer('weather_station_id') ?: null,
+            'selectedSourceType' => $request->input('source_type', 'manual'),
         ]);
     }
 
@@ -123,6 +132,8 @@ class PhysicalVariableRecordController extends Controller
                 'school_id' => $validated['school_id'],
                 'grade_id' => $validated['grade_id'] ?: null,
                 'course_id' => $validated['course_id'] ?: null,
+                'weather_station_id' => $validated['weather_station_id'] ?: null,
+                'source_type' => $validated['source_type'] ?: 'manual',
                 'user_id' => $authUser->id,
                 'recorded_at' => $validated['recorded_at'],
                 'observations' => filled($validated['observations'] ?? null)
@@ -157,12 +168,16 @@ class PhysicalVariableRecordController extends Controller
                 'course',
                 'user',
                 'values.variable.category',
+                'weatherStation',
             ])
             ->findOrFail($physical_variable_record);
 
         $this->authorizeSchoolScope($authUser, $record->school_id);
 
-        return view('admin.physical-variable-records.show', compact('record'));
+        return view('admin.physical-variable-records.show', [
+            'record' => $record,
+            'sourceTypes' => $this->sourceTypes(),
+        ]);
     }
 
     public function edit(Request $request, int $physical_variable_record): View
@@ -209,6 +224,10 @@ class PhysicalVariableRecordController extends Controller
             'selectedCourseId' => $selectedCourseId,
             'selectedCategoryId' => $selectedCategoryId,
             'recordedAt' => optional($record->recorded_at)->format('Y-m-d\TH:i'),
+            'weatherStations' => $this->visibleWeatherStations($authUser, $selectedSchoolId),
+            'sourceTypes' => $this->sourceTypes(),
+            'selectedWeatherStationId' => $request->integer('weather_station_id') ?: null,
+            'selectedSourceType' => $request->input('source_type', 'manual'),
         ]);
     }
 
@@ -264,6 +283,8 @@ class PhysicalVariableRecordController extends Controller
                 'school_id' => $validated['school_id'],
                 'grade_id' => $validated['grade_id'] ?: null,
                 'course_id' => $validated['course_id'] ?: null,
+                'weather_station_id' => $validated['weather_station_id'] ?: null,
+                'source_type' => $validated['source_type'] ?? 'manual',
                 'recorded_at' => $validated['recorded_at'],
                 'observations' => filled($validated['observations'] ?? null)
                     ? trim($validated['observations'])
@@ -381,6 +402,8 @@ class PhysicalVariableRecordController extends Controller
             'per_page' => in_array((int) $request->integer('per_page', 10), [10, 15, 25, 50], true)
                 ? (int) $request->integer('per_page', 10)
                 : 10,
+            'weather_station_id' => $request->integer('weather_station_id') ?: null,
+            'source_type' => $request->input('source_type') ?: null,
         ];
     }
 
@@ -418,6 +441,8 @@ class PhysicalVariableRecordController extends Controller
             ->when($filters['variable_id'], function ($q) use ($filters) {
                 $q->whereHas('values', fn ($sub) => $sub->where('physical_variable_id', $filters['variable_id']));
             })
+            ->when($filters['weather_station_id'], fn ($q) => $q->where('weather_station_id', $filters['weather_station_id']))
+            ->when($filters['source_type'], fn ($q) => $q->where('source_type', $filters['source_type']))
             ->latest('recorded_at');
     }
 
@@ -453,6 +478,15 @@ class PhysicalVariableRecordController extends Controller
                     }
                 }),
             ],
+            'weather_station_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('weather_stations', 'id')->where(function ($query) use ($schoolId) {
+                    $query->where('school_id', $schoolId)
+                        ->where('is_active', true);
+                }),
+            ],
+            'source_type' => ['required', Rule::in(array_keys($this->sourceTypes()))],
             'category_id' => ['nullable', 'integer', Rule::exists('physical_variable_categories', 'id')->where(fn ($query) => $query->where('is_active', true))],
             'recorded_at' => ['required', 'date'],
             'observations' => ['nullable', 'string'],
@@ -465,6 +499,8 @@ class PhysicalVariableRecordController extends Controller
             'category_id' => 'categoría',
             'recorded_at' => 'fecha y hora',
             'observations' => 'observaciones',
+            'weather_station_id' => 'estación meteorológica',
+            'source_type' => 'tipo de fuente',
         ];
 
         foreach ($variables as $variable) {
@@ -491,6 +527,9 @@ class PhysicalVariableRecordController extends Controller
             'category_id.exists' => 'La categoría seleccionada no existe o está inactiva.',
             'recorded_at.required' => 'Debes indicar la fecha y hora del registro.',
             'recorded_at.date' => 'La fecha y hora del registro no es válida.',
+            'weather_station_id.exists' => 'La estación meteorológica seleccionada no existe o está inactiva.',
+            'source_type.in' => 'El tipo de fuente seleccionado no es válido.',
+            'source_type.required' => 'Debes seleccionar el origen del dato.',
         ];
 
         $validator = Validator::make($request->all(), $rules, $messages);
@@ -695,5 +734,24 @@ class PhysicalVariableRecordController extends Controller
             403,
             'No tienes autorización para gestionar registros físicos de otro colegio.'
         );
+    }
+
+    private function visibleWeatherStations(User $authUser, ?int $schoolId = null)
+    {
+        return WeatherStation::query()
+            ->when(! $authUser->hasRole('super_admin'), fn ($query) => $query->where('school_id', $authUser->school_id))
+            ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'school_id', 'name', 'code']);
+    }
+
+    private function sourceTypes(): array
+    {
+        return [
+            'manual' => 'Manual',
+            'station' => 'Estación meteorológica',
+            'csv' => 'Cargue CSV',
+        ];
     }
 }

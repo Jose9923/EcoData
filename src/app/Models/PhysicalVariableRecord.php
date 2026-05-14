@@ -10,6 +10,8 @@ class PhysicalVariableRecord extends Model
         'school_id',
         'grade_id',
         'course_id',
+        'weather_station_id',
+        'source_type',
         'user_id',
         'recorded_at',
         'observations',
@@ -45,5 +47,10 @@ class PhysicalVariableRecord extends Model
     public function values()
     {
         return $this->hasMany(PhysicalVariableRecordValue::class, 'physical_variable_record_id');
+    }
+
+    public function weatherStation()
+    {
+        return $this->belongsTo(WeatherStation::class);
     }
 }

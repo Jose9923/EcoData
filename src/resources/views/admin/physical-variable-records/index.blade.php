@@ -105,6 +105,30 @@
                 </div>
 
                 <div class="col-12 col-md-4">
+                    <label class="form-label fw-semibold">Estación meteorológica</label>
+                    <select name="weather_station_id" class="form-select rounded-4">
+                        <option value="">Todas</option>
+                        @foreach($weatherStations as $station)
+                            <option value="{{ $station->id }}" @selected((string) $filters['weather_station_id'] === (string) $station->id)>
+                                {{ $station->name }} · {{ $station->code }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label class="form-label fw-semibold">Origen del dato</label>
+                    <select name="source_type" class="form-select rounded-4">
+                        <option value="">Todos</option>
+                        @foreach($sourceTypes as $value => $label)
+                            <option value="{{ $value }}" @selected((string) $filters['source_type'] === (string) $value)>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-4">
                     <label class="form-label fw-semibold">Variable</label>
                     <select name="variable_id" class="form-select rounded-4">
                         <option value="">Todas</option>
@@ -139,6 +163,8 @@
                         <th>Contexto</th>
                         <th>Registrado por</th>
                         <th>Variables capturadas</th>
+                        <th>Estación</th>
+                        <th>Origen</th>
                         <th>Observaciones</th>
                         <th class="text-end">Acciones</th>
                     </tr>
@@ -157,9 +183,12 @@
                                 <small class="text-secondary">{{ optional($record->recorded_at)->format('H:i') }}</small>
                             </td>
                             <td class="small">
+                                <div><strong>Fecha:</strong> {{ $record->recorded_at?->format('d/m/Y H:i') }}</div>
                                 <div><strong>Colegio:</strong> {{ $record->school?->name ?? '—' }}</div>
                                 <div><strong>Grado:</strong> {{ $gradeLabel ?: '—' }}</div>
                                 <div><strong>Curso:</strong> {{ $courseLabel ?: '—' }}</div>
+                                <div><strong>Estación:</strong> {{ $record->weatherStation?->name ?? '—' }}</div>
+                                <div><strong>Origen:</strong> {{ $sourceTypes[$record->source_type] ?? 'Manual' }}</div>
                             </td>
                             <td>
                                 <div class="fw-semibold">{{ $record->user?->name ?? '—' }}</div>
@@ -196,6 +225,8 @@
                                     <div class="mt-1 text-muted">+ {{ $remainingValues }} más</div>
                                 @endif
                             </td>
+                            <td>{{ $record->weatherStation?->name ?? '—' }}</td>
+                            <td>{{ $sourceTypes[$record->source_type] ?? 'Manual' }}</td>
                             <td>
                                 <small class="text-secondary">
                                     {{ $record->observations ?: 'Sin observaciones' }}
