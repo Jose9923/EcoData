@@ -65,4 +65,19 @@ class User extends Authenticatable
     {
         return $this->hasMany(EnvironmentalEventAcknowledgement::class);
     }
+
+    public function createdFieldDiaryActivities()
+    {
+        return $this->hasMany(FieldDiaryActivity::class, 'created_by');
+    }
+
+    public function fieldDiarySubmissions()
+    {
+        return $this->hasMany(FieldDiarySubmission::class);
+    }
+
+    public function reviewedFieldDiarySubmissions()
+    {
+        return $this->hasMany(FieldDiarySubmission::class, 'reviewed_by');
+    }
 }

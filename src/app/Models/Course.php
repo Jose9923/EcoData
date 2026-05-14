@@ -30,4 +30,14 @@ class Course extends Model
     {
         return $this->belongsTo(Grade::class);
     }
+
+    public function fieldDiaryActivities()
+    {
+        return $this->hasMany(FieldDiaryActivity::class);
+    }
+
+    public function fieldDiarySubmissions()
+    {
+        return $this->hasMany(FieldDiarySubmission::class);
+    }
 }

@@ -47,4 +47,14 @@ class School extends Model
     {
         return $this->hasMany(EnvironmentalEvent::class);
     }
+
+    public function fieldDiaryActivities()
+    {
+        return $this->hasMany(FieldDiaryActivity::class);
+    }
+
+    public function fieldDiarySubmissions()
+    {
+        return $this->hasMany(FieldDiarySubmission::class);
+    }
 }

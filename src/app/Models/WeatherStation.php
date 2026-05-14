@@ -45,4 +45,9 @@ class WeatherStation extends Model
     {
         return $this->hasMany(Sensor::class);
     }
+
+    public function fieldDiaryActivities()
+    {
+        return $this->hasMany(FieldDiaryActivity::class);
+    }
 }

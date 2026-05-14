@@ -21,6 +21,8 @@ use App\Http\Controllers\Admin\PhysicalVariableRecordImportController;
 use App\Http\Controllers\Admin\EnvironmentalEventController;
 use App\Http\Controllers\EnvironmentalEventPublicController;
 use App\Http\Controllers\EnvironmentalEventAcknowledgementController;
+use App\Http\Controllers\Admin\FieldDiaryActivityController;
+use App\Http\Controllers\FieldDiarySubmissionController;
 
 Route::view('/', 'welcome');
 
@@ -124,6 +126,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->name('laboratory-guides.download');
 
             Route::resource('laboratory-guides', LaboratoryGuideController::class)->except(['show']);
+            Route::resource('field-diary-activities', FieldDiaryActivityController::class);
         });
 
     /*
@@ -132,25 +135,38 @@ Route::middleware(['auth', 'verified'])->group(function () {
     | estudiante
     |--------------------------------------------------------------------------
     */
-    Route::middleware('role:estudiante')->group(function () {
-        Route::get('/estudiante/laboratory-guides', [LaboratoryGuideStudentController::class, 'index'])
-            ->name('estudiante.laboratory-guides.index');
+Route::middleware('role:estudiante')->group(function () {
+    Route::get('/estudiante/laboratory-guides', [LaboratoryGuideStudentController::class, 'index'])
+        ->name('estudiante.laboratory-guides.index');
 
-        Route::get('/estudiante/laboratory-guides/{laboratory_guide}/view', [LaboratoryGuideStudentController::class, 'view'])
-            ->name('estudiante.laboratory-guides.view');
+    Route::get('/estudiante/laboratory-guides/{laboratory_guide}/view', [LaboratoryGuideStudentController::class, 'view'])
+        ->name('estudiante.laboratory-guides.view');
 
-        Route::get('/estudiante/laboratory-guides/{laboratory_guide}/download', [LaboratoryGuideStudentController::class, 'download'])
-            ->name('estudiante.laboratory-guides.download');
-            });
+    Route::get('/estudiante/laboratory-guides/{laboratory_guide}/download', [LaboratoryGuideStudentController::class, 'download'])
+        ->name('estudiante.laboratory-guides.download');
 
-    Route::get('calendario-ambiental', [EnvironmentalEventPublicController::class, 'index'])
-        ->name('environmental-events.index');
+    Route::get('/estudiante/field-diaries', [FieldDiarySubmissionController::class, 'index'])
+        ->name('estudiante.field-diaries.index');
 
-    Route::get('calendario-ambiental/{environmental_event}', [EnvironmentalEventPublicController::class, 'show'])
-        ->name('environmental-events.show');
-    
-    Route::post('calendario-ambiental/{environmental_event}/aceptar', [EnvironmentalEventAcknowledgementController::class, 'store'])
-    ->name('environmental-events.acknowledge');
+    Route::get('/estudiante/field-diaries/{field_diary_activity}', [FieldDiarySubmissionController::class, 'show'])
+        ->name('estudiante.field-diaries.show');
+
+    Route::post('/estudiante/field-diaries/{field_diary_activity}/save', [FieldDiarySubmissionController::class, 'save'])
+        ->name('estudiante.field-diaries.save');
+
+    Route::post('/estudiante/field-diaries/{field_diary_activity}/submit', [FieldDiarySubmissionController::class, 'submit'])
+        ->name('estudiante.field-diaries.submit');
+});
+
+        Route::get('calendario-ambiental', [EnvironmentalEventPublicController::class, 'index'])
+            ->name('environmental-events.index');
+
+        Route::get('calendario-ambiental/{environmental_event}', [EnvironmentalEventPublicController::class, 'show'])
+            ->name('environmental-events.show');
+        
+        Route::post('calendario-ambiental/{environmental_event}/aceptar', [EnvironmentalEventAcknowledgementController::class, 'store'])
+        ->name('environmental-events.acknowledge');
+
 });
 
 Route::post('/logout', function (Request $request) {

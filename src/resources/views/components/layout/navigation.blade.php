@@ -176,6 +176,13 @@
                     Mis guías de laboratorio
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a href="{{ route('estudiante.field-diaries.index') }}"
+                class="nav-link {{ request()->routeIs('estudiante.field-diaries.*') ? 'active' : '' }}">
+                    Mi Diario de Campo
+                </a>
+            </li>
         @endif
 
         @if($isSuperAdmin || $isSchoolAdmin || $isdocente)
@@ -208,6 +215,14 @@
                     Calendario ambiental
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a href="{{ route('admin.field-diary-activities.index') }}"
+                class="nav-link {{ request()->routeIs('admin.field-diary-activities.*') ? 'active' : '' }}">
+                    Diario de Campo
+                </a>
+            </li>
+
         @endif
     </ul>
 

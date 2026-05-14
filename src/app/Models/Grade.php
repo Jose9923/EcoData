@@ -29,4 +29,14 @@ class Grade extends Model
     {
         return $this->hasMany(Course::class);
     }
+
+    public function fieldDiaryActivities()
+    {
+        return $this->hasMany(FieldDiaryActivity::class);
+    }
+
+    public function fieldDiarySubmissions()
+    {
+        return $this->hasMany(FieldDiarySubmission::class);
+    }
 }
