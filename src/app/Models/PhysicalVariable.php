@@ -52,4 +52,9 @@ class PhysicalVariable extends Model
     {
         return $this->hasMany(PhysicalVariableRecordValue::class);
     }
+
+    public function sensors()
+    {
+        return $this->hasMany(Sensor::class);
+    }
 }

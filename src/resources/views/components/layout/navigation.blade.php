@@ -187,6 +187,13 @@
                     Estaciones meteorológicas
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a href="{{ route('admin.sensors.index') }}"
+                class="nav-link {{ request()->routeIs('admin.sensors.*') ? 'active' : '' }}">
+                    Sensores
+                </a>
+            </li>
         @endif
     </ul>
 

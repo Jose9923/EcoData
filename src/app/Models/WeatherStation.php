@@ -40,4 +40,9 @@ class WeatherStation extends Model
     {
         return $this->belongsTo(User::class, 'responsible_user_id');
     }
+
+    public function sensors()
+    {
+        return $this->hasMany(Sensor::class);
+    }
 }
