@@ -23,6 +23,7 @@ use App\Http\Controllers\EnvironmentalEventPublicController;
 use App\Http\Controllers\EnvironmentalEventAcknowledgementController;
 use App\Http\Controllers\Admin\FieldDiaryActivityController;
 use App\Http\Controllers\FieldDiarySubmissionController;
+use App\Http\Controllers\Admin\FieldDiarySubmissionController as AdminFieldDiarySubmissionController;
 
 Route::view('/', 'welcome');
 
@@ -126,8 +127,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->name('laboratory-guides.download');
 
             Route::resource('laboratory-guides', LaboratoryGuideController::class)->except(['show']);
+
             Route::resource('field-diary-activities', FieldDiaryActivityController::class);
-        });
+
+            Route::get('field-diary-submissions', [AdminFieldDiarySubmissionController::class, 'index'])
+                ->name('field-diary-submissions.index');
+
+            Route::get('field-diary-submissions-export', [AdminFieldDiarySubmissionController::class, 'export'])
+                ->name('field-diary-submissions.export');
+
+            Route::get('field-diary-submissions/{field_diary_submission}', [AdminFieldDiarySubmissionController::class, 'show'])
+                ->name('field-diary-submissions.show');
+
+            Route::post('field-diary-submissions/{field_diary_submission}/review', [AdminFieldDiarySubmissionController::class, 'review'])
+                ->name('field-diary-submissions.review');
+    });
 
     /*
     |--------------------------------------------------------------------------
@@ -135,28 +149,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
     | estudiante
     |--------------------------------------------------------------------------
     */
-Route::middleware('role:estudiante')->group(function () {
-    Route::get('/estudiante/laboratory-guides', [LaboratoryGuideStudentController::class, 'index'])
-        ->name('estudiante.laboratory-guides.index');
+    Route::middleware('role:estudiante')->group(function () {
+        Route::get('/estudiante/laboratory-guides', [LaboratoryGuideStudentController::class, 'index'])
+            ->name('estudiante.laboratory-guides.index');
 
-    Route::get('/estudiante/laboratory-guides/{laboratory_guide}/view', [LaboratoryGuideStudentController::class, 'view'])
-        ->name('estudiante.laboratory-guides.view');
+        Route::get('/estudiante/laboratory-guides/{laboratory_guide}/view', [LaboratoryGuideStudentController::class, 'view'])
+            ->name('estudiante.laboratory-guides.view');
 
-    Route::get('/estudiante/laboratory-guides/{laboratory_guide}/download', [LaboratoryGuideStudentController::class, 'download'])
-        ->name('estudiante.laboratory-guides.download');
+        Route::get('/estudiante/laboratory-guides/{laboratory_guide}/download', [LaboratoryGuideStudentController::class, 'download'])
+            ->name('estudiante.laboratory-guides.download');
 
-    Route::get('/estudiante/field-diaries', [FieldDiarySubmissionController::class, 'index'])
-        ->name('estudiante.field-diaries.index');
+        Route::get('/estudiante/field-diaries', [FieldDiarySubmissionController::class, 'index'])
+            ->name('estudiante.field-diaries.index');
 
-    Route::get('/estudiante/field-diaries/{field_diary_activity}', [FieldDiarySubmissionController::class, 'show'])
-        ->name('estudiante.field-diaries.show');
+        Route::get('/estudiante/field-diaries/{field_diary_activity}', [FieldDiarySubmissionController::class, 'show'])
+            ->name('estudiante.field-diaries.show');
 
-    Route::post('/estudiante/field-diaries/{field_diary_activity}/save', [FieldDiarySubmissionController::class, 'save'])
-        ->name('estudiante.field-diaries.save');
+        Route::post('/estudiante/field-diaries/{field_diary_activity}/save', [FieldDiarySubmissionController::class, 'save'])
+            ->name('estudiante.field-diaries.save');
 
-    Route::post('/estudiante/field-diaries/{field_diary_activity}/submit', [FieldDiarySubmissionController::class, 'submit'])
-        ->name('estudiante.field-diaries.submit');
-});
+        Route::post('/estudiante/field-diaries/{field_diary_activity}/submit', [FieldDiarySubmissionController::class, 'submit'])
+            ->name('estudiante.field-diaries.submit');
+    });
 
         Route::get('calendario-ambiental', [EnvironmentalEventPublicController::class, 'index'])
             ->name('environmental-events.index');
