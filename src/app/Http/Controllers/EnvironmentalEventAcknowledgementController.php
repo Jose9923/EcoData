@@ -29,6 +29,10 @@ class EnvironmentalEventAcknowledgementController extends Controller
             ]
         );
 
+        if ($request->input('redirect_to') === 'show') {
+            return redirect()->route('environmental-events.show', $environmental_event);
+        }
+
         return back();
     }
 }

@@ -225,10 +225,17 @@
                                 @endif
 
                                 <div class="d-flex flex-column flex-md-row gap-2 justify-content-end">
-                                    <a href="{{ route('environmental-events.show', $todayEnvironmentalEvent) }}"
-                                    class="btn btn-outline-dark rounded-4 px-4 py-2">
-                                        Ver detalles
-                                    </a>
+                                    <form method="POST"
+                                        action="{{ route('environmental-events.acknowledge', $todayEnvironmentalEvent) }}">
+                                        @csrf
+
+                                        <input type="hidden" name="redirect_to" value="show">
+
+                                        <button type="submit"
+                                                class="btn btn-outline-dark rounded-4 px-4 py-2">
+                                            Ver detalles
+                                        </button>
+                                    </form>
 
                                     <form method="POST"
                                         action="{{ route('environmental-events.acknowledge', $todayEnvironmentalEvent) }}">
