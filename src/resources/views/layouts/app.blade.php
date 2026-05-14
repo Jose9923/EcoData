@@ -176,9 +176,7 @@
             id="environmentalEventModal"
             tabindex="-1"
             aria-labelledby="environmentalEventModalLabel"
-            aria-hidden="true"
-            data-event-id="{{ $todayEnvironmentalEvent->id }}"
-            data-event-date="{{ now()->format('Y-m-d') }}">
+            aria-hidden="true">
             <div class="modal-dialog modal-xl modal-dialog-centered">
                 <div class="modal-content rounded-4 border-0 overflow-hidden">
                     <div class="row g-0">
@@ -232,13 +230,16 @@
                                         Ver detalles
                                     </a>
 
-                                    <button type="button"
-                                            id="acceptEnvironmentalEventModal"
-                                            class="btn text-white rounded-4 px-4 py-2 fw-semibold"
-                                            style="background-color: var(--school-primary);"
-                                            data-bs-dismiss="modal">
-                                        Aceptar
-                                    </button>
+                                    <form method="POST"
+                                        action="{{ route('environmental-events.acknowledge', $todayEnvironmentalEvent) }}">
+                                        @csrf
+
+                                        <button type="submit"
+                                                class="btn text-white rounded-4 px-4 py-2 fw-semibold"
+                                                style="background-color: var(--school-primary);">
+                                            Aceptar
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -256,24 +257,12 @@
                         return;
                     }
 
-                    const eventId = modalElement.dataset.eventId;
-                    const eventDate = modalElement.dataset.eventDate;
-                    const storageKey = `environmental_event_seen_${eventId}_${eventDate}`;
+                    const modal = new bootstrap.Modal(modalElement, {
+                        backdrop: 'static',
+                        keyboard: false
+                    });
 
-                    if (localStorage.getItem(storageKey) === '1') {
-                        return;
-                    }
-
-                    const modal = new bootstrap.Modal(modalElement);
                     modal.show();
-
-                    const acceptButton = document.getElementById('acceptEnvironmentalEventModal');
-
-                    if (acceptButton) {
-                        acceptButton.addEventListener('click', function () {
-                            localStorage.setItem(storageKey, '1');
-                        });
-                    }
                 });
             </script>
         @endpush

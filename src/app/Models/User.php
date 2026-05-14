@@ -60,4 +60,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(EnvironmentalEvent::class, 'created_by');
     }
+
+    public function environmentalEventAcknowledgements()
+    {
+        return $this->hasMany(EnvironmentalEventAcknowledgement::class);
+    }
 }

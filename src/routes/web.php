@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\SensorController;
 use App\Http\Controllers\Admin\PhysicalVariableRecordImportController;
 use App\Http\Controllers\Admin\EnvironmentalEventController;
 use App\Http\Controllers\EnvironmentalEventPublicController;
+use App\Http\Controllers\EnvironmentalEventAcknowledgementController;
 
 Route::view('/', 'welcome');
 
@@ -147,6 +148,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('calendario-ambiental/{environmental_event}', [EnvironmentalEventPublicController::class, 'show'])
         ->name('environmental-events.show');
+    
+    Route::post('calendario-ambiental/{environmental_event}/aceptar', [EnvironmentalEventAcknowledgementController::class, 'store'])
+    ->name('environmental-events.acknowledge');
 });
 
 Route::post('/logout', function (Request $request) {

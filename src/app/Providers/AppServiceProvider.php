@@ -35,6 +35,9 @@ class AppServiceProvider extends ServiceProvider
                     ->when(! $user->hasRole('super_admin'), function ($query) use ($user) {
                         $query->where('school_id', $user->school_id);
                     })
+                    ->whereDoesntHave('acknowledgements', function ($query) use ($user) {
+                        $query->where('user_id', $user->id);
+                    })
                     ->with('school')
                     ->orderBy('starts_at')
                     ->first();
