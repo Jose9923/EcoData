@@ -137,7 +137,7 @@
                 </li>
 
                 <div id="adminGroup" class="collapse {{ $adminOpen ? 'show' : '' }}">
-                    <ul class="nav nav-pills flex-column gap-2 ms-3 ps-2 <ul class="nav nav-pills flex-column gap-2 ms-3 ps-2 border-start border-secondary-subtle">
+                    <ul class="nav nav-pills flex-column gap-2 ms-3 ps-2">
                         @if ($isSuperAdmin && Route::has('admin.schools.index'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.schools.index') }}"
@@ -204,7 +204,7 @@
                 </li>
 
                 <div id="ecodataGroup" class="collapse {{ $ecodataOpen ? 'show' : '' }}">
-                    <ul class="nav nav-pills flex-column gap-2 ms-3 ps-2 <ul class="nav nav-pills flex-column gap-2 ms-3 ps-2 border-start border-secondary-subtle">
+                    <ul class="nav nav-pills flex-column gap-2 ms-3 ps-2">
                         @if ($isSuperAdmin && Route::has('admin.physical-variable-categories.index'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.physical-variable-categories.index') }}"
@@ -280,7 +280,7 @@
                 </li>
 
                 <div id="pedagogyGroup" class="collapse {{ $pedagogyOpen ? 'show' : '' }}">
-                    <ul class="nav nav-pills flex-column gap-2 ms-3 ps-2 <ul class="nav nav-pills flex-column gap-2 ms-3 ps-2 border-start border-secondary-subtle">
+                    <ul class="nav nav-pills flex-column gap-2 ms-3 ps-2">
                         @if ($canManageLaboratoryGuides && Route::has('admin.laboratory-guides.index'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.laboratory-guides.index') }}"
@@ -338,7 +338,7 @@
                 </li>
 
                 <div id="studentGroup" class="collapse {{ $studentOpen ? 'show' : '' }}">
-                    <ul class="nav nav-pills flex-column gap-2 ms-3 ps-2 <ul class="nav nav-pills flex-column gap-2 ms-3 ps-2 border-start border-secondary-subtle">
+                    <ul class="nav nav-pills flex-column gap-2 ms-3 ps-2">
                         @if (Route::has('estudiante.laboratory-guides.index'))
                             <li class="nav-item">
                                 <a href="{{ route('estudiante.laboratory-guides.index') }}"
