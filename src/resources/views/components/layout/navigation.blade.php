@@ -177,6 +177,17 @@
                 </a>
             </li>
         @endif
+
+        @if($isSuperAdmin || $isSchoolAdmin || $isdocente)
+            <li class="nav-item">
+                <a
+                    href="{{ route('admin.weather-stations.index') }}"
+                    class="nav-link {{ request()->routeIs('admin.weather-stations.*') ? 'active' : '' }}"
+                >
+                    Estaciones meteorológicas
+                </a>
+            </li>
+        @endif
     </ul>
 
     <div class="mt-auto pt-4">

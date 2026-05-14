@@ -15,6 +15,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\WeatherStationController;
 
 Route::view('/', 'welcome');
 
@@ -35,6 +36,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:super_admin')
         ->group(function () {
             Route::resource('schools', SchoolController::class)->except(['show']);
+            Route::resource('weather-stations', WeatherStationController::class)->except(['show']);
         });
 
     /*
@@ -86,6 +88,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::get('physical-variable-records/ajax/variables', [PhysicalVariableRecordController::class, 'getVariables'])
                 ->name('physical-variable-records.ajax.variables');
+
+            Route::resource('weather-stations', WeatherStationController::class);
         });
 
     /*

@@ -50,4 +50,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Course::class);
     }
+
+    public function responsibleWeatherStations()
+    {
+        return $this->hasMany(WeatherStation::class, 'responsible_user_id');
+    }
 }

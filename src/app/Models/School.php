@@ -37,4 +37,9 @@ class School extends Model
     {
         return $this->hasMany(Course::class);
     }
+
+    public function weatherStations()
+    {
+        return $this->hasMany(WeatherStation::class);
+    }
 }
