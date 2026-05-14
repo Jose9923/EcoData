@@ -76,6 +76,7 @@ class PhysicalVariableRecordsExport implements
                 'school',
                 'grade',
                 'course',
+                'weatherStation',
                 'user',
                 'values.variable.category',
             ])
@@ -114,6 +115,9 @@ class PhysicalVariableRecordsExport implements
                     'Colegio' => $record->school?->name,
                     'Grado' => $grade,
                     'Curso' => $course,
+                    'Estación meteorológica' => $record->weatherStation?->name ?: 'Sin estación asociada',
+                    'Código estación' => $record->weatherStation?->code ?: '—',
+                    'Origen del dato' => $this->sourceTypes()[$record->source_type] ?? 'Manual',
                     'Registrado por' => $record->user?->name,
                     'Tipo identificación usuario' => $record->user?->document_type,
                     'Número identificación usuario' => $record->user?->document_number,
@@ -131,6 +135,9 @@ class PhysicalVariableRecordsExport implements
             'Colegio',
             'Grado',
             'Curso',
+            'Estación meteorológica',
+            'Código estación',
+            'Origen del dato',
             'Registrado por',
             'Tipo identificación usuario',
             'Número identificación usuario',
@@ -151,8 +158,8 @@ class PhysicalVariableRecordsExport implements
             $this->filtersText
         );
 
-        $this->applyTableHeaderStyle($sheet, 'B8:K8', $this->school);
-        $this->applyBodyStyle($sheet, 'B9:K5000', $this->school);
+        $this->applyTableHeaderStyle($sheet, 'B8:N8', $this->school);
+        $this->applyBodyStyle($sheet, 'B9:N5000', $this->school);
 
         return [];
     }
@@ -164,24 +171,35 @@ class PhysicalVariableRecordsExport implements
                 $sheet = $event->sheet->getDelegate();
 
                 $sheet->freezePane('B9');
-                $sheet->setAutoFilter('B8:K8');
+                $sheet->setAutoFilter('B8:N8');
 
-                foreach (range('B', 'K') as $col) {
+                foreach (range('B', 'N') as $col) {
                     $sheet->getColumnDimension($col)->setAutoSize(true);
                 }
 
-                $sheet->getColumnDimension('I')->setWidth(35);
-                $sheet->getColumnDimension('J')->setWidth(55);
-                $sheet->getColumnDimension('K')->setWidth(70);
+                $sheet->getColumnDimension('F')->setWidth(35);
+                $sheet->getColumnDimension('H')->setWidth(28);
+                $sheet->getColumnDimension('L')->setWidth(30);
+                $sheet->getColumnDimension('M')->setWidth(45);
+                $sheet->getColumnDimension('N')->setWidth(75);
 
                 $sheet->getRowDimension(8)->setRowHeight(28);
 
                 $sheet->setCellValue('I4', 'Modo de lectura');
-                $sheet->setCellValue('J4', 'Cada fila corresponde a un registro físico capturado. La columna "Variables capturadas" resume las variables asociadas al registro.');
+                $sheet->setCellValue('J4', 'Cada fila corresponde a un registro físico capturado. Las columnas "Estación meteorológica" y "Origen del dato" indican si el dato fue manual, tomado desde estación o cargado por CSV.');
 
                 $this->applyInfoPanelStyle($sheet, 'I2:J4', $this->school);
-                $this->applyZebraRows($sheet, 9, 500, 2, 12);
+                $this->applyZebraRows($sheet, 9, 500, 2, 14);
             },
+        ];
+    }
+
+    private function sourceTypes(): array
+    {
+        return [
+            'manual' => 'Manual',
+            'station' => 'Estación meteorológica',
+            'csv' => 'Cargue CSV',
         ];
     }
 }

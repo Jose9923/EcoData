@@ -329,7 +329,7 @@ class PhysicalVariableRecordController extends Controller
                 $query,
                 $school,
                 $user->name,
-                $filtersText ?? null
+                null
             ),
             'registros_variables_fisicas.xlsx'
         );
