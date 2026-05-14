@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\WeatherStationController;
 use App\Http\Controllers\Admin\SensorController;
 use App\Http\Controllers\Admin\PhysicalVariableRecordImportController;
+use App\Http\Controllers\Admin\EnvironmentalEventController;
+use App\Http\Controllers\EnvironmentalEventPublicController;
 
 Route::view('/', 'welcome');
 
@@ -94,9 +96,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('weather-stations', WeatherStationController::class);
 
             Route::resource('sensors', SensorController::class);
-            
+
             Route::get('physical-variable-record-imports/create', [PhysicalVariableRecordImportController::class, 'create'])
                 ->name('physical-variable-record-imports.create');
+            
+            Route::resource('environmental-events', EnvironmentalEventController::class);
         });
 
     /*
@@ -137,6 +141,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/estudiante/laboratory-guides/{laboratory_guide}/download', [LaboratoryGuideStudentController::class, 'download'])
             ->name('estudiante.laboratory-guides.download');
             });
+
+    Route::get('calendario-ambiental', [EnvironmentalEventPublicController::class, 'index'])
+        ->name('environmental-events.index');
+
+    Route::get('calendario-ambiental/{environmental_event}', [EnvironmentalEventPublicController::class, 'show'])
+        ->name('environmental-events.show');
 });
 
 Route::post('/logout', function (Request $request) {

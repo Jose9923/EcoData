@@ -55,4 +55,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(WeatherStation::class, 'responsible_user_id');
     }
+
+    public function createdEnvironmentalEvents()
+    {
+        return $this->hasMany(EnvironmentalEvent::class, 'created_by');
+    }
 }

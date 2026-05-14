@@ -42,4 +42,9 @@ class School extends Model
     {
         return $this->hasMany(WeatherStation::class);
     }
+
+    public function environmentalEvents()
+    {
+        return $this->hasMany(EnvironmentalEvent::class);
+    }
 }

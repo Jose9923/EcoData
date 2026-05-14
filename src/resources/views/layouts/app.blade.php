@@ -171,7 +171,115 @@
             </div>
         </div>
     </div>
+    @if(isset($todayEnvironmentalEvent) && $todayEnvironmentalEvent)
+        <div class="modal fade"
+            id="environmentalEventModal"
+            tabindex="-1"
+            aria-labelledby="environmentalEventModalLabel"
+            aria-hidden="true"
+            data-event-id="{{ $todayEnvironmentalEvent->id }}"
+            data-event-date="{{ now()->format('Y-m-d') }}">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content rounded-4 border-0 overflow-hidden">
+                    <div class="row g-0">
+                        <div class="col-12 col-lg-5">
+                            @if($todayEnvironmentalEvent->image_path)
+                                <img src="{{ asset('storage/' . $todayEnvironmentalEvent->image_path) }}"
+                                    alt="{{ $todayEnvironmentalEvent->title }}"
+                                    class="w-100 h-100"
+                                    style="object-fit: cover; min-height: 360px;">
+                            @else
+                                <div class="bg-light h-100 d-flex align-items-center justify-content-center"
+                                    style="min-height: 360px;">
+                                    <div class="text-center p-4">
+                                        <div class="display-3 mb-3">🌎</div>
+                                        <div class="fw-bold text-muted">Calendario ambiental</div>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
 
+                        <div class="col-12 col-lg-7">
+                            <div class="modal-body p-4 p-md-5">
+                                <div class="text-uppercase small fw-semibold text-muted mb-2">
+                                    Calendario ambiental
+                                </div>
+
+                                <h2 class="fw-bold mb-3" id="environmentalEventModalLabel">
+                                    {{ $todayEnvironmentalEvent->title }}
+                                </h2>
+
+                                <div class="text-muted fw-semibold mb-3">
+                                    {{ $todayEnvironmentalEvent->starts_at?->format('d/m/Y') }}
+                                    @if($todayEnvironmentalEvent->ends_at && !$todayEnvironmentalEvent->starts_at->isSameDay($todayEnvironmentalEvent->ends_at))
+                                        - {{ $todayEnvironmentalEvent->ends_at->format('d/m/Y') }}
+                                    @endif
+                                </div>
+
+                                @if($todayEnvironmentalEvent->description)
+                                    <p class="text-muted mb-4" style="font-size: 1.05rem;">
+                                        {{ $todayEnvironmentalEvent->description }}
+                                    </p>
+                                @else
+                                    <p class="text-muted mb-4">
+                                        Hoy hay un evento ambiental programado por tu institución.
+                                    </p>
+                                @endif
+
+                                <div class="d-flex flex-column flex-md-row gap-2 justify-content-end">
+                                    <a href="{{ route('environmental-events.show', $todayEnvironmentalEvent) }}"
+                                    class="btn btn-outline-dark rounded-4 px-4 py-2">
+                                        Ver detalles
+                                    </a>
+
+                                    <button type="button"
+                                            id="acceptEnvironmentalEventModal"
+                                            class="btn text-white rounded-4 px-4 py-2 fw-semibold"
+                                            style="background-color: var(--school-primary);"
+                                            data-bs-dismiss="modal">
+                                        Aceptar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const modalElement = document.getElementById('environmentalEventModal');
+
+                    if (!modalElement) {
+                        return;
+                    }
+
+                    const eventId = modalElement.dataset.eventId;
+                    const eventDate = modalElement.dataset.eventDate;
+                    const storageKey = `environmental_event_seen_${eventId}_${eventDate}`;
+
+                    if (localStorage.getItem(storageKey) === '1') {
+                        return;
+                    }
+
+                    const modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+
+                    const acceptButton = document.getElementById('acceptEnvironmentalEventModal');
+
+                    if (acceptButton) {
+                        acceptButton.addEventListener('click', function () {
+                            localStorage.setItem(storageKey, '1');
+                        });
+                    }
+                });
+            </script>
+        @endpush
+    @endif
+</body>
+</html>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 @if (session('success'))
@@ -233,5 +341,3 @@ document.addEventListener('DOMContentLoaded', function () {
     recalculateResponsiveTables();
 });
 </script>
-</body>
-</html>

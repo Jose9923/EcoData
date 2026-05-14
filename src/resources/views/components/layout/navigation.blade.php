@@ -201,6 +201,13 @@
                     Cargue CSV
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a href="{{ route('admin.environmental-events.index') }}"
+                class="nav-link {{ request()->routeIs('admin.environmental-events.*') ? 'active' : '' }}">
+                    Calendario ambiental
+                </a>
+            </li>
         @endif
     </ul>
 
