@@ -194,6 +194,13 @@
                     Sensores
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a href="{{ route('admin.physical-variable-record-imports.create') }}"
+                class="nav-link {{ request()->routeIs('admin.physical-variable-record-imports.*') ? 'active' : '' }}">
+                    Cargue CSV
+                </a>
+            </li>
         @endif
     </ul>
 

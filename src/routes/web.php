@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\WeatherStationController;
 use App\Http\Controllers\Admin\SensorController;
+use App\Http\Controllers\Admin\PhysicalVariableRecordImportController;
 
 Route::view('/', 'welcome');
 
@@ -91,7 +92,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->name('physical-variable-records.ajax.variables');
 
             Route::resource('weather-stations', WeatherStationController::class);
+
             Route::resource('sensors', SensorController::class);
+            
+            Route::get('physical-variable-record-imports/create', [PhysicalVariableRecordImportController::class, 'create'])
+                ->name('physical-variable-record-imports.create');
         });
 
     /*
