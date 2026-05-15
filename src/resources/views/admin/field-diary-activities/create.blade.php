@@ -15,12 +15,12 @@
                 </p>
             </div>
 
-            <div class="col-12 col-lg-4 text-lg-end">
+            <!-- <div class="col-12 col-lg-4 text-lg-end">
                 <a href="{{ route('admin.field-diary-activities.index') }}"
                    class="btn btn-light rounded-4 px-4 py-3 fw-semibold">
                     Volver al listado
                 </a>
-            </div>
+            </div> -->
         </div>
     </section>
 
