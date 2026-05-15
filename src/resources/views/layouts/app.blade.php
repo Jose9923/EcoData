@@ -389,4 +389,46 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+
+ function ecodataDisableSubmitForm(form, loadingText = 'Procesando...') {
+        if (!form || form.dataset.submitted === 'true') {
+            return false;
+        }
+
+        form.dataset.submitted = 'true';
+
+        form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (button) {
+            button.disabled = true;
+
+            if (button.tagName === 'BUTTON') {
+                button.dataset.originalHtml = button.innerHTML;
+                button.innerHTML = `
+                    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    ${loadingText}
+                `;
+            } else {
+                button.dataset.originalValue = button.value;
+                button.value = loadingText;
+            }
+        });
+
+        return true;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('form').forEach(function (form) {
+            if (form.classList.contains('js-confirm-delete')) {
+                return;
+            }
+
+            form.addEventListener('submit', function (event) {
+                if (form.dataset.submitted === 'true') {
+                    event.preventDefault();
+                    return false;
+                }
+
+                ecodataDisableSubmitForm(form);
+            });
+        });
+    });
 </script>
