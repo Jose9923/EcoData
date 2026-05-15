@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class StoreLaboratoryGuideRequest extends FormRequest
@@ -10,6 +11,25 @@ class StoreLaboratoryGuideRequest extends FormRequest
     public function authorize(): bool
     {
         return $this->user()?->hasAnyRole(['super_admin', 'admin_colegio', 'docente']) ?? false;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->hasFile('pdf')) {
+            $file = $this->file('pdf');
+
+            if ($file->isValid() && $file->getRealPath() && is_readable($file->getRealPath())) {
+                Log::info('DEBUG PDF - firma inicial', [
+                    'first_20_hex' => bin2hex(file_get_contents($file->getRealPath(), false, null, 0, 20)),
+                    'first_20_chars' => file_get_contents($file->getRealPath(), false, null, 0, 20),
+                ]);
+            }
+        } else {
+            Log::warning('DEBUG PDF - no llegó archivo en el campo pdf', [
+                'input_names' => array_keys($this->all()),
+                'files' => $this->allFiles(),
+            ]);
+        }
     }
 
     public function rules(): array
@@ -55,7 +75,10 @@ class StoreLaboratoryGuideRequest extends FormRequest
 
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+
+            // Puedes dejar mimes:pdf. Si el PDF del banco falla por MIME raro,
             'pdf' => ['required', 'file', 'mimes:pdf', 'max:10240'],
+
             'published_at' => ['nullable', 'date'],
             'is_active' => ['required', 'boolean'],
         ];
@@ -83,6 +106,7 @@ class StoreLaboratoryGuideRequest extends FormRequest
 
             'pdf.required' => 'Debes cargar un archivo PDF.',
             'pdf.file' => 'El archivo cargado no es válido.',
+            'pdf.uploaded' => 'El PDF no pudo cargarse correctamente. Puede estar dañado, incompleto o venir en un formato no estándar. Intenta abrirlo y volverlo a guardar como PDF.',
             'pdf.mimes' => 'La guía debe estar en formato PDF.',
             'pdf.max' => 'El PDF no puede superar los 10 MB.',
 
