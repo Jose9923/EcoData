@@ -24,6 +24,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\ReportMailController;
 
 Route::view('/', 'welcome');
 
@@ -61,6 +62,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('courses', CourseController::class)->except(['show']);
             Route::resource('physical-variable-categories', PhysicalVariableCategoryController::class)->except(['show']);
             Route::resource('physical-variables', PhysicalVariableController::class)->except(['show']);
+            Route::resource('weather-stations', WeatherStationController::class);
+            Route::resource('sensors', SensorController::class);
 
             Route::get('users/import', [UserImportController::class, 'create'])
                 ->name('users.import');
@@ -79,20 +82,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::get('courses/ajax/grades', [CourseController::class, 'getGrades'])
                 ->name('courses.ajax.grades');
-        });
-
-    /*
-    |--------------------------------------------------------------------------
-    | Administración técnica
-    | solo super_admin + admin_colegio
-    |--------------------------------------------------------------------------
-    */
-    Route::prefix('admin')
-        ->name('admin.')
-        ->middleware('role:super_admin|admin_colegio')
-        ->group(function () {
-            Route::resource('weather-stations', WeatherStationController::class);
-            Route::resource('sensors', SensorController::class);
         });
 
     /*
@@ -151,32 +140,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::get('physical-variable-record-imports/create', [PhysicalVariableRecordImportController::class, 'create'])
                 ->name('physical-variable-record-imports.create');
-        });
-
-    /*
-    |--------------------------------------------------------------------------
-    | Calendario ambiental administrativo
-    | super_admin + admin_colegio + docente
-    |--------------------------------------------------------------------------
-    */
-    Route::prefix('admin')
-        ->name('admin.')
-        ->middleware('role:super_admin|admin_colegio|docente')
-        ->group(function () {
+                
             Route::resource('environmental-events', EnvironmentalEventController::class);
-        });
 
-    /*
-    |--------------------------------------------------------------------------
-    | Guías de laboratorio y Diario de Campo admin
-    | super_admin + admin_colegio + docente
-    |--------------------------------------------------------------------------
-    */
-    Route::prefix('admin')
-        ->name('admin.')
-        ->middleware('role:super_admin|admin_colegio|docente')
-        ->group(function () {
-            Route::get('laboratory-guides/ajax/grades', [LaboratoryGuideController::class, 'getGrades'])
+                        Route::get('laboratory-guides/ajax/grades', [LaboratoryGuideController::class, 'getGrades'])
                 ->name('laboratory-guides.ajax.grades');
 
             Route::get('laboratory-guides/ajax/courses', [LaboratoryGuideController::class, 'getCourses'])
@@ -201,6 +168,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('field-diary-submissions/{field_diary_submission}/review', [AdminFieldDiarySubmissionController::class, 'review'])
                 ->name('field-diary-submissions.review');
         });
+
 
     /*
     |--------------------------------------------------------------------------
@@ -237,6 +205,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     | usuarios autenticados
     |--------------------------------------------------------------------------
     */
+    Route::get('/reports/mail', [ReportMailController::class, 'create'])
+        ->name('reports.mail');
+
+    Route::post('/reports/mail/send', [ReportMailController::class, 'send'])
+        ->name('reports.mail.send');
+    
     Route::get('calendario-ambiental', [EnvironmentalEventPublicController::class, 'index'])
         ->name('environmental-events.index');
 
