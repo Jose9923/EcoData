@@ -94,15 +94,78 @@
                                         Editar
                                     </a>
 
-                                    <form method="POST"
-                                        action="{{ route('admin.physical-variable-categories.destroy', $category->id) }}"
-                                        onsubmit="return confirm('¿Seguro que deseas eliminar esta categoría?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-outline-danger rounded-4">
-                                            Eliminar
-                                        </button>
-                                    </form>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger rounded-3"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteCategoryModal{{ $category->id }}">
+                                        Eliminar
+                                    </button>
+
+                                    <div class="modal fade"
+                                        id="deleteCategoryModal{{ $category->id }}"
+                                        tabindex="-1"
+                                        aria-labelledby="deleteCategoryModalLabel{{ $category->id }}"
+                                        aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content rounded-4 border-0 shadow">
+
+                                                <div class="modal-header border-0 pb-0">
+                                                    <div>
+                                                        <h5 class="modal-title fw-bold mb-1" id="deleteCategoryModalLabel{{ $category->id }}">
+                                                            Confirmar eliminación
+                                                        </h5>
+                                                        <p class="text-muted small mb-0">
+                                                            Esta acción requiere confirmación.
+                                                        </p>
+                                                    </div>
+
+                                                    <button type="button"
+                                                            class="btn-close"
+                                                            data-bs-dismiss="modal"
+                                                            aria-label="Cerrar"></button>
+                                                </div>
+
+                                                <div class="modal-body pt-4">
+                                                    <p class="mb-3">
+                                                        ¿Seguro que deseas eliminar la categoría
+                                                        <strong>{{ $category->name }}</strong>?
+                                                    </p>
+
+                                                    <div class="rounded-4 p-3 w-100"
+                                                        style="background-color: #fff8e5; border: 1px solid #ffe4a3; overflow-wrap: break-word; word-break: normal; white-space: normal;">
+                                                        <div class="fw-semibold mb-1" style="color: #7a5200;">
+                                                            Importante
+                                                        </div>
+
+                                                        <p class="small mb-0" style="color: #7a5200; line-height: 1.45; white-space: normal;">
+                                                            Si esta categoría tiene variables físicas asociadas, no se eliminará.
+                                                            En su lugar, el sistema la desactivará para proteger los datos existentes.
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="modal-footer border-0 pt-0">
+                                                    <button type="button"
+                                                            class="btn btn-outline-secondary rounded-4 px-4"
+                                                            data-bs-dismiss="modal">
+                                                        Cancelar
+                                                    </button>
+
+                                                    <form action="{{ route('admin.physical-variable-categories.destroy', $category) }}"
+                                                        method="POST">
+                                                        @csrf
+                                                        @method('DELETE')
+
+                                                        <button type="submit"
+                                                                class="btn text-white rounded-4 px-4 fw-semibold"
+                                                                style="background-color: #c72f3b;">
+                                                            Sí, eliminar
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>

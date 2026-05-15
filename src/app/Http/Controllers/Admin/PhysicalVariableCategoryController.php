@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 
 class PhysicalVariableCategoryController extends Controller
 {
@@ -94,11 +95,34 @@ class PhysicalVariableCategoryController extends Controller
         $this->authorizeSuperAdmin($request);
 
         $category = PhysicalVariableCategory::findOrFail($physical_variable_category);
+
+        $variablesCount = DB::table('physical_variables')
+            ->where('category_id', $category->id)
+            ->count();
+
+        if ($variablesCount > 0) {
+            $category->update([
+                'is_active' => false,
+            ]);
+
+            return redirect()
+                ->route('admin.physical-variable-categories.index')
+                ->with(
+                    'warning',
+                    "La categoría «{$category->name}» tiene {$variablesCount} variable(s) física(s) asociada(s), por eso no fue eliminada. Se desactivó para proteger los datos existentes."
+                );
+        }
+
+        $categoryName = $category->name;
+
         $category->delete();
 
         return redirect()
             ->route('admin.physical-variable-categories.index')
-            ->with('success', 'Categoría eliminada correctamente.');
+            ->with(
+                'success',
+                "La categoría «{$categoryName}» fue eliminada correctamente."
+            );
     }
 
     private function authorizeSuperAdmin(Request $request): void
