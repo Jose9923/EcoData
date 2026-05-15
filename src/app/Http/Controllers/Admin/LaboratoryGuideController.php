@@ -99,14 +99,21 @@ class LaboratoryGuideController extends Controller
             'created_by' => $authUser->id,
         ]);
 
-        $students = User::role('estudiante')
-            ->where('school_id', $schoolId)
-            ->where('is_active', true)
-            ->when(! empty($data['grade_id']), fn ($query) => $query->where('grade_id', $data['grade_id']))
-            ->when(! empty($data['course_id']), fn ($query) => $query->where('course_id', $data['course_id']))
-            ->get();
+        if ($guide->is_active) {
+            $guide->load(['grade', 'course']);
 
-        Notification::send($students, new NewLaboratoryGuideNotification($guide));
+            $students = User::role('estudiante')
+                ->where('school_id', $schoolId)
+                ->where('is_active', true)
+                ->when(! empty($data['grade_id']), fn ($query) => $query->where('grade_id', $data['grade_id']))
+                ->when(! empty($data['course_id']), fn ($query) => $query->where('course_id', $data['course_id']))
+                ->get();
+
+            if ($students->isNotEmpty()) {
+                Notification::send($students, new NewLaboratoryGuideNotification($guide));
+            }
+        }
+
         return redirect()
             ->route('admin.laboratory-guides.index')
             ->with('success', 'Guía de laboratorio cargada correctamente.');
