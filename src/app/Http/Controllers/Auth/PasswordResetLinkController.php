@@ -25,9 +25,8 @@ class PasswordResetLinkController extends Controller
             $request->only('email')
         );
 
-        return back()->with(
-            'status',
-            __($status)
-        );
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with('success', 'Te hemos enviado por correo electrónico el enlace para restablecer tu contraseña.')
+            : back()->withErrors(['email' => 'No encontramos un usuario registrado con ese correo electrónico.']);
     }
 }
