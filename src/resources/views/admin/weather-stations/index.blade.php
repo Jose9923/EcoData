@@ -112,18 +112,21 @@
                             <td class="text-end">
                                 <div class="d-inline-flex gap-1">
                                     <a href="{{ route('admin.weather-stations.show', $station) }}"
-                                       class="btn btn-sm btn-outline-dark rounded-3">
+                                    class="btn btn-sm btn-outline-dark rounded-3">
                                         Ver
                                     </a>
 
                                     <a href="{{ route('admin.weather-stations.edit', $station) }}"
-                                       class="btn btn-sm btn-outline-primary rounded-3">
+                                    class="btn btn-sm btn-outline-primary rounded-3">
                                         Editar
                                     </a>
 
                                     <form action="{{ route('admin.weather-stations.destroy', $station) }}"
-                                          method="POST"
-                                          onsubmit="return confirm('¿Deseas eliminar esta estación meteorológica?')">
+                                        method="POST"
+                                        class="js-confirm-delete"
+                                        data-title="¿Eliminar estación meteorológica?"
+                                        data-text="Esta acción eliminará la estación meteorológica {{ $station->name }}. Si tiene información asociada, el sistema podría impedir la eliminación."
+                                        data-confirm-button="Sí, eliminar">
                                         @csrf
                                         @method('DELETE')
 

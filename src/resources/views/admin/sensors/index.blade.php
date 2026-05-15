@@ -144,18 +144,21 @@
                             <td class="text-end">
                                 <div class="d-inline-flex gap-1">
                                     <a href="{{ route('admin.sensors.show', $sensor) }}"
-                                       class="btn btn-sm btn-outline-dark rounded-3">
+                                    class="btn btn-sm btn-outline-dark rounded-3">
                                         Ver
                                     </a>
 
                                     <a href="{{ route('admin.sensors.edit', $sensor) }}"
-                                       class="btn btn-sm btn-outline-primary rounded-3">
+                                    class="btn btn-sm btn-outline-primary rounded-3">
                                         Editar
                                     </a>
 
                                     <form action="{{ route('admin.sensors.destroy', $sensor) }}"
-                                          method="POST"
-                                          onsubmit="return confirm('¿Deseas eliminar este sensor?')">
+                                        method="POST"
+                                        class="js-confirm-delete"
+                                        data-title="¿Eliminar sensor?"
+                                        data-text="Esta acción eliminará el sensor {{ $sensor->name }}. Si tiene información asociada, el sistema podría impedir la eliminación."
+                                        data-confirm-button="Sí, eliminar">
                                         @csrf
                                         @method('DELETE')
 

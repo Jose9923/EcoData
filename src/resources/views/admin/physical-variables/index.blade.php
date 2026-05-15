@@ -111,9 +111,13 @@
 
                                     <form method="POST"
                                         action="{{ route('admin.physical-variables.destroy', $variable->id) }}"
-                                        onsubmit="return confirm('¿Seguro que deseas eliminar esta variable?')">
+                                        class="js-confirm-delete"
+                                        data-title="¿Eliminar variable física?"
+                                        data-text="Esta acción eliminará la variable física {{ $variable->name }}. Si tiene información asociada, el sistema podría impedir la eliminación."
+                                        data-confirm-button="Sí, eliminar">
                                         @csrf
                                         @method('DELETE')
+
                                         <button type="submit" class="btn btn-outline-danger rounded-4">
                                             Eliminar
                                         </button>

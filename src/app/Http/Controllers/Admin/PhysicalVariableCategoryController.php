@@ -109,7 +109,7 @@ class PhysicalVariableCategoryController extends Controller
                 ->route('admin.physical-variable-categories.index')
                 ->with(
                     'warning',
-                    "La categoría «{$category->name}» tiene {$variablesCount} variable(s) física(s) asociada(s), por eso no fue eliminada. Se desactivó para proteger los datos existentes."
+                    "La categoría {$category->name} tiene {$variablesCount} variable(s) física(s) asociada(s), por eso no fue eliminada. Se desactivó para proteger los datos existentes."
                 );
         }
 
@@ -121,7 +121,7 @@ class PhysicalVariableCategoryController extends Controller
             ->route('admin.physical-variable-categories.index')
             ->with(
                 'success',
-                "La categoría «{$categoryName}» fue eliminada correctamente."
+                "La categoría {$categoryName} fue eliminada correctamente."
             );
     }
 

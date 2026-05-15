@@ -133,18 +133,21 @@
                             <td class="text-end">
                                 <div class="d-inline-flex gap-1">
                                     <a href="{{ route('admin.field-diary-activities.show', $activity) }}"
-                                       class="btn btn-sm btn-outline-dark rounded-3">
+                                    class="btn btn-sm btn-outline-dark rounded-3">
                                         Ver
                                     </a>
 
                                     <a href="{{ route('admin.field-diary-activities.edit', $activity) }}"
-                                       class="btn btn-sm btn-outline-primary rounded-3">
+                                    class="btn btn-sm btn-outline-primary rounded-3">
                                         Editar
                                     </a>
 
                                     <form action="{{ route('admin.field-diary-activities.destroy', $activity) }}"
-                                          method="POST"
-                                          onsubmit="return confirm('¿Deseas eliminar esta actividad de diario de campo?')">
+                                        method="POST"
+                                        class="js-confirm-delete"
+                                        data-title="¿Eliminar actividad de diario de campo?"
+                                        data-text="Esta acción eliminará la actividad de diario de campo {{ $activity->title }}. Si tiene información asociada, el sistema podría impedir la eliminación."
+                                        data-confirm-button="Sí, eliminar">
                                         @csrf
                                         @method('DELETE')
 

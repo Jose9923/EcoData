@@ -122,18 +122,21 @@
                             <td class="text-end">
                                 <div class="d-inline-flex gap-1">
                                     <a href="{{ route('admin.environmental-events.show', $event) }}"
-                                       class="btn btn-sm btn-outline-dark rounded-3">
+                                    class="btn btn-sm btn-outline-dark rounded-3">
                                         Ver
                                     </a>
 
                                     <a href="{{ route('admin.environmental-events.edit', $event) }}"
-                                       class="btn btn-sm btn-outline-primary rounded-3">
+                                    class="btn btn-sm btn-outline-primary rounded-3">
                                         Editar
                                     </a>
 
                                     <form action="{{ route('admin.environmental-events.destroy', $event) }}"
-                                          method="POST"
-                                          onsubmit="return confirm('¿Deseas eliminar este evento ambiental?')">
+                                        method="POST"
+                                        class="js-confirm-delete"
+                                        data-title="¿Eliminar evento ambiental?"
+                                        data-text="Esta acción eliminará el evento ambiental {{ $event->title }}. Si tiene información asociada, el sistema podría impedir la eliminación."
+                                        data-confirm-button="Sí, eliminar">
                                         @csrf
                                         @method('DELETE')
 

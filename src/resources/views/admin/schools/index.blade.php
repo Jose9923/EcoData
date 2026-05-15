@@ -131,15 +131,20 @@
 
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2">
-                                    <a href="{{ route('admin.schools.edit', $school->id) }}" class="btn btn-outline-secondary rounded-4">
+                                    <a href="{{ route('admin.schools.edit', $school->id) }}"
+                                    class="btn btn-outline-secondary rounded-4">
                                         Editar
                                     </a>
 
                                     <form method="POST"
                                         action="{{ route('admin.schools.destroy', $school->id) }}"
-                                        onsubmit="return confirm('¿Seguro que deseas eliminar este colegio?')">
+                                        class="js-confirm-delete"
+                                        data-title="¿Eliminar colegio?"
+                                        data-text="Esta acción eliminará el colegio {{ $school->name }}. Si tiene información asociada, el sistema podría impedir la eliminación."
+                                        data-confirm-button="Sí, eliminar">
                                         @csrf
                                         @method('DELETE')
+
                                         <button type="submit" class="btn btn-outline-danger rounded-4">
                                             Eliminar
                                         </button>

@@ -355,5 +355,38 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('hidden.bs.offcanvas', recalculateResponsiveTables);
 
     recalculateResponsiveTables();
+
+    document.querySelectorAll('.js-confirm-delete').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const title = form.dataset.title || '¿Confirmar eliminación?';
+            const text = form.dataset.text || 'Esta acción no se puede deshacer.';
+            const confirmButtonText = form.dataset.confirmButton || 'Sí, eliminar';
+
+            Swal.fire({
+                icon: 'warning',
+                title: title,
+                text: text,
+                showCancelButton: true,
+                confirmButtonText: confirmButtonText,
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: getComputedStyle(document.documentElement)
+                    .getPropertyValue('--school-primary')
+                    .trim() || '#6c757d',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'rounded-4',
+                    confirmButton: 'rounded-4 px-4 fw-semibold',
+                    cancelButton: 'rounded-4 px-4 fw-semibold'
+                }
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
 });
 </script>

@@ -105,14 +105,20 @@
                             </td>
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2">
-                                    <a href="{{ route('admin.grades.edit', $grade->id) }}" class="btn btn-outline-secondary rounded-4">
+                                    <a href="{{ route('admin.grades.edit', $grade->id) }}"
+                                    class="btn btn-outline-secondary rounded-4">
                                         Editar
                                     </a>
 
-                                    <form method="POST" action="{{ route('admin.grades.destroy', $grade->id) }}"
-                                        onsubmit="return confirm('¿Seguro que deseas eliminar este grado?')">
+                                    <form method="POST"
+                                        action="{{ route('admin.grades.destroy', $grade->id) }}"
+                                        class="js-confirm-delete"
+                                        data-title="¿Eliminar grado?"
+                                        data-text="Esta acción eliminará el grado {{ $grade->name }}. Si tiene información asociada, el sistema podría impedir la eliminación."
+                                        data-confirm-button="Sí, eliminar">
                                         @csrf
                                         @method('DELETE')
+
                                         <button type="submit" class="btn btn-outline-danger rounded-4">
                                             Eliminar
                                         </button>
