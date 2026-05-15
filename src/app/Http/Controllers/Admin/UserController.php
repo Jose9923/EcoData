@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
+use App\Notifications\UserCreatedNotification;
 
 class UserController extends Controller
 {
@@ -92,6 +93,11 @@ class UserController extends Controller
         ]);
 
         $user->syncRoles([$data['role']]);
+
+        $user->notify(new UserCreatedNotification(
+            temporaryPassword: $data['password'],
+            roleName: $data['role']
+        ));
 
         return redirect()
             ->route('admin.users.index')

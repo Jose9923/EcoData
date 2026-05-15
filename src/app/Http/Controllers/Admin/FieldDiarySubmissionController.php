@@ -15,6 +15,9 @@ use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use App\Exports\FieldDiarySubmissionsExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Notifications\NewFieldDiaryActivityNotification;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\FieldDiarySubmissionReviewedNotification;
 
 class FieldDiarySubmissionController extends Controller
 {
@@ -134,6 +137,13 @@ class FieldDiarySubmissionController extends Controller
             'reviewed_at' => now(),
         ]);
 
+        $field_diary_submission->load(['student', 'activity']);
+
+        if ($field_diary_submission->student) {
+            $field_diary_submission->student->notify(
+                new FieldDiarySubmissionReviewedNotification($field_diary_submission)
+            );
+        }
         return redirect()
             ->route('admin.field-diary-submissions.show', $field_diary_submission)
             ->with(

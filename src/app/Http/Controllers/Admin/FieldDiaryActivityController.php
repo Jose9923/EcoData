@@ -16,6 +16,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use App\Notifications\NewFieldDiaryActivityNotification;
+use Illuminate\Support\Facades\Notification;
 
 class FieldDiaryActivityController extends Controller
 {
@@ -101,6 +103,15 @@ class FieldDiaryActivityController extends Controller
 
             $this->syncQuestions($activity, $data['questions'] ?? []);
         });
+
+        $students = User::role('estudiante')
+            ->where('school_id', $activity->school_id)
+            ->where('is_active', true)
+            ->when($activity->grade_id, fn ($query) => $query->where('grade_id', $activity->grade_id))
+            ->when($activity->course_id, fn ($query) => $query->where('course_id', $activity->course_id))
+            ->get();
+
+        Notification::send($students, new NewFieldDiaryActivityNotification($activity));
 
         return redirect()
             ->route('admin.field-diary-activities.index')

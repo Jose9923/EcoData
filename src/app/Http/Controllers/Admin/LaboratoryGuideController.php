@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Notifications\NewLaboratoryGuideNotification;
+use Illuminate\Support\Facades\Notification;
 
 class LaboratoryGuideController extends Controller
 {
@@ -85,7 +87,7 @@ class LaboratoryGuideController extends Controller
             title: $data['title']
         );
 
-        LaboratoryGuide::create([
+        $guide = LaboratoryGuide::create([
             'school_id' => $schoolId,
             'grade_id' => $data['grade_id'] ?? null,
             'course_id' => $data['course_id'] ?? null,
@@ -97,6 +99,14 @@ class LaboratoryGuideController extends Controller
             'created_by' => $authUser->id,
         ]);
 
+        $students = User::role('estudiante')
+            ->where('school_id', $schoolId)
+            ->where('is_active', true)
+            ->when(! empty($data['grade_id']), fn ($query) => $query->where('grade_id', $data['grade_id']))
+            ->when(! empty($data['course_id']), fn ($query) => $query->where('course_id', $data['course_id']))
+            ->get();
+
+        Notification::send($students, new NewLaboratoryGuideNotification($guide));
         return redirect()
             ->route('admin.laboratory-guides.index')
             ->with('success', 'Guía de laboratorio cargada correctamente.');
