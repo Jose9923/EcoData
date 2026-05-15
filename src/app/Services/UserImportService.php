@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\Grade;
 use App\Models\School;
 use App\Models\User;
+use App\Notifications\UserCreatedNotification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
@@ -137,11 +138,24 @@ class UserImportService
                 ];
 
                 if (! $existingUser) {
-                    $payload['password'] = Hash::make($normalized['password'] ?: 'Cambio123*');
+                    $plainPassword = $normalized['password'] ?: 'Cambio123*';
+
+                    $payload['password'] = Hash::make($plainPassword);
                     $payload['email_verified_at'] = now();
 
                     $user = User::create($payload);
                     $user->syncRoles([$role->name]);
+
+                    if ($user->is_active) {
+                        try {
+                            $user->notify(new UserCreatedNotification(
+                                temporaryPassword: $plainPassword,
+                                roleName: $role->name
+                            ));
+                        } catch (\Throwable $e) {
+                            report($e);
+                        }
+                    }
 
                     $summary['created']++;
                     continue;
