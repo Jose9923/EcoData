@@ -17,7 +17,8 @@
 
             <div class="col-12 col-lg-4 text-lg-end">
                 <a href="{{ route('estudiante.field-diaries.index') }}"
-                   class="btn btn-light rounded-4 px-4 py-3 fw-semibold">
+                   class="btn text-white rounded-4 px-4 py-3 fw-semibold"
+                   style="background-color: var(--school-primary);">
                     Volver a mis actividades
                 </a>
             </div>

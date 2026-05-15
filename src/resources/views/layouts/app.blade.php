@@ -303,6 +303,26 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endif
+
+@if (session('warning'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Advertencia',
+                text: @json(session('warning')),
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: getComputedStyle(document.documentElement)
+                    .getPropertyValue('--school-primary')
+                    .trim() || '#c93a7b',
+                customClass: {
+                    popup: 'rounded-4',
+                    confirmButton: 'rounded-4 px-4 fw-semibold'
+                }
+            });
+        });
+    </script>
+@endif
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
 <script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
