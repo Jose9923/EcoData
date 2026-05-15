@@ -17,13 +17,6 @@ class StoreLaboratoryGuideRequest extends FormRequest
     {
         if ($this->hasFile('pdf')) {
             $file = $this->file('pdf');
-
-            if ($file->isValid() && $file->getRealPath() && is_readable($file->getRealPath())) {
-                Log::info('DEBUG PDF - firma inicial', [
-                    'first_20_hex' => bin2hex(file_get_contents($file->getRealPath(), false, null, 0, 20)),
-                    'first_20_chars' => file_get_contents($file->getRealPath(), false, null, 0, 20),
-                ]);
-            }
         } else {
             Log::warning('DEBUG PDF - no llegó archivo en el campo pdf', [
                 'input_names' => array_keys($this->all()),

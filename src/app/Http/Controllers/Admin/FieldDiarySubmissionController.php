@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\FieldDiarySubmissionsExport;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\FieldDiaryActivity;
@@ -9,15 +10,12 @@ use App\Models\FieldDiarySubmission;
 use App\Models\Grade;
 use App\Models\School;
 use App\Models\User;
+use App\Notifications\FieldDiarySubmissionReviewedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-use App\Exports\FieldDiarySubmissionsExport;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Notifications\NewFieldDiaryActivityNotification;
-use Illuminate\Support\Facades\Notification;
-use App\Notifications\FieldDiarySubmissionReviewedNotification;
 
 class FieldDiarySubmissionController extends Controller
 {
@@ -139,10 +137,14 @@ class FieldDiarySubmissionController extends Controller
 
         $field_diary_submission->load(['student', 'activity']);
 
-        if ($field_diary_submission->student) {
-            $field_diary_submission->student->notify(
-                new FieldDiarySubmissionReviewedNotification($field_diary_submission)
-            );
+        if ($field_diary_submission->student && $field_diary_submission->student->is_active) {
+            try {
+                $field_diary_submission->student->notify(
+                    new FieldDiarySubmissionReviewedNotification($field_diary_submission)
+                );
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
         return redirect()
             ->route('admin.field-diary-submissions.show', $field_diary_submission)

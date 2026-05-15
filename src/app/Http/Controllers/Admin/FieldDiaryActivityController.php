@@ -86,7 +86,7 @@ class FieldDiaryActivityController extends Controller
             ? (int) $data['school_id']
             : (int) $authUser->school_id;
 
-        DB::transaction(function () use ($data, $schoolId, $authUser) {
+        $activity = DB::transaction(function () use ($data, $schoolId, $authUser) {
             $activity = FieldDiaryActivity::create([
                 'school_id' => $schoolId,
                 'grade_id' => $data['grade_id'] ?? null,
@@ -102,16 +102,24 @@ class FieldDiaryActivityController extends Controller
             ]);
 
             $this->syncQuestions($activity, $data['questions'] ?? []);
+
+            return $activity;
         });
 
-        $students = User::role('estudiante')
-            ->where('school_id', $activity->school_id)
-            ->where('is_active', true)
-            ->when($activity->grade_id, fn ($query) => $query->where('grade_id', $activity->grade_id))
-            ->when($activity->course_id, fn ($query) => $query->where('course_id', $activity->course_id))
-            ->get();
+        if ($activity->is_active) {
+            $activity->load(['grade', 'course', 'weatherStation']);
 
-        Notification::send($students, new NewFieldDiaryActivityNotification($activity));
+            $students = User::role('estudiante')
+                ->where('school_id', $activity->school_id)
+                ->where('is_active', true)
+                ->when($activity->grade_id, fn ($query) => $query->where('grade_id', $activity->grade_id))
+                ->when($activity->course_id, fn ($query) => $query->where('course_id', $activity->course_id))
+                ->get();
+
+            if ($students->isNotEmpty()) {
+                Notification::send($students, new NewFieldDiaryActivityNotification($activity));
+            }
+        }
 
         return redirect()
             ->route('admin.field-diary-activities.index')

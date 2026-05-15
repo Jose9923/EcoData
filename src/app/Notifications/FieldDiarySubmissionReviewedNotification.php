@@ -23,6 +23,8 @@ class FieldDiarySubmissionReviewedNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
+        $this->submission->loadMissing('activity');
+
         return (new MailMessage)
             ->subject('Tu Diario de Campo fue revisado')
             ->markdown('emails.field-diaries.submission-reviewed', [

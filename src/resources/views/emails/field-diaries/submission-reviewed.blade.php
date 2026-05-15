@@ -1,4 +1,6 @@
 @component('mail::message')
+@include('emails.partials.logo')
+
 # Tu Diario de Campo fue revisado
 
 Hola, **{{ $user->name }}**.
@@ -15,6 +17,10 @@ Tu entrega de **Diario de Campo** ha sido revisada.
 @if($submission->teacher_feedback)
 **Retroalimentación:**  
 {{ $submission->teacher_feedback }}
+@endif
+
+@if($submission->status)
+**Estado:** {{ ucfirst(str_replace('_', ' ', $submission->status)) }}
 @endif
 @endcomponent
 
