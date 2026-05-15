@@ -1,3 +1,14 @@
+@php
+    $authUser = auth()->user();
+
+    $currentSchool = $currentSchool
+        ?? $authUser?->loadMissing('school')->school
+        ?? null;
+
+    $schoolPrimary = $currentSchool?->primary_color ?: '#1d4ed8';
+    $schoolSecondary = $currentSchool?->secondary_color ?: '#0f172a';
+    $schoolAccent = $currentSchool?->accent_color ?: '#22c55e';
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -7,57 +18,106 @@
     <link rel="icon" href="{{ asset('img/favicon.ico') }}?v=3">
     <title>{{ config('app.name', 'Laravel') }}</title>
 
-    @if($currentSchool)
-        <style>
-            :root {
-                --school-primary: {{ $currentSchool->primary_color ?? '#c93a7b' }};
-                --school-secondary: {{ $currentSchool->secondary_color ?? '#2f3b52' }};
-                --school-accent: {{ $currentSchool->accent_color ?? '#6366f1' }};
-            }
-        </style>
-    @else
-        <style>
-            :root {
-                --school-primary: #c93a7b;
-                --school-secondary: #2f3b52;
-                --school-accent: #6366f1;
-            }
-        </style>
-    @endif
-
-    @vite(['resources/scss/app.scss', 'resources/js/app.js'])
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.4/css/responsive.bootstrap5.min.css">
     <style>
+        :root {
+            --school-primary: {{ $schoolPrimary }};
+            --school-secondary: {{ $schoolSecondary }};
+            --school-accent: {{ $schoolAccent }};
+
+            --ecodata-primary: var(--school-primary);
+            --ecodata-secondary: var(--school-secondary);
+            --ecodata-accent: var(--school-accent);
+
+            --ecodata-bg: #f4f6fb;
+            --ecodata-card: #ffffff;
+            --ecodata-text: #1f2937;
+            --ecodata-muted: #6b7280;
+            --ecodata-border: rgba(15, 23, 42, 0.10);
+            --ecodata-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+        }
+
         html,
         body {
             min-height: 100%;
-            overflow-x: hidden;
+            background-color: var(--ecodata-bg);
+            color: var(--ecodata-text);
         }
+
+        body {
+            font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        a {
+            color: var(--school-primary);
+        }
+
+        a:hover {
+            color: var(--school-secondary);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Layout general
+        |--------------------------------------------------------------------------
+        */
 
         .admin-shell {
             min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        .admin-layout {
-            min-height: 100vh;
-            align-items: stretch;
+            background:
+                radial-gradient(circle at top left, rgba(255, 255, 255, 0.95), transparent 28rem),
+                linear-gradient(135deg, rgba(244, 246, 251, 0.98), rgba(236, 240, 248, 0.98));
         }
 
         .admin-sidebar-col {
-            background: var(--school-secondary);
+            background: linear-gradient(
+                180deg,
+                var(--school-secondary) 0%,
+                var(--school-primary) 100%
+            );
             min-width: 0;
             z-index: 20;
+            box-shadow: 12px 0 35px rgba(15, 23, 42, 0.12);
+        }
+
+        .admin-main-col {
+            min-width: 0;
+            background-color: var(--ecodata-bg);
+        }
+
+        .admin-content {
+            width: 100%;
+            max-width: 1480px;
+            margin: 0 auto;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Sidebar / navegación
+        |--------------------------------------------------------------------------
+        */
+
+        .admin-sidebar-col {
+            background: linear-gradient(
+                180deg,
+                var(--school-primary) 0%,
+                var(--school-secondary) 100%
+            ) !important;
+            min-width: 0;
+            z-index: 20;
+            box-shadow: 12px 0 35px rgba(15, 23, 42, 0.12);
         }
 
         .admin-sidebar {
+            min-height: 100vh;
+            max-height: 100vh;
+            overflow-y: auto;
+            background: transparent !important;
             scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, .35) transparent;
+            scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
         }
 
         .admin-sidebar::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
         }
 
         .admin-sidebar::-webkit-scrollbar-track {
@@ -65,96 +125,493 @@
         }
 
         .admin-sidebar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, .35);
+            background-color: rgba(255, 255, 255, 0.25);
             border-radius: 999px;
         }
 
-        .admin-sidebar::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, .55);
+        .admin-sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.88) !important;
+            border-radius: 1rem;
+            padding: 0.78rem 1rem;
+            font-weight: 600;
+            background-color: transparent !important;
+            border: 0 !important;
+            transition:
+                background-color 0.18s ease,
+                color 0.18s ease,
+                transform 0.18s ease;
         }
 
-        .admin-content-col {
-            min-width: 0;
-            overflow-x: hidden;
+        .admin-sidebar .nav-link:hover {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.12) !important;
+            transform: translateX(2px);
         }
 
-        .admin-main {
-            min-width: 0;
+        .admin-sidebar .nav-link.active {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.20) !important;
+            box-shadow: inset 4px 0 0 var(--school-accent);
+        }
+
+        .admin-sidebar .nav-pills .nav-link.active {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.20) !important;
+        }
+
+        .admin-sidebar button.nav-link {
             width: 100%;
+            text-align: left;
         }
-@media (min-width: 992px) {
-    .admin-sidebar {
-        min-height: 100vh;
-        height: 100%;
-        max-height: none;
-        overflow-y: visible;
-    }
-}
-        @media (max-width: 992px) {
-            .admin-shell,
-            .admin-layout {
+
+        .admin-sidebar .collapse .nav-link {
+            padding-left: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .admin-sidebar hr {
+            border-color: rgba(255, 255, 255, 0.18);
+            opacity: 1;
+        }
+
+        .admin-sidebar .badge {
+            background-color: rgba(255, 255, 255, 0.18) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.20);
+        }
+
+        .school-avatar {
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            border-radius: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: rgba(255, 255, 255, 0.16) !important;
+            color: #ffffff;
+            font-weight: 800;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+        }
+
+        .school-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Hero / banners
+        |--------------------------------------------------------------------------
+        */
+
+        .admin-hero {
+            background:
+                radial-gradient(circle at top right, rgba(255, 255, 255, 0.28), transparent 22rem),
+                linear-gradient(
+                    135deg,
+                    var(--school-primary) 0%,
+                    var(--school-secondary) 100%
+                ) !important;
+            color: #ffffff;
+            border-radius: 1.75rem;
+            box-shadow: var(--ecodata-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .admin-hero::after {
+            content: "";
+            position: absolute;
+            right: -80px;
+            bottom: -80px;
+            width: 220px;
+            height: 220px;
+            border-radius: 999px;
+            background-color: rgba(255, 255, 255, 0.10);
+            pointer-events: none;
+        }
+
+        .admin-hero h1,
+        .admin-hero h2,
+        .admin-hero h3,
+        .admin-hero p,
+        .admin-hero small {
+            color: inherit;
+        }
+
+        .admin-hero .text-muted,
+        .admin-hero .text-secondary {
+            color: rgba(255, 255, 255, 0.78) !important;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Cards / contenedores
+        |--------------------------------------------------------------------------
+        */
+
+        .admin-card {
+            background-color: var(--ecodata-card);
+            border: 1px solid var(--ecodata-border);
+            border-radius: 1.5rem;
+            box-shadow: var(--ecodata-shadow);
+        }
+
+        .admin-card-soft {
+            background-color: rgba(255, 255, 255, 0.74);
+            border: 1px solid var(--ecodata-border);
+            border-radius: 1.5rem;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+        }
+
+        .stat-card {
+            background-color: var(--ecodata-card);
+            border: 1px solid var(--ecodata-border);
+            border-radius: 1.35rem;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+            transition:
+                transform 0.18s ease,
+                box-shadow 0.18s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 38px rgba(15, 23, 42, 0.10);
+        }
+
+        .stat-icon,
+        .admin-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: color-mix(in srgb, var(--school-primary) 13%, white);
+            color: var(--school-primary);
+            font-weight: 800;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Botones institucionales
+        |--------------------------------------------------------------------------
+        */
+
+        .btn-school-primary,
+        .btn-ecodata-primary {
+            background-color: var(--school-primary) !important;
+            border-color: var(--school-primary) !important;
+            color: #ffffff !important;
+        }
+
+        .btn-school-primary:hover,
+        .btn-school-primary:focus,
+        .btn-ecodata-primary:hover,
+        .btn-ecodata-primary:focus {
+            background-color: var(--school-secondary) !important;
+            border-color: var(--school-secondary) !important;
+            color: #ffffff !important;
+        }
+
+        .btn-school-secondary,
+        .btn-ecodata-secondary {
+            background-color: var(--school-secondary) !important;
+            border-color: var(--school-secondary) !important;
+            color: #ffffff !important;
+        }
+
+        .btn-school-secondary:hover,
+        .btn-school-secondary:focus,
+        .btn-ecodata-secondary:hover,
+        .btn-ecodata-secondary:focus {
+            background-color: var(--school-primary) !important;
+            border-color: var(--school-primary) !important;
+            color: #ffffff !important;
+        }
+
+        .btn-school-accent,
+        .btn-ecodata-accent {
+            background-color: var(--school-accent) !important;
+            border-color: var(--school-accent) !important;
+            color: #ffffff !important;
+        }
+
+        .btn-outline-school-primary {
+            border-color: var(--school-primary) !important;
+            color: var(--school-primary) !important;
+        }
+
+        .btn-outline-school-primary:hover,
+        .btn-outline-school-primary:focus {
+            background-color: var(--school-primary) !important;
+            color: #ffffff !important;
+        }
+
+        .btn-outline-school-secondary {
+            border-color: var(--school-secondary) !important;
+            color: var(--school-secondary) !important;
+        }
+
+        .btn-outline-school-secondary:hover,
+        .btn-outline-school-secondary:focus {
+            background-color: var(--school-secondary) !important;
+            color: #ffffff !important;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Utilidades de color
+        |--------------------------------------------------------------------------
+        */
+
+        .bg-school-primary {
+            background-color: var(--school-primary) !important;
+            color: #ffffff !important;
+        }
+
+        .bg-school-secondary {
+            background-color: var(--school-secondary) !important;
+            color: #ffffff !important;
+        }
+
+        .bg-school-accent {
+            background-color: var(--school-accent) !important;
+            color: #ffffff !important;
+        }
+
+        .text-school-primary {
+            color: var(--school-primary) !important;
+        }
+
+        .text-school-secondary {
+            color: var(--school-secondary) !important;
+        }
+
+        .text-school-accent {
+            color: var(--school-accent) !important;
+        }
+
+        .border-school-primary {
+            border-color: var(--school-primary) !important;
+        }
+
+        .border-school-secondary {
+            border-color: var(--school-secondary) !important;
+        }
+
+        .border-school-accent {
+            border-color: var(--school-accent) !important;
+        }
+
+        .badge-school-primary {
+            background-color: color-mix(in srgb, var(--school-primary) 14%, white);
+            color: var(--school-primary);
+            border: 1px solid color-mix(in srgb, var(--school-primary) 22%, white);
+        }
+
+        .badge-school-secondary {
+            background-color: color-mix(in srgb, var(--school-secondary) 14%, white);
+            color: var(--school-secondary);
+            border: 1px solid color-mix(in srgb, var(--school-secondary) 22%, white);
+        }
+
+        .badge-school-accent {
+            background-color: color-mix(in srgb, var(--school-accent) 14%, white);
+            color: var(--school-accent);
+            border: 1px solid color-mix(in srgb, var(--school-accent) 22%, white);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Formularios
+        |--------------------------------------------------------------------------
+        */
+
+        .form-control:focus,
+        .form-select:focus,
+        .form-check-input:focus {
+            border-color: var(--school-primary);
+            box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--school-primary) 22%, transparent);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--school-primary);
+            border-color: var(--school-primary);
+        }
+
+        .form-control-lg,
+        .form-select-lg {
+            border-radius: 1rem;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Tablas / DataTables
+        |--------------------------------------------------------------------------
+        */
+
+        .table {
+            --bs-table-hover-bg: color-mix(in srgb, var(--school-primary) 5%, white);
+        }
+
+        .table thead th {
+            color: #334155;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            background-color: #f8fafc;
+            border-bottom: 1px solid var(--ecodata-border);
+        }
+
+        .table td,
+        .table th {
+            vertical-align: middle;
+        }
+
+        .dataTables_wrapper .page-link,
+        .dt-container .page-link {
+            color: var(--school-primary);
+            border-radius: 0.7rem;
+            margin: 0 0.12rem;
+        }
+
+        .dataTables_wrapper .page-item.active .page-link,
+        .dt-container .page-item.active .page-link {
+            background-color: var(--school-primary);
+            border-color: var(--school-primary);
+            color: #ffffff;
+        }
+
+        .dataTables_wrapper .form-control:focus,
+        .dataTables_wrapper .form-select:focus,
+        .dt-container .form-control:focus,
+        .dt-container .form-select:focus {
+            border-color: var(--school-primary);
+            box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--school-primary) 20%, transparent);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Alertas / SweetAlert
+        |--------------------------------------------------------------------------
+        */
+
+        .swal2-popup {
+            border-radius: 1.5rem !important;
+        }
+
+        .swal2-confirm,
+        .swal2-cancel {
+            border-radius: 1rem !important;
+            font-weight: 700 !important;
+            padding-left: 1.35rem !important;
+            padding-right: 1.35rem !important;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Modales
+        |--------------------------------------------------------------------------
+        */
+
+        .modal-content {
+            border-radius: 1.5rem;
+            border: 0;
+            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.20);
+        }
+
+        .modal-header,
+        .modal-footer {
+            border-color: var(--ecodata-border);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Dropdowns
+        |--------------------------------------------------------------------------
+        */
+
+        .dropdown-menu {
+            border-radius: 1rem;
+            border: 1px solid var(--ecodata-border);
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        }
+
+        .dropdown-item.active,
+        .dropdown-item:active {
+            background-color: var(--school-primary);
+            color: #ffffff;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Links especiales
+        |--------------------------------------------------------------------------
+        */
+
+        .link-school {
+            color: var(--school-primary);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .link-school:hover {
+            color: var(--school-secondary);
+            text-decoration: underline;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Responsive
+        |--------------------------------------------------------------------------
+        */
+
+        @media (max-width: 991.98px) {
+            .admin-sidebar {
                 min-height: auto;
+                max-height: none;
             }
 
             .admin-sidebar-col {
-                position: sticky;
-                top: 0;
-                z-index: 1030;
+                box-shadow: none;
             }
 
-            .admin-sidebar {
-                min-height: auto;
-                height: auto;
-                max-height: 100vh;
-                overflow-y: auto;
-            }
-
-            .admin-main {
-                padding-top: 1rem !important;
-            }
-
-            #adminSidebarMenu.show {
-                max-height: calc(100vh - 5rem);
-                overflow-y: auto;
-                padding-bottom: 1rem;
+            .admin-content {
+                max-width: 100%;
             }
         }
-        .pagination {
-            margin-bottom: 0;
-            gap: .25rem;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
 
-        .page-item .page-link {
-            border-radius: .75rem;
-            border: 1px solid rgba(15, 23, 42, .12);
-            color: var(--school-secondary);
-            min-width: 2.35rem;
-            min-height: 2.35rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-        }
+        /*
+        |--------------------------------------------------------------------------
+        | Fallback para navegadores sin color-mix
+        |--------------------------------------------------------------------------
+        */
 
-        .page-item.active .page-link {
-            background: var(--school-secondary);
-            border-color: var(--school-secondary);
-            color: #fff;
-        }
+        @supports not (background-color: color-mix(in srgb, red 10%, white)) {
+            .stat-icon,
+            .admin-icon {
+                background-color: rgba(29, 78, 216, 0.10);
+            }
 
-        .page-item.disabled .page-link {
-            color: #94a3b8;
-            background: #f8fafc;
-        }
+            .badge-school-primary,
+            .badge-school-secondary,
+            .badge-school-accent {
+                background-color: #eef2ff;
+            }
 
-        .page-link:hover {
-            color: #fff;
-            background: var(--school-primary);
-            border-color: var(--school-primary);
+            .table {
+                --bs-table-hover-bg: #f8fafc;
+            }
         }
     </style>
+
+    @vite(['resources/scss/app.scss', 'resources/js/app.js'])
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.4/css/responsive.bootstrap5.min.css">
     @stack('styles')
 </head>
 <body>
@@ -275,6 +732,16 @@
         @endpush
     @endif
 </body>
+@if(auth()->check())
+    <div style="position: fixed; bottom: 10px; right: 10px; z-index: 99999; background: white; color: black; padding: 10px; border: 1px solid red;">
+        Usuario: {{ auth()->user()->email }} <br>
+        School ID: {{ auth()->user()->school_id }} <br>
+        Colegio: {{ $currentSchool?->name ?? 'SIN COLEGIO' }} <br>
+        Primary: {{ $schoolPrimary }} <br>
+        Secondary: {{ $schoolSecondary }} <br>
+        Accent: {{ $schoolAccent }}
+    </div>
+@endif
 </html>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
