@@ -1,29 +1,29 @@
 <?php
 
 use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\EnvironmentalEventController;
+use App\Http\Controllers\Admin\FieldDiaryActivityController;
+use App\Http\Controllers\Admin\FieldDiarySubmissionController as AdminFieldDiarySubmissionController;
 use App\Http\Controllers\Admin\GradeController;
 use App\Http\Controllers\Admin\LaboratoryGuideController;
 use App\Http\Controllers\Admin\PhysicalVariableCategoryController;
 use App\Http\Controllers\Admin\PhysicalVariableController;
 use App\Http\Controllers\Admin\PhysicalVariableRecordController;
+use App\Http\Controllers\Admin\PhysicalVariableRecordImportController;
 use App\Http\Controllers\Admin\SchoolController;
+use App\Http\Controllers\Admin\SensorController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserImportController;
+use App\Http\Controllers\Admin\WeatherStationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EnvironmentalEventAcknowledgementController;
+use App\Http\Controllers\EnvironmentalEventPublicController;
+use App\Http\Controllers\FieldDiarySubmissionController;
 use App\Http\Controllers\LaboratoryGuideStudentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\WeatherStationController;
-use App\Http\Controllers\Admin\SensorController;
-use App\Http\Controllers\Admin\PhysicalVariableRecordImportController;
-use App\Http\Controllers\Admin\EnvironmentalEventController;
-use App\Http\Controllers\EnvironmentalEventPublicController;
-use App\Http\Controllers\EnvironmentalEventAcknowledgementController;
-use App\Http\Controllers\Admin\FieldDiaryActivityController;
-use App\Http\Controllers\FieldDiarySubmissionController;
-use App\Http\Controllers\Admin\FieldDiarySubmissionController as AdminFieldDiarySubmissionController;
 
 Route::view('/', 'welcome');
 
@@ -44,7 +44,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:super_admin')
         ->group(function () {
             Route::resource('schools', SchoolController::class)->except(['show']);
-            Route::resource('weather-stations', WeatherStationController::class)->except(['show']);
         });
 
     /*
@@ -63,30 +62,57 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('physical-variable-categories', PhysicalVariableCategoryController::class)->except(['show']);
             Route::resource('physical-variables', PhysicalVariableController::class)->except(['show']);
 
-            Route::get('users/import', [UserImportController::class, 'create'])->name('users.import');
-            Route::post('users/import', [UserImportController::class, 'store'])->name('users.import.store');
-            Route::get('users/import/template', [UserImportController::class, 'template'])->name('users.import.template');
+            Route::get('users/import', [UserImportController::class, 'create'])
+                ->name('users.import');
 
-            Route::get('users/ajax/grades', [UserController::class, 'getGrades'])->name('users.ajax.grades');
-            Route::get('users/ajax/courses', [UserController::class, 'getCourses'])->name('users.ajax.courses');
-            Route::get('courses/ajax/grades', [CourseController::class, 'getGrades'])->name('courses.ajax.grades');
+            Route::post('users/import', [UserImportController::class, 'store'])
+                ->name('users.import.store');
+
+            Route::get('users/import/template', [UserImportController::class, 'template'])
+                ->name('users.import.template');
+
+            Route::get('users/ajax/grades', [UserController::class, 'getGrades'])
+                ->name('users.ajax.grades');
+
+            Route::get('users/ajax/courses', [UserController::class, 'getCourses'])
+                ->name('users.ajax.courses');
+
+            Route::get('courses/ajax/grades', [CourseController::class, 'getGrades'])
+                ->name('courses.ajax.grades');
+        });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Administración técnica
+    | solo super_admin + admin_colegio
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('admin')
+        ->name('admin.')
+        ->middleware('role:super_admin|admin_colegio')
+        ->group(function () {
+            Route::resource('weather-stations', WeatherStationController::class);
+            Route::resource('sensors', SensorController::class);
         });
 
     /*
     |--------------------------------------------------------------------------
     | Registros físicos
-    | super_admin + admin_colegio + docente
+    | super_admin + admin_colegio + docente + estudiante
     |--------------------------------------------------------------------------
     */
     Route::prefix('admin')
         ->name('admin.')
-        ->middleware('role:super_admin|admin_colegio|docente')
+        ->middleware('role:super_admin|admin_colegio|docente|estudiante')
         ->group(function () {
-            Route::resource('physical-variable-records', PhysicalVariableRecordController::class)
-                ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+            Route::get('physical-variable-records', [PhysicalVariableRecordController::class, 'index'])
+                ->name('physical-variable-records.index');
 
-            Route::get('physical-variable-records-export', [PhysicalVariableRecordController::class, 'export'])
-                ->name('physical-variable-records.export');
+            Route::get('physical-variable-records/create', [PhysicalVariableRecordController::class, 'create'])
+                ->name('physical-variable-records.create');
+
+            Route::post('physical-variable-records', [PhysicalVariableRecordController::class, 'store'])
+                ->name('physical-variable-records.store');
 
             Route::get('physical-variable-records/ajax/grades', [PhysicalVariableRecordController::class, 'getGrades'])
                 ->name('physical-variable-records.ajax.grades');
@@ -97,19 +123,52 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('physical-variable-records/ajax/variables', [PhysicalVariableRecordController::class, 'getVariables'])
                 ->name('physical-variable-records.ajax.variables');
 
-            Route::resource('weather-stations', WeatherStationController::class);
+            Route::get('physical-variable-records/{physical_variable_record}', [PhysicalVariableRecordController::class, 'show'])
+                ->name('physical-variable-records.show');
+        });
 
-            Route::resource('sensors', SensorController::class);
+    /*
+    |--------------------------------------------------------------------------
+    | Administración de registros físicos
+    | super_admin + admin_colegio + docente
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('admin')
+        ->name('admin.')
+        ->middleware('role:super_admin|admin_colegio|docente')
+        ->group(function () {
+            Route::get('physical-variable-records/{physical_variable_record}/edit', [PhysicalVariableRecordController::class, 'edit'])
+                ->name('physical-variable-records.edit');
+
+            Route::put('physical-variable-records/{physical_variable_record}', [PhysicalVariableRecordController::class, 'update'])
+                ->name('physical-variable-records.update');
+
+            Route::patch('physical-variable-records/{physical_variable_record}', [PhysicalVariableRecordController::class, 'update'])
+                ->name('physical-variable-records.patch');
+
+            Route::get('physical-variable-records-export', [PhysicalVariableRecordController::class, 'export'])
+                ->name('physical-variable-records.export');
 
             Route::get('physical-variable-record-imports/create', [PhysicalVariableRecordImportController::class, 'create'])
                 ->name('physical-variable-record-imports.create');
-            
+        });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Calendario ambiental administrativo
+    | super_admin + admin_colegio + docente
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('admin')
+        ->name('admin.')
+        ->middleware('role:super_admin|admin_colegio|docente')
+        ->group(function () {
             Route::resource('environmental-events', EnvironmentalEventController::class);
         });
 
     /*
     |--------------------------------------------------------------------------
-    | Guías de laboratorio admin
+    | Guías de laboratorio y Diario de Campo admin
     | super_admin + admin_colegio + docente
     |--------------------------------------------------------------------------
     */
@@ -118,7 +177,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:super_admin|admin_colegio|docente')
         ->group(function () {
             Route::get('laboratory-guides/ajax/grades', [LaboratoryGuideController::class, 'getGrades'])
-            ->name('laboratory-guides.ajax.grades');
+                ->name('laboratory-guides.ajax.grades');
 
             Route::get('laboratory-guides/ajax/courses', [LaboratoryGuideController::class, 'getCourses'])
                 ->name('laboratory-guides.ajax.courses');
@@ -141,11 +200,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::post('field-diary-submissions/{field_diary_submission}/review', [AdminFieldDiarySubmissionController::class, 'review'])
                 ->name('field-diary-submissions.review');
-    });
+        });
 
     /*
     |--------------------------------------------------------------------------
-    | Vista estudiante de guías
+    | Vista estudiante de guías y Diario de Campo
     | estudiante
     |--------------------------------------------------------------------------
     */
@@ -172,15 +231,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('estudiante.field-diaries.submit');
     });
 
-        Route::get('calendario-ambiental', [EnvironmentalEventPublicController::class, 'index'])
-            ->name('environmental-events.index');
+    /*
+    |--------------------------------------------------------------------------
+    | Calendario ambiental público interno
+    | usuarios autenticados
+    |--------------------------------------------------------------------------
+    */
+    Route::get('calendario-ambiental', [EnvironmentalEventPublicController::class, 'index'])
+        ->name('environmental-events.index');
 
-        Route::get('calendario-ambiental/{environmental_event}', [EnvironmentalEventPublicController::class, 'show'])
-            ->name('environmental-events.show');
-        
-        Route::post('calendario-ambiental/{environmental_event}/aceptar', [EnvironmentalEventAcknowledgementController::class, 'store'])
+    Route::get('calendario-ambiental/{environmental_event}', [EnvironmentalEventPublicController::class, 'show'])
+        ->name('environmental-events.show');
+
+    Route::post('calendario-ambiental/{environmental_event}/aceptar', [EnvironmentalEventAcknowledgementController::class, 'store'])
         ->name('environmental-events.acknowledge');
-
 });
 
 Route::post('/logout', function (Request $request) {

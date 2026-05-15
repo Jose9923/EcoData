@@ -4,17 +4,54 @@
 
     $isSuperAdmin = $authUser?->hasRole('super_admin') ?? false;
     $isSchoolAdmin = $authUser?->hasRole('admin_colegio') ?? false;
-    $isdocente = $authUser?->hasRole('docente') ?? false;
-    $isestudiante = $authUser?->hasRole('estudiante') ?? false;
+    $isDocente = $authUser?->hasRole('docente') ?? false;
+    $isEstudiante = $authUser?->hasRole('estudiante') ?? false;
 
-    $canManageSchoolCatalogs = $isSuperAdmin || $isSchoolAdmin;
-    $canManagePhysicalRecords = $isSuperAdmin || $isSchoolAdmin || $isdocente;
-    $canManageLaboratoryGuides = $isSuperAdmin || $isSchoolAdmin || $isdocente;
+    /*
+    |--------------------------------------------------------------------------
+    | Capacidades por rol
+    |--------------------------------------------------------------------------
+    */
+    $canManageSchools = $isSuperAdmin;
 
     $canManageAdmin = $isSuperAdmin || $isSchoolAdmin;
-    $canManageEcoData = $isSuperAdmin || $isSchoolAdmin || $isdocente;
-    $canManagePedagogy = $isSuperAdmin || $isSchoolAdmin || $isdocente;
 
+    $canManageSchoolCatalogs = $isSuperAdmin || $isSchoolAdmin;
+
+    $canManagePhysicalVariables = $isSuperAdmin || $isSchoolAdmin;
+
+    $canAccessPhysicalRecords = $isSuperAdmin || $isSchoolAdmin || $isDocente || $isEstudiante;
+
+    $canAdminPhysicalRecords = $isSuperAdmin || $isSchoolAdmin || $isDocente;
+
+    $canManageStationsAndSensors = $isSuperAdmin || $isSchoolAdmin;
+
+    $canManageLaboratoryGuides = $isSuperAdmin || $isSchoolAdmin || $isDocente;
+
+    $canManageEnvironmentalEvents = $isSuperAdmin || $isSchoolAdmin || $isDocente;
+
+    $canManageFieldDiaries = $isSuperAdmin || $isSchoolAdmin || $isDocente;
+
+    $canUseStudentModules = $isEstudiante;
+
+    $canViewInternalEnvironmentalCalendar = $isSuperAdmin || $isSchoolAdmin || $isDocente || $isEstudiante;
+
+    $canShowEcoDataGroup =
+        $canManagePhysicalVariables ||
+        $canAccessPhysicalRecords ||
+        $canAdminPhysicalRecords ||
+        $canManageStationsAndSensors;
+
+    $canShowPedagogyGroup =
+        $canManageLaboratoryGuides ||
+        $canManageEnvironmentalEvents ||
+        $canManageFieldDiaries;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Estados de menús desplegables
+    |--------------------------------------------------------------------------
+    */
     $adminOpen = request()->routeIs(
         'admin.schools.*',
         'admin.users.*',
@@ -22,7 +59,7 @@
         'admin.courses.*'
     );
 
-    $ecodataOpen = request()->routeIs(
+    $ecoDataOpen = request()->routeIs(
         'admin.physical-variable-categories.*',
         'admin.physical-variables.*',
         'admin.physical-variable-records.*',
@@ -40,9 +77,10 @@
 
     $studentOpen = request()->routeIs(
         'estudiante.laboratory-guides.*',
-        'estudiante.field-diaries.*',
-        'environmental-events.*'
+        'estudiante.field-diaries.*'
     );
+
+    $calendarOpen = request()->routeIs('environmental-events.*');
 @endphp
 
 <div class="admin-sidebar d-flex flex-column p-3 p-md-4">
@@ -121,6 +159,7 @@
 
             <hr class="my-3">
 
+            {{-- ADMINISTRACIÓN --}}
             @if($canManageAdmin)
                 <li class="nav-item">
                     <button
@@ -138,7 +177,7 @@
 
                 <div id="adminGroup" class="collapse {{ $adminOpen ? 'show' : '' }}">
                     <ul class="nav nav-pills flex-column gap-2 ms-3 ps-2">
-                        @if ($isSuperAdmin && Route::has('admin.schools.index'))
+                        @if($canManageSchools && Route::has('admin.schools.index'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.schools.index') }}"
                                    class="nav-link {{ request()->routeIs('admin.schools.*') ? 'active' : '' }}">
@@ -147,7 +186,7 @@
                             </li>
                         @endif
 
-                        @if (($isSuperAdmin || $isSchoolAdmin) && Route::has('admin.users.index'))
+                        @if(Route::has('admin.users.index'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.users.index') }}"
                                    class="nav-link {{ request()->routeIs('admin.users.*') && ! request()->routeIs('admin.users.import*') ? 'active' : '' }}">
@@ -156,7 +195,7 @@
                             </li>
                         @endif
 
-                        @if (($isSuperAdmin || $isSchoolAdmin) && Route::has('admin.users.import'))
+                        @if(Route::has('admin.users.import'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.users.import') }}"
                                    class="nav-link {{ request()->routeIs('admin.users.import*') ? 'active' : '' }}">
@@ -165,7 +204,7 @@
                             </li>
                         @endif
 
-                        @if ($canManageSchoolCatalogs && Route::has('admin.grades.index'))
+                        @if($canManageSchoolCatalogs && Route::has('admin.grades.index'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.grades.index') }}"
                                    class="nav-link {{ request()->routeIs('admin.grades.*') ? 'active' : '' }}">
@@ -174,7 +213,7 @@
                             </li>
                         @endif
 
-                        @if ($canManageSchoolCatalogs && Route::has('admin.courses.index'))
+                        @if($canManageSchoolCatalogs && Route::has('admin.courses.index'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.courses.index') }}"
                                    class="nav-link {{ request()->routeIs('admin.courses.*') ? 'active' : '' }}">
@@ -188,24 +227,25 @@
                 <hr class="my-3">
             @endif
 
-            @if($canManageEcoData)
+            {{-- ECODATA --}}
+            @if($canShowEcoDataGroup)
                 <li class="nav-item">
                     <button
-                        class="nav-link w-100 text-start d-flex justify-content-between align-items-center {{ $ecodataOpen ? 'active' : '' }}"
+                        class="nav-link w-100 text-start d-flex justify-content-between align-items-center {{ $ecoDataOpen ? 'active' : '' }}"
                         type="button"
                         data-bs-toggle="collapse"
-                        data-bs-target="#ecodataGroup"
-                        aria-expanded="{{ $ecodataOpen ? 'true' : 'false' }}"
-                        aria-controls="ecodataGroup"
+                        data-bs-target="#ecoDataGroup"
+                        aria-expanded="{{ $ecoDataOpen ? 'true' : 'false' }}"
+                        aria-controls="ecoDataGroup"
                     >
                         <span>EcoData</span>
                         <span class="small">▾</span>
                     </button>
                 </li>
 
-                <div id="ecodataGroup" class="collapse {{ $ecodataOpen ? 'show' : '' }}">
+                <div id="ecoDataGroup" class="collapse {{ $ecoDataOpen ? 'show' : '' }}">
                     <ul class="nav nav-pills flex-column gap-2 ms-3 ps-2">
-                        @if ($isSuperAdmin && Route::has('admin.physical-variable-categories.index'))
+                        @if($isSuperAdmin && Route::has('admin.physical-variable-categories.index'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.physical-variable-categories.index') }}"
                                    class="nav-link {{ request()->routeIs('admin.physical-variable-categories.*') ? 'active' : '' }}">
@@ -214,7 +254,7 @@
                             </li>
                         @endif
 
-                        @if ($canManageSchoolCatalogs && Route::has('admin.physical-variables.index'))
+                        @if($canManagePhysicalVariables && Route::has('admin.physical-variables.index'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.physical-variables.index') }}"
                                    class="nav-link {{ request()->routeIs('admin.physical-variables.*') ? 'active' : '' }}">
@@ -223,7 +263,7 @@
                             </li>
                         @endif
 
-                        @if ($canManagePhysicalRecords && Route::has('admin.physical-variable-records.index'))
+                        @if($canAccessPhysicalRecords && Route::has('admin.physical-variable-records.index'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.physical-variable-records.index') }}"
                                    class="nav-link {{ request()->routeIs('admin.physical-variable-records.*') ? 'active' : '' }}">
@@ -232,7 +272,7 @@
                             </li>
                         @endif
 
-                        @if ($canManagePhysicalRecords && Route::has('admin.physical-variable-record-imports.create'))
+                        @if($canAdminPhysicalRecords && Route::has('admin.physical-variable-record-imports.create'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.physical-variable-record-imports.create') }}"
                                    class="nav-link {{ request()->routeIs('admin.physical-variable-record-imports.*') ? 'active' : '' }}">
@@ -241,7 +281,7 @@
                             </li>
                         @endif
 
-                        @if (($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.weather-stations.index'))
+                        @if($canManageStationsAndSensors && Route::has('admin.weather-stations.index'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.weather-stations.index') }}"
                                    class="nav-link {{ request()->routeIs('admin.weather-stations.*') ? 'active' : '' }}">
@@ -250,7 +290,7 @@
                             </li>
                         @endif
 
-                        @if (($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.sensors.index'))
+                        @if($canManageStationsAndSensors && Route::has('admin.sensors.index'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.sensors.index') }}"
                                    class="nav-link {{ request()->routeIs('admin.sensors.*') ? 'active' : '' }}">
@@ -264,7 +304,8 @@
                 <hr class="my-3">
             @endif
 
-            @if($canManagePedagogy)
+            {{-- PEDAGOGÍA --}}
+            @if($canShowPedagogyGroup)
                 <li class="nav-item">
                     <button
                         class="nav-link w-100 text-start d-flex justify-content-between align-items-center {{ $pedagogyOpen ? 'active' : '' }}"
@@ -281,7 +322,7 @@
 
                 <div id="pedagogyGroup" class="collapse {{ $pedagogyOpen ? 'show' : '' }}">
                     <ul class="nav nav-pills flex-column gap-2 ms-3 ps-2">
-                        @if ($canManageLaboratoryGuides && Route::has('admin.laboratory-guides.index'))
+                        @if($canManageLaboratoryGuides && Route::has('admin.laboratory-guides.index'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.laboratory-guides.index') }}"
                                    class="nav-link {{ request()->routeIs('admin.laboratory-guides.*') ? 'active' : '' }}">
@@ -290,7 +331,7 @@
                             </li>
                         @endif
 
-                        @if (($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.environmental-events.index'))
+                        @if($canManageEnvironmentalEvents && Route::has('admin.environmental-events.index'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.environmental-events.index') }}"
                                    class="nav-link {{ request()->routeIs('admin.environmental-events.*') ? 'active' : '' }}">
@@ -299,7 +340,7 @@
                             </li>
                         @endif
 
-                        @if (($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.field-diary-activities.index'))
+                        @if($canManageFieldDiaries && Route::has('admin.field-diary-activities.index'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.field-diary-activities.index') }}"
                                    class="nav-link {{ request()->routeIs('admin.field-diary-activities.*') ? 'active' : '' }}">
@@ -308,7 +349,7 @@
                             </li>
                         @endif
 
-                        @if (($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.field-diary-submissions.index'))
+                        @if($canManageFieldDiaries && Route::has('admin.field-diary-submissions.index'))
                             <li class="nav-item">
                                 <a href="{{ route('admin.field-diary-submissions.index') }}"
                                    class="nav-link {{ request()->routeIs('admin.field-diary-submissions.*') ? 'active' : '' }}">
@@ -322,7 +363,8 @@
                 <hr class="my-3">
             @endif
 
-            @if($isestudiante)
+            {{-- ESTUDIANTE --}}
+            @if($canUseStudentModules)
                 <li class="nav-item">
                     <button
                         class="nav-link w-100 text-start d-flex justify-content-between align-items-center {{ $studentOpen ? 'active' : '' }}"
@@ -339,7 +381,7 @@
 
                 <div id="studentGroup" class="collapse {{ $studentOpen ? 'show' : '' }}">
                     <ul class="nav nav-pills flex-column gap-2 ms-3 ps-2">
-                        @if (Route::has('estudiante.laboratory-guides.index'))
+                        @if(Route::has('estudiante.laboratory-guides.index'))
                             <li class="nav-item">
                                 <a href="{{ route('estudiante.laboratory-guides.index') }}"
                                    class="nav-link {{ request()->routeIs('estudiante.laboratory-guides.*') ? 'active' : '' }}">
@@ -348,7 +390,7 @@
                             </li>
                         @endif
 
-                        @if (Route::has('estudiante.field-diaries.index'))
+                        @if(Route::has('estudiante.field-diaries.index'))
                             <li class="nav-item">
                                 <a href="{{ route('estudiante.field-diaries.index') }}"
                                    class="nav-link {{ request()->routeIs('estudiante.field-diaries.*') ? 'active' : '' }}">
@@ -356,26 +398,20 @@
                                 </a>
                             </li>
                         @endif
-
-                        @if(Route::has('environmental-events.index'))
-                            <li class="nav-item">
-                                <a href="{{ route('environmental-events.index') }}"
-                                   class="nav-link {{ request()->routeIs('environmental-events.*') ? 'active' : '' }}">
-                                    Eventos ambientales
-                                </a>
-                            </li>
-                        @endif
                     </ul>
                 </div>
-            @else
-                @if(Route::has('environmental-events.index'))
-                    <li class="nav-item">
-                        <a href="{{ route('environmental-events.index') }}"
-                           class="nav-link {{ request()->routeIs('environmental-events.*') ? 'active' : '' }}">
-                            Eventos ambientales
-                        </a>
-                    </li>
-                @endif
+
+                <hr class="my-3">
+            @endif
+
+            {{-- CALENDARIO AMBIENTAL PÚBLICO INTERNO --}}
+            @if($canViewInternalEnvironmentalCalendar && Route::has('environmental-events.index'))
+                <li class="nav-item">
+                    <a href="{{ route('environmental-events.index') }}"
+                       class="nav-link {{ $calendarOpen ? 'active' : '' }}">
+                        Eventos ambientales
+                    </a>
+                </li>
             @endif
         </ul>
 
