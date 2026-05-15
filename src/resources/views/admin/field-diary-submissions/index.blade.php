@@ -123,7 +123,14 @@
                 <div class="col-12 col-sm-6 col-lg-2 d-grid">
                     <a href="{{ route('admin.field-diary-submissions.index') }}"
                        class="btn btn-outline-secondary btn-lg rounded-4">
-                        Limpiar
+                        Limpiar filtros
+                    </a>
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-2 d-grid">
+                    <a href="{{ route('admin.field-diary-submissions.export', request()->query()) }}"
+                       class="btn btn-outline-success btn-lg rounded-4">
+                        Exportar Excel
                     </a>
                 </div>
             </div>
@@ -138,12 +145,6 @@
                     Selecciona una entrega para revisar sus respuestas y asignar retroalimentación.
                 </p>
             </div>
-
-            <a href="{{ route('admin.field-diary-submissions.export', request()->query()) }}"
-            class="btn text-white rounded-4 px-4 py-3 fw-semibold"
-            style="background-color: var(--school-primary);">
-                Exportar Excel
-            </a>
         </div>
 
         <div class="table-responsive">

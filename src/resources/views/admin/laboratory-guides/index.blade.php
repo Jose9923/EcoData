@@ -8,11 +8,12 @@
                 <h1 class="h2 fw-bold mb-2">Guías de laboratorio</h1>
                 <p class="mb-0 text-light-emphasis">Gestiona las guías en PDF para estudiantes.</p>
             </div>
-            <a href="{{ route('admin.laboratory-guides.create') }}" class="btn text-white rounded-4 px-4"
-               style="background-color: var(--school-primary);">
-                Nueva guía
-            </a>
-        </div>
+            <div class="col-12 col-lg-4 text-lg-end">
+                <a href="{{ route('admin.laboratory-guides.create') }}" class="btn text-white rounded-4 px-4 py-3 fw-semibold"
+                   style="background-color: var(--school-primary);">
+                    + Nueva guía
+                </a>
+            </div>
     </section>
 
     <div class="admin-card bg-white p-4">

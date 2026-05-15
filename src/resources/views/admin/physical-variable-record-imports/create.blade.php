@@ -16,9 +16,10 @@
             </div>
 
             <div class="col-12 col-lg-4 text-lg-end">
-                <a href="{{ route('admin.physical-variable-records.index') }}"
-                   class="btn btn-light rounded-4 px-4 py-3 fw-semibold">
-                    Ver registros físicos
+                <a href="{{ route('admin.physical-variable-records.create') }}"
+                   class="btn text-white rounded-4 px-4 py-3 fw-semibold"
+                   style="background-color: var(--school-primary);">
+                    Ver Registros físicos
                 </a>
             </div>
         </div>
