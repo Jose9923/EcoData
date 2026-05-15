@@ -168,16 +168,12 @@ class PhysicalVariableRecordController extends Controller
                 'course',
                 'user',
                 'values.variable.category',
-                'weatherStation',
             ])
             ->findOrFail($physical_variable_record);
 
-        $this->authorizeSchoolScope($authUser, $record->school_id);
+        $this->authorizeRecordView($authUser, $record);
 
-        return view('admin.physical-variable-records.show', [
-            'record' => $record,
-            'sourceTypes' => $this->sourceTypes(),
-        ]);
+        return view('admin.physical-variable-records.show', compact('record'));
     }
 
     public function edit(Request $request, int $physical_variable_record): View
@@ -188,7 +184,7 @@ class PhysicalVariableRecordController extends Controller
             ->with(['values.variable.category'])
             ->findOrFail($physical_variable_record);
 
-        $this->authorizeSchoolScope($authUser, $record->school_id);
+        $this->authorizeRecordEdit($authUser, $record);
 
         $selectedSchoolId = $authUser->hasRole('super_admin')
             ? old('school_id', $request->integer('school_id') ?: $record->school_id)
@@ -239,7 +235,7 @@ class PhysicalVariableRecordController extends Controller
             ->with('values')
             ->findOrFail($physical_variable_record);
 
-        $this->authorizeSchoolScope($authUser, $record->school_id);
+        $this->authorizeRecordEdit($authUser, $record);
 
         $schoolId = $this->effectiveSchoolId($request, $request->integer('school_id') ?: null);
         $categoryId = $request->integer('category_id') ?: null;
@@ -278,13 +274,20 @@ class PhysicalVariableRecordController extends Controller
                 ->withInput();
         }
 
-        DB::transaction(function () use ($record, $validated, $filledValues) {
+        DB::transaction(function () use ($record, $validated, $filledValues, $authUser) {
             $record->update([
-                'school_id' => $validated['school_id'],
-                'grade_id' => $validated['grade_id'] ?: null,
-                'course_id' => $validated['course_id'] ?: null,
-                'weather_station_id' => $validated['weather_station_id'] ?: null,
-                'source_type' => $validated['source_type'] ?? 'manual',
+                'school_id' => $authUser->hasRole('estudiante')
+                    ? $record->school_id
+                    : $validated['school_id'],
+
+                'grade_id' => $authUser->hasRole('estudiante')
+                    ? $record->grade_id
+                    : ($validated['grade_id'] ?: null),
+
+                'course_id' => $authUser->hasRole('estudiante')
+                    ? $record->course_id
+                    : ($validated['course_id'] ?: null),
+
                 'recorded_at' => $validated['recorded_at'],
                 'observations' => filled($validated['observations'] ?? null)
                     ? trim($validated['observations'])
@@ -753,5 +756,23 @@ class PhysicalVariableRecordController extends Controller
             'station' => 'Estación meteorológica',
             'csv' => 'Cargue CSV',
         ];
+    }
+
+    private function authorizeRecordView(User $authUser, PhysicalVariableRecord $record): void
+    {
+        $this->authorizeSchoolScope($authUser, $record->school_id);
+    }
+
+    private function authorizeRecordEdit(User $authUser, PhysicalVariableRecord $record): void
+    {
+        $this->authorizeSchoolScope($authUser, $record->school_id);
+
+        if ($authUser->hasRole('estudiante')) {
+            abort_if(
+                (int) $record->user_id !== (int) $authUser->id,
+                403,
+                'No tienes autorización para editar registros físicos de otro usuario.'
+            );
+        }
     }
 }

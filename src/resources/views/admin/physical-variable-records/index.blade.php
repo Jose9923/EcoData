@@ -232,16 +232,30 @@
                                     {{ $record->observations ?: 'Sin observaciones' }}
                                 </small>
                             </td>
+                            @php
+                                $authUser = auth()->user();
+
+                                $canEditRecord =
+                                    $authUser?->hasAnyRole(['super_admin', 'admin_colegio', 'docente']) ||
+                                    (
+                                        $authUser?->hasRole('estudiante') &&
+                                        (int) $record->user_id === (int) $authUser->id
+                                    );
+                            @endphp
+
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2">
                                     <a href="{{ route('admin.physical-variable-records.show', $record->id) }}"
-                                    class="btn btn-outline-secondary rounded-4">
+                                    class="btn btn-outline-primary rounded-4">
                                         Ver detalle
                                     </a>
-                                    <a href="{{ route('admin.physical-variable-records.edit', $record->id) }}"
-                                    class="btn btn-outline-primary rounded-4">
-                                        Editar
-                                    </a>
+
+                                    @if($canEditRecord && Route::has('admin.physical-variable-records.edit'))
+                                        <a href="{{ route('admin.physical-variable-records.edit', $record->id) }}"
+                                        class="btn btn-outline-secondary rounded-4">
+                                            Editar
+                                        </a>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

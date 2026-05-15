@@ -118,6 +118,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('admin.')
             ->middleware('role:super_admin|admin_colegio|docente|estudiante')
             ->group(function () {
+
+                Route::get('physical-variable-records/{physical_variable_record}/edit', [PhysicalVariableRecordController::class, 'edit'])
+                    ->name('physical-variable-records.edit');
+
+                Route::put('physical-variable-records/{physical_variable_record}', [PhysicalVariableRecordController::class, 'update'])
+                    ->name('physical-variable-records.update');
+
+                Route::patch('physical-variable-records/{physical_variable_record}', [PhysicalVariableRecordController::class, 'update'])
+                    ->name('physical-variable-records.patch');
+                
                 Route::get('physical-variable-records', [PhysicalVariableRecordController::class, 'index'])
                     ->name('physical-variable-records.index');
 
@@ -150,14 +160,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('admin.')
             ->middleware('role:super_admin|admin_colegio|docente')
             ->group(function () {
-                Route::get('physical-variable-records/{physical_variable_record}/edit', [PhysicalVariableRecordController::class, 'edit'])
-                    ->name('physical-variable-records.edit');
-
-                Route::put('physical-variable-records/{physical_variable_record}', [PhysicalVariableRecordController::class, 'update'])
-                    ->name('physical-variable-records.update');
-
-                Route::patch('physical-variable-records/{physical_variable_record}', [PhysicalVariableRecordController::class, 'update'])
-                    ->name('physical-variable-records.patch');
 
                 Route::get('physical-variable-records-export', [PhysicalVariableRecordController::class, 'export'])
                     ->name('physical-variable-records.export');
@@ -220,6 +222,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::post('/estudiante/field-diaries/{field_diary_activity}/submit', [FieldDiarySubmissionController::class, 'submit'])
                 ->name('estudiante.field-diaries.submit');
+
         });
 
         /*
