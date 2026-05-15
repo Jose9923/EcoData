@@ -24,7 +24,7 @@
                            value="{{ $search }}" placeholder="Buscar por título o descripción...">
                 </div>
                 <div class="col-12 col-md-2 d-grid">
-                    <button class="btn btn-dark rounded-4">Buscar</button>
+                    <button class="btn btn-dark rounded-4">Filtrar</button>
                 </div>
             </div>
         </form>
@@ -69,12 +69,12 @@
                                 <div class="d-flex justify-content-end gap-2">
                                     <a href="{{ route('admin.laboratory-guides.download', $guide) }}"
                                     target="_blank"
-                                    class="btn btn-outline-secondary rounded-4">
+                                    class="btn btn-outline-primary rounded-4">
                                         Ver PDF
                                     </a>
 
                                     <a href="{{ route('admin.laboratory-guides.edit', $guide) }}"
-                                    class="btn btn-outline-primary rounded-4">
+                                    class="btn btn-outline-secondary rounded-4">
                                         Editar
                                     </a>
 

@@ -28,14 +28,15 @@
 
     <div class="col-12 col-lg-6">
         <label for="responsible_user_id" class="form-label fw-semibold">Responsable</label>
-        <select id="responsible_user_id"
-                name="responsible_user_id"
+        <select name="responsible_user_id"
+                id="responsible_user_id"
                 class="form-select form-select-lg rounded-4 @error('responsible_user_id') is-invalid @enderror">
             <option value="">Sin responsable asignado</option>
+
             @foreach($responsibles as $responsible)
                 <option value="{{ $responsible->id }}"
-                    @selected((int) old('responsible_user_id', $station?->responsible_user_id) === (int) $responsible->id)>
-                    {{ $responsible->name }} - {{ $responsible->email }}
+                    @selected((int) old('responsible_user_id', $selectedResponsibleId ?? null) === (int) $responsible->id)>
+                    {{ $responsible->name }} — {{ $responsible->email }}
                 </option>
             @endforeach
         </select>
@@ -189,3 +190,59 @@
         @enderror
     </div>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const schoolSelect = document.getElementById('school_id');
+        const responsibleSelect = document.getElementById('responsible_user_id');
+
+        if (!schoolSelect || !responsibleSelect) {
+            return;
+        }
+
+        schoolSelect.addEventListener('change', function () {
+            const schoolId = this.value;
+
+            responsibleSelect.innerHTML = '<option value="">Cargando responsables...</option>';
+
+            if (!schoolId) {
+                responsibleSelect.innerHTML = '<option value="">Primero selecciona un colegio</option>';
+                return;
+            }
+
+            fetch(`{{ route('admin.weather-stations.ajax.responsibles') }}?school_id=${schoolId}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('No se pudieron cargar responsables.');
+                }
+
+                return response.json();
+            })
+            .then(data => {
+                responsibleSelect.innerHTML = '<option value="">Sin responsable asignado</option>';
+
+                if (!data.length) {
+                    responsibleSelect.innerHTML = '<option value="">No hay responsables disponibles para este colegio</option>';
+                    return;
+                }
+
+                data.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = user.label;
+                    responsibleSelect.appendChild(option);
+                });
+            })
+            .catch(() => {
+                responsibleSelect.innerHTML = '<option value="">No se pudieron cargar responsables</option>';
+            });
+        });
+    });
+</script>
+@endpush

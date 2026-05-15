@@ -133,12 +133,12 @@
                             <td class="text-end">
                                 <div class="d-inline-flex gap-1">
                                     <a href="{{ route('admin.field-diary-activities.show', $activity) }}"
-                                    class="btn btn-sm btn-outline-dark rounded-3">
-                                        Ver
+                                    class="btn btn-outline-primary rounded-4">
+                                        Ver detalles
                                     </a>
 
                                     <a href="{{ route('admin.field-diary-activities.edit', $activity) }}"
-                                    class="btn btn-sm btn-outline-primary rounded-3">
+                                    class="btn btn-outline-secondary rounded-4">
                                         Editar
                                     </a>
 
@@ -151,7 +151,7 @@
                                         @csrf
                                         @method('DELETE')
 
-                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-3">
+                                        <button type="submit" class="btn btn-outline-danger rounded-4">
                                             Eliminar
                                         </button>
                                     </form>

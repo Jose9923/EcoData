@@ -87,6 +87,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::resource('physical-variables', PhysicalVariableController::class)->except(['show']);
 
                 Route::resource('weather-stations', WeatherStationController::class);
+
+                Route::get('weather-stations/ajax/responsibles', [WeatherStationController::class, 'getResponsibles'])
+                    ->name('weather-stations.ajax.responsibles');
+
+                Route::resource('weather-stations', WeatherStationController::class);
                 Route::resource('sensors', SensorController::class);
 
                 Route::get('users/import', [UserImportController::class, 'create'])

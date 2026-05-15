@@ -144,8 +144,8 @@
 
                                 <td class="text-end">
                                     <a href="{{ route('estudiante.field-diaries.show', $submission->activity) }}"
-                                       class="btn btn-sm btn-outline-dark rounded-3">
-                                        Ver
+                                    class="btn btn-outline-primary rounded-4">
+                                        Ver detalles
                                     </a>
                                 </td>
                             </tr>

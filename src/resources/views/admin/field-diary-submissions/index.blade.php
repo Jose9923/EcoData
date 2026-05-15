@@ -21,7 +21,7 @@
         <form method="GET" action="{{ route('admin.field-diary-submissions.index') }}">
             <div class="row g-3 align-items-end">
                 <div class="col-12 col-lg-4">
-                    <label for="search" class="form-label fw-semibold">Buscar</label>
+                    <label for="search" class="form-label fw-semibold">Filtrar</label>
                     <input type="text"
                            id="search"
                            name="search"
@@ -216,7 +216,7 @@
 
                             <td class="text-end">
                                 <a href="{{ route('admin.field-diary-submissions.show', $submission) }}"
-                                   class="btn btn-sm btn-outline-dark rounded-3">
+                                   class="btn btn-outline-secondary rounded-4">
                                     Revisar
                                 </a>
                             </td>

@@ -29,7 +29,7 @@
         <form method="GET" action="{{ route('admin.physical-variable-records.index') }}">
             <div class="row g-3">
                 <div class="col-12 col-xl-6">
-                    <label class="form-label fw-semibold">Buscar</label>
+                    <label class="form-label fw-semibold">Filtrar</label>
                     <input type="text" name="search" value="{{ $filters['search'] }}"
                            class="form-control form-control-lg rounded-4"
                            placeholder="Buscar por observaciones, usuario, correo, documento, colegio o variable...">

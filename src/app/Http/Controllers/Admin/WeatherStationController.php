@@ -11,6 +11,7 @@ use App\Models\WeatherStation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Http\JsonResponse;
 
 class WeatherStationController extends Controller
 {
@@ -52,12 +53,15 @@ class WeatherStationController extends Controller
     {
         $authUser = $request->user();
 
-        $selectedSchoolId = $this->resolveSelectedSchoolId($request);
+        $selectedSchoolId = $authUser->hasRole('super_admin')
+            ? ($request->integer('school_id') ?: null)
+            : (int) $authUser->school_id;
 
         return view('admin.weather-stations.create', [
             'schools' => $this->visibleSchools($authUser),
             'responsibles' => $this->visibleResponsibles($selectedSchoolId),
             'selectedSchoolId' => $selectedSchoolId,
+            'selectedResponsibleId' => $request->integer('responsible_user_id') ?: null,
         ]);
     }
 
@@ -110,13 +114,14 @@ class WeatherStationController extends Controller
 
         $selectedSchoolId = $authUser->hasRole('super_admin')
             ? old('school_id', $request->integer('school_id') ?: $weather_station->school_id)
-            : $authUser->school_id;
+            : (int) $authUser->school_id;
 
         return view('admin.weather-stations.edit', [
             'station' => $weather_station,
             'schools' => $this->visibleSchools($authUser),
             'responsibles' => $this->visibleResponsibles((int) $selectedSchoolId),
             'selectedSchoolId' => $selectedSchoolId,
+            'selectedResponsibleId' => old('responsible_user_id', $weather_station->responsible_user_id),
         ]);
     }
 
@@ -175,12 +180,16 @@ class WeatherStationController extends Controller
 
     private function visibleResponsibles(?int $schoolId)
     {
+        if (! $schoolId) {
+            return collect();
+        }
+
         return User::query()
-            ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+            ->where('school_id', $schoolId)
             ->where('is_active', true)
             ->whereHas('roles', fn ($query) => $query->whereIn('name', ['admin_colegio', 'docente']))
             ->orderBy('name')
-            ->get(['id', 'name', 'email']);
+            ->get(['id', 'name', 'email', 'school_id']);
     }
 
     private function resolveSelectedSchoolId(Request $request): ?int
@@ -209,5 +218,33 @@ class WeatherStationController extends Controller
             403,
             'No tienes autorización para gestionar estaciones meteorológicas de otro colegio.'
         );
+    }
+
+    public function getResponsibles(Request $request): JsonResponse
+    {
+        $authUser = $request->user();
+
+        $schoolId = $authUser->hasRole('super_admin')
+            ? $request->integer('school_id')
+            : (int) $authUser->school_id;
+
+        abort_if(! $schoolId, 422, 'Debes seleccionar un colegio.');
+
+        if (! $authUser->hasRole('super_admin')) {
+            abort_if(
+                (int) $schoolId !== (int) $authUser->school_id,
+                403,
+                'No puedes consultar responsables de otro colegio.'
+            );
+        }
+
+        $responsibles = $this->visibleResponsibles($schoolId)
+            ->map(fn ($user) => [
+                'id' => $user->id,
+                'label' => "{$user->name} — {$user->email}",
+            ])
+            ->values();
+
+        return response()->json($responsibles);
     }
 }
