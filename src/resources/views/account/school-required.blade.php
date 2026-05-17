@@ -84,7 +84,7 @@
                 allowEscapeKey: false,
                 confirmButtonColor: getComputedStyle(document.documentElement)
                     .getPropertyValue('--school-primary')
-                    .trim() || '#c93a7b',
+                    .trim(),
                 customClass: {
                     popup: 'rounded-4',
                     confirmButton: 'rounded-4 px-4 fw-semibold'

@@ -5,9 +5,9 @@
         ?? $authUser?->loadMissing('school')->school
         ?? null;
 
-    $schoolPrimary = $currentSchool?->primary_color ?: '#1d4ed8';
+    $schoolPrimary = $currentSchool?->primary_color ?: '#22c55e';
     $schoolSecondary = $currentSchool?->secondary_color ?: '#0f172a';
-    $schoolAccent = $currentSchool?->accent_color ?: '#22c55e';
+    $schoolAccent = $currentSchool?->accent_color ?: '#86efac';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -771,7 +771,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 confirmButtonText: 'Entendido',
                 confirmButtonColor: getComputedStyle(document.documentElement)
                     .getPropertyValue('--school-primary')
-                    .trim() || '#c93a7b',
+                    .trim(),
                 customClass: {
                     popup: 'rounded-4',
                     confirmButton: 'rounded-4 px-4 fw-semibold'
