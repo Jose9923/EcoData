@@ -6,11 +6,11 @@
     <section class="admin-hero p-4 p-md-5">
         <div class="row g-3 align-items-center">
             <div class="col-12 col-lg-8">
-                <div class="text-uppercase small fw-semibold text-light-emphasis mb-2">
+                <div class="text-uppercase small fw-semibold admin-hero-subtitle mb-2">
                     Administración
                 </div>
                 <h1 class="display-6 fw-bold mb-2">Revisión de Diario de Campo</h1>
-                <p class="mb-0 text-light-emphasis">
+                <p class="mb-0 admin-hero-subtitle">
                     Revisa, califica y retroalimenta las entregas realizadas por los estudiantes.
                 </p>
             </div>

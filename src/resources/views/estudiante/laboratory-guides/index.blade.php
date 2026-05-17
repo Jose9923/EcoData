@@ -4,7 +4,7 @@
 <div class="d-flex flex-column gap-4">
     <section class="admin-hero p-4 p-md-5">
         <h1 class="h2 fw-bold mb-2">Guías de laboratorio</h1>
-        <p class="mb-0 text-light-emphasis">Consulta, visualiza y descarga las guías disponibles para tu grupo.</p>
+        <p class="mb-0 admin-hero-subtitle">Consulta, visualiza y descarga las guías disponibles para tu grupo.</p>
     </section>
 
     <div class="row g-4">

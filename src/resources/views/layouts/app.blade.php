@@ -8,6 +8,37 @@
     $schoolPrimary = $currentSchool?->primary_color ?: '#22c55e';
     $schoolSecondary = $currentSchool?->secondary_color ?: '#0f172a';
     $schoolAccent = $currentSchool?->accent_color ?: '#86efac';
+
+    $contrastText = function (?string $hexColor): string {
+        $hexColor = trim((string) $hexColor);
+
+        if (! str_starts_with($hexColor, '#')) {
+            $hexColor = '#' . $hexColor;
+        }
+
+        $hex = ltrim($hexColor, '#');
+
+        if (strlen($hex) === 3) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+
+        if (strlen($hex) !== 6 || ! ctype_xdigit($hex)) {
+            return '#ffffff';
+        }
+
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+
+        // Fórmula de luminancia perceptiva.
+        $luminance = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
+
+        return $luminance > 150 ? '#0f172a' : '#ffffff';
+    };
+
+    $schoolPrimaryText = $contrastText($schoolPrimary);
+    $schoolSecondaryText = $contrastText($schoolSecondary);
+    $schoolAccentText = $contrastText($schoolAccent);
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -23,6 +54,10 @@
             --school-primary: {{ $schoolPrimary }};
             --school-secondary: {{ $schoolSecondary }};
             --school-accent: {{ $schoolAccent }};
+
+            --school-primary-text: {{ $schoolPrimaryText }};
+            --school-secondary-text: {{ $schoolSecondaryText }};
+            --school-accent-text: {{ $schoolAccentText }};
 
             --ecodata-primary: var(--school-primary);
             --ecodata-secondary: var(--school-secondary);
@@ -69,11 +104,17 @@
         }
 
         .admin-sidebar-col {
-            background: linear-gradient(
-                180deg,
-                var(--school-secondary) 0%,
-                var(--school-primary) 100%
-            );
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(15, 23, 42, 0.28),
+                    rgba(15, 23, 42, 0.48)
+                ),
+                linear-gradient(
+                    180deg,
+                    var(--school-primary) 0%,
+                    var(--school-secondary) 100%
+                ) !important;
             min-width: 0;
             z-index: 20;
             box-shadow: 12px 0 35px rgba(15, 23, 42, 0.12);
@@ -97,11 +138,17 @@
         */
 
         .admin-sidebar-col {
-            background: linear-gradient(
-                180deg,
-                var(--school-primary) 0%,
-                var(--school-secondary) 100%
-            ) !important;
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(15, 23, 42, 0.28),
+                    rgba(15, 23, 42, 0.48)
+                ),
+                linear-gradient(
+                    180deg,
+                    var(--school-primary) 0%,
+                    var(--school-secondary) 100%
+                ) !important;
             min-width: 0;
             z-index: 20;
             box-shadow: 12px 0 35px rgba(15, 23, 42, 0.12);
@@ -151,7 +198,7 @@
         .admin-sidebar .nav-link.active {
             color: #ffffff !important;
             background-color: rgba(255, 255, 255, 0.20) !important;
-            box-shadow: inset 4px 0 0 var(--school-accent);
+            box-shadow: inset 4px 0 0 var(--school-accent) !important;
         }
 
         .admin-sidebar .nav-pills .nav-link.active {
@@ -209,17 +256,42 @@
 
         .admin-hero {
             background:
-                radial-gradient(circle at top right, rgba(255, 255, 255, 0.28), transparent 22rem),
+                linear-gradient(
+                    135deg,
+                    rgba(15, 23, 42, 0.22),
+                    rgba(15, 23, 42, 0.48)
+                ),
+                radial-gradient(circle at top right, rgba(255, 255, 255, 0.22), transparent 22rem),
                 linear-gradient(
                     135deg,
                     var(--school-primary) 0%,
                     var(--school-secondary) 100%
                 ) !important;
             color: #ffffff;
-            border-radius: 1.75rem;
-            box-shadow: var(--ecodata-shadow);
-            position: relative;
-            overflow: hidden;
+        }
+
+        .admin-hero h1,
+        .admin-hero h2,
+        .admin-hero h3,
+        .admin-hero h4,
+        .admin-hero h5,
+        .admin-hero h6 {
+            color: #ffffff !important;
+        }
+
+        .admin-hero p,
+        .admin-hero small,
+        .admin-hero .admin-hero-subtitle {
+            color: rgba(255, 255, 255, 0.86) !important;
+        }
+
+        .admin-hero .text-muted,
+        .admin-hero .text-secondary,
+        .admin-hero .admin-hero-subtitle,
+        .admin-hero .text-dark,
+        .admin-hero .text-body,
+        .admin-hero .text-body-secondary {
+            color: rgba(255, 255, 255, 0.86) !important;
         }
 
         .admin-hero::after {
@@ -305,7 +377,7 @@
         .btn-ecodata-primary {
             background-color: var(--school-primary) !important;
             border-color: var(--school-primary) !important;
-            color: #ffffff !important;
+            color: var(--school-primary-text) !important;
         }
 
         .btn-school-primary:hover,
@@ -321,7 +393,7 @@
         .btn-ecodata-secondary {
             background-color: var(--school-secondary) !important;
             border-color: var(--school-secondary) !important;
-            color: #ffffff !important;
+            color: var(--school-secondary-text) !important;
         }
 
         .btn-school-secondary:hover,
@@ -337,7 +409,7 @@
         .btn-ecodata-accent {
             background-color: var(--school-accent) !important;
             border-color: var(--school-accent) !important;
-            color: #ffffff !important;
+            color: var(--school-accent-text) !important;
         }
 
         .btn-outline-school-primary {
@@ -370,17 +442,17 @@
 
         .bg-school-primary {
             background-color: var(--school-primary) !important;
-            color: #ffffff !important;
+            color: var(--school-primary-text) !important;
         }
 
         .bg-school-secondary {
             background-color: var(--school-secondary) !important;
-            color: #ffffff !important;
+            color: var(--school-secondary-text) !important;
         }
 
         .bg-school-accent {
             background-color: var(--school-accent) !important;
-            color: #ffffff !important;
+            color: var(--school-accent-text) !important;
         }
 
         .text-school-primary {

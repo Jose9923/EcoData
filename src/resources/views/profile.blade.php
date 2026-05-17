@@ -4,7 +4,7 @@
 <div class="d-flex flex-column gap-4">
     <section class="admin-hero p-4 p-md-5">
         <h1 class="h2 fw-bold mb-2">Mi perfil</h1>
-        <p class="mb-0 text-light-emphasis">
+        <p class="mb-0 admin-hero-subtitle">
             Gestiona tu información personal y la seguridad de tu cuenta.
         </p>
     </section>

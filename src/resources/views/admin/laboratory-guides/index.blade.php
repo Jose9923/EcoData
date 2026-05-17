@@ -6,7 +6,7 @@
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h1 class="h2 fw-bold mb-2">Guías de laboratorio</h1>
-                <p class="mb-0 text-light-emphasis">Gestiona las guías en PDF para estudiantes.</p>
+                <p class="mb-0 admin-hero-subtitle">Gestiona las guías en PDF para estudiantes.</p>
             </div>
             <div class="col-12 col-lg-4 text-lg-end">
                 <a href="{{ route('admin.laboratory-guides.create') }}" class="btn text-white rounded-4 px-4 py-3 fw-semibold"

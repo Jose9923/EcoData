@@ -4,7 +4,7 @@
 <div class="d-flex flex-column gap-4">
     <section class="admin-hero p-4 p-md-5">
         <h1 class="h2 fw-bold mb-2">Nueva categoría</h1>
-        <p class="mb-0 text-light-emphasis">Configura la categoría y su organización dentro del sistema.</p>
+        <p class="mb-0 admin-hero-subtitle">Configura la categoría y su organización dentro del sistema.</p>
     </section>
 
     <form method="POST" action="{{ route('admin.physical-variable-categories.store') }}">

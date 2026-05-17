@@ -4,7 +4,7 @@
 <div class="d-flex flex-column gap-4">
     <section class="admin-hero p-4 p-md-5">
         <h1 class="h2 fw-bold mb-2">Nuevo registro físico</h1>
-        <p class="mb-0 text-light-emphasis">
+        <p class="admin-hero-subtitle mb-0">
             Captura variables físicas por contexto académico, categoría y fecha de medición.
         </p>
     </section>

@@ -10,11 +10,11 @@
     <section class="admin-hero p-4 p-md-5">
         <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
             <div>
-                <div class="text-uppercase small fw-semibold text-light-emphasis mb-2">
+                <div class="text-uppercase small fw-semibold admin-hero-subtitle mb-2">
                     Monitoreo
                 </div>
                 <h1 class="display-6 fw-bold mb-2">Detalle del registro físico</h1>
-                <p class="mb-0 text-light-emphasis">
+                <p class="mb-0 admin-hero-subtitle">
                     Revisa el contexto, los valores capturados y las observaciones del registro.
                 </p>
             </div>
