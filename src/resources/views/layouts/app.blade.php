@@ -5,10 +5,23 @@
         ?? $authUser?->loadMissing('school')->school
         ?? null;
 
+    /*
+    |--------------------------------------------------------------------------
+    | Paleta institucional
+    |--------------------------------------------------------------------------
+    | Si el usuario tiene colegio asignado, toma los colores configurados.
+    | Si no, usa la paleta base EcoData.
+    */
     $schoolPrimary = $currentSchool?->primary_color ?: '#22c55e';
     $schoolSecondary = $currentSchool?->secondary_color ?: '#0f172a';
     $schoolAccent = $currentSchool?->accent_color ?: '#86efac';
 
+    /*
+    |--------------------------------------------------------------------------
+    | Contraste automático
+    |--------------------------------------------------------------------------
+    | Calcula si sobre un fondo institucional debe ir texto claro u oscuro.
+    */
     $contrastText = function (?string $hexColor): string {
         $hexColor = trim((string) $hexColor);
 
@@ -30,7 +43,6 @@
         $g = hexdec(substr($hex, 2, 2));
         $b = hexdec(substr($hex, 4, 2));
 
-        // Fórmula de luminancia perceptiva.
         $luminance = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
 
         return $luminance > 150 ? '#0f172a' : '#ffffff';
@@ -40,14 +52,23 @@
     $schoolSecondaryText = $contrastText($schoolSecondary);
     $schoolAccentText = $contrastText($schoolAccent);
 @endphp
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="icon" href="{{ asset('img/favicon.ico') }}?v=3">
-    <title>{{ config('app.name', 'Laravel') }}</title>
+
+    <title>{{ config('app.name', 'EcoData') }}</title>
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
+
+    @vite(['resources/scss/app.scss', 'resources/js/app.js'])
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.4/css/responsive.bootstrap5.min.css">
 
     <style>
         :root {
@@ -58,10 +79,6 @@
             --school-primary-text: {{ $schoolPrimaryText }};
             --school-secondary-text: {{ $schoolSecondaryText }};
             --school-accent-text: {{ $schoolAccentText }};
-
-            --ecodata-primary: var(--school-primary);
-            --ecodata-secondary: var(--school-secondary);
-            --ecodata-accent: var(--school-accent);
 
             --ecodata-bg: #f4f6fb;
             --ecodata-card: #ffffff;
@@ -74,12 +91,13 @@
         html,
         body {
             min-height: 100%;
+            overflow-x: hidden;
             background-color: var(--ecodata-bg);
             color: var(--ecodata-text);
         }
 
         body {
-            font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: "Figtree", "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         a {
@@ -98,9 +116,15 @@
 
         .admin-shell {
             min-height: 100vh;
+            overflow-x: hidden;
             background:
                 radial-gradient(circle at top left, rgba(255, 255, 255, 0.95), transparent 28rem),
                 linear-gradient(135deg, rgba(244, 246, 251, 0.98), rgba(236, 240, 248, 0.98));
+        }
+
+        .admin-layout {
+            min-height: 100vh;
+            align-items: stretch;
         }
 
         .admin-sidebar-col {
@@ -120,9 +144,15 @@
             box-shadow: 12px 0 35px rgba(15, 23, 42, 0.12);
         }
 
-        .admin-main-col {
+        .admin-content-col {
             min-width: 0;
+            overflow-x: hidden;
             background-color: var(--ecodata-bg);
+        }
+
+        .admin-main {
+            min-width: 0;
+            width: 100%;
         }
 
         .admin-content {
@@ -136,23 +166,6 @@
         | Sidebar / navegación
         |--------------------------------------------------------------------------
         */
-
-        .admin-sidebar-col {
-            background:
-                linear-gradient(
-                    180deg,
-                    rgba(15, 23, 42, 0.28),
-                    rgba(15, 23, 42, 0.48)
-                ),
-                linear-gradient(
-                    180deg,
-                    var(--school-primary) 0%,
-                    var(--school-secondary) 100%
-                ) !important;
-            min-width: 0;
-            z-index: 20;
-            box-shadow: 12px 0 35px rgba(15, 23, 42, 0.12);
-        }
 
         .admin-sidebar {
             min-height: 100vh;
@@ -183,10 +196,7 @@
             font-weight: 600;
             background-color: transparent !important;
             border: 0 !important;
-            transition:
-                background-color 0.18s ease,
-                color 0.18s ease,
-                transform 0.18s ease;
+            transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
         }
 
         .admin-sidebar .nav-link:hover {
@@ -195,15 +205,11 @@
             transform: translateX(2px);
         }
 
-        .admin-sidebar .nav-link.active {
-            color: #ffffff !important;
-            background-color: rgba(255, 255, 255, 0.20) !important;
-            box-shadow: inset 4px 0 0 var(--school-accent) !important;
-        }
-
+        .admin-sidebar .nav-link.active,
         .admin-sidebar .nav-pills .nav-link.active {
             color: #ffffff !important;
             background-color: rgba(255, 255, 255, 0.20) !important;
+            box-shadow: inset 4px 0 0 var(--school-accent) !important;
         }
 
         .admin-sidebar button.nav-link {
@@ -268,6 +274,27 @@
                     var(--school-secondary) 100%
                 ) !important;
             color: #ffffff;
+            border-radius: 1.75rem;
+            box-shadow: var(--ecodata-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .admin-hero::after {
+            content: "";
+            position: absolute;
+            right: -80px;
+            bottom: -80px;
+            width: 220px;
+            height: 220px;
+            border-radius: 999px;
+            background-color: rgba(255, 255, 255, 0.10);
+            pointer-events: none;
+        }
+
+        .admin-hero > * {
+            position: relative;
+            z-index: 1;
         }
 
         .admin-hero h1,
@@ -287,41 +314,16 @@
 
         .admin-hero .text-muted,
         .admin-hero .text-secondary,
-        .admin-hero .admin-hero-subtitle,
+        .admin-hero .text-light-emphasis,
         .admin-hero .text-dark,
         .admin-hero .text-body,
         .admin-hero .text-body-secondary {
             color: rgba(255, 255, 255, 0.86) !important;
         }
 
-        .admin-hero::after {
-            content: "";
-            position: absolute;
-            right: -80px;
-            bottom: -80px;
-            width: 220px;
-            height: 220px;
-            border-radius: 999px;
-            background-color: rgba(255, 255, 255, 0.10);
-            pointer-events: none;
-        }
-
-        .admin-hero h1,
-        .admin-hero h2,
-        .admin-hero h3,
-        .admin-hero p,
-        .admin-hero small {
-            color: inherit;
-        }
-
-        .admin-hero .text-muted,
-        .admin-hero .text-secondary {
-            color: rgba(255, 255, 255, 0.78) !important;
-        }
-
         /*
         |--------------------------------------------------------------------------
-        | Cards / contenedores
+        | Cards
         |--------------------------------------------------------------------------
         */
 
@@ -344,9 +346,7 @@
             border: 1px solid var(--ecodata-border);
             border-radius: 1.35rem;
             box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
-            transition:
-                transform 0.18s ease,
-                box-shadow 0.18s ease;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
         }
 
         .stat-card:hover {
@@ -386,7 +386,7 @@
         .btn-ecodata-primary:focus {
             background-color: var(--school-secondary) !important;
             border-color: var(--school-secondary) !important;
-            color: #ffffff !important;
+            color: var(--school-secondary-text) !important;
         }
 
         .btn-school-secondary,
@@ -402,7 +402,7 @@
         .btn-ecodata-secondary:focus {
             background-color: var(--school-primary) !important;
             border-color: var(--school-primary) !important;
-            color: #ffffff !important;
+            color: var(--school-primary-text) !important;
         }
 
         .btn-school-accent,
@@ -420,7 +420,7 @@
         .btn-outline-school-primary:hover,
         .btn-outline-school-primary:focus {
             background-color: var(--school-primary) !important;
-            color: #ffffff !important;
+            color: var(--school-primary-text) !important;
         }
 
         .btn-outline-school-secondary {
@@ -431,12 +431,23 @@
         .btn-outline-school-secondary:hover,
         .btn-outline-school-secondary:focus {
             background-color: var(--school-secondary) !important;
-            color: #ffffff !important;
+            color: var(--school-secondary-text) !important;
+        }
+
+        .btn-outline-school-accent {
+            border-color: var(--school-accent) !important;
+            color: var(--school-accent) !important;
+        }
+
+        .btn-outline-school-accent:hover,
+        .btn-outline-school-accent:focus {
+            background-color: var(--school-accent) !important;
+            color: var(--school-accent-text) !important;
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Utilidades de color
+        | Utilidades institucionales
         |--------------------------------------------------------------------------
         */
 
@@ -492,9 +503,9 @@
         }
 
         .badge-school-accent {
-            background-color: color-mix(in srgb, var(--school-accent) 14%, white);
+            background-color: color-mix(in srgb, var(--school-accent) 18%, white);
             color: var(--school-accent);
-            border: 1px solid color-mix(in srgb, var(--school-accent) 22%, white);
+            border: 1px solid color-mix(in srgb, var(--school-accent) 25%, white);
         }
 
         /*
@@ -518,6 +529,13 @@
         .form-control-lg,
         .form-select-lg {
             border-radius: 1rem;
+        }
+
+        .form-section-title {
+            font-size: .875rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: .75rem;
         }
 
         /*
@@ -555,7 +573,7 @@
         .dt-container .page-item.active .page-link {
             background-color: var(--school-primary);
             border-color: var(--school-primary);
-            color: #ffffff;
+            color: var(--school-primary-text);
         }
 
         .dataTables_wrapper .form-control:focus,
@@ -568,7 +586,44 @@
 
         /*
         |--------------------------------------------------------------------------
-        | Alertas / SweetAlert
+        | Paginación Laravel
+        |--------------------------------------------------------------------------
+        */
+
+        .pagination {
+            margin-bottom: 0;
+            gap: .25rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .page-item .page-link {
+            border-radius: .75rem;
+            border: 1px solid rgba(15, 23, 42, .12);
+            color: var(--school-secondary);
+            min-width: 2.35rem;
+            min-height: 2.35rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .page-item.active .page-link {
+            background: var(--school-primary);
+            border-color: var(--school-primary);
+            color: var(--school-primary-text);
+        }
+
+        .page-link:hover {
+            color: var(--school-primary-text);
+            background: var(--school-primary);
+            border-color: var(--school-primary);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SweetAlert / modales
         |--------------------------------------------------------------------------
         */
 
@@ -584,12 +639,6 @@
             padding-right: 1.35rem !important;
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Modales
-        |--------------------------------------------------------------------------
-        */
-
         .modal-content {
             border-radius: 1.5rem;
             border: 0;
@@ -603,7 +652,7 @@
 
         /*
         |--------------------------------------------------------------------------
-        | Dropdowns
+        | Dropdowns / varios
         |--------------------------------------------------------------------------
         */
 
@@ -616,14 +665,22 @@
         .dropdown-item.active,
         .dropdown-item:active {
             background-color: var(--school-primary);
-            color: #ffffff;
+            color: var(--school-primary-text);
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Links especiales
-        |--------------------------------------------------------------------------
-        */
+        .color-dot {
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 50%;
+            display: inline-block;
+            border: 2px solid #fff;
+            box-shadow: 0 .125rem .375rem rgba(0, 0, 0, .15);
+        }
+
+        .school-preview {
+            border-radius: 1.25rem;
+            color: white;
+        }
 
         .link-school {
             color: var(--school-primary);
@@ -642,31 +699,56 @@
         |--------------------------------------------------------------------------
         */
 
-        @media (max-width: 991.98px) {
+        @media (min-width: 992px) {
             .admin-sidebar {
-                min-height: auto;
+                min-height: 100vh;
+                height: 100%;
                 max-height: none;
+                overflow-y: visible;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .admin-shell,
+            .admin-layout {
+                min-height: auto;
             }
 
             .admin-sidebar-col {
+                position: sticky;
+                top: 0;
+                z-index: 1030;
                 box-shadow: none;
             }
 
-            .admin-content {
-                max-width: 100%;
+            .admin-sidebar {
+                min-height: auto;
+                height: auto;
+                max-height: 100vh;
+                overflow-y: auto;
+            }
+
+            .admin-main {
+                padding-top: 1rem !important;
+            }
+
+            #adminSidebarMenu.show {
+                max-height: calc(100vh - 5rem);
+                overflow-y: auto;
+                padding-bottom: 1rem;
             }
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Fallback para navegadores sin color-mix
+        | Fallback color-mix
         |--------------------------------------------------------------------------
         */
 
         @supports not (background-color: color-mix(in srgb, red 10%, white)) {
             .stat-icon,
             .admin-icon {
-                background-color: rgba(29, 78, 216, 0.10);
+                background-color: rgba(34, 197, 94, 0.12);
             }
 
             .badge-school-primary,
@@ -680,284 +762,200 @@
             }
         }
     </style>
-
-    @vite(['resources/scss/app.scss', 'resources/js/app.js'])
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.4/css/responsive.bootstrap5.min.css">
-    @stack('styles')
 </head>
-<body>
-    <div class="container-fluid admin-shell px-0">
-        <div class="row g-0 admin-layout">
-            <aside class="col-12 col-lg-3 col-xl-2 admin-sidebar-col">
-                @include('components.layout.navigation')
-            </aside>
 
-            <div class="col-12 col-lg-9 col-xl-10 admin-content-col">
-                <main class="admin-main p-3 p-md-4 p-xl-5">
-                    @yield('content')
-                </main>
+<body>
+    <div class="admin-shell">
+        <div class="container-fluid px-0">
+            <div class="row g-0 admin-layout">
+                @auth
+                    <aside class="col-12 col-lg-3 col-xl-2 admin-sidebar-col">
+                        @include('components.layout.navigation', ['currentSchool' => $currentSchool])
+                    </aside>
+
+                    <main class="col-12 col-lg-9 col-xl-10 admin-content-col">
+                        <div class="admin-main p-3 p-md-4 p-xl-5">
+                            <div class="admin-content">
+                                @yield('content')
+                            </div>
+                        </div>
+                    </main>
+                @else
+                    <main class="col-12">
+                        @yield('content')
+                    </main>
+                @endauth
             </div>
         </div>
     </div>
-    @if(isset($todayEnvironmentalEvent) && $todayEnvironmentalEvent)
-        <div class="modal fade"
-            id="environmentalEventModal"
-            tabindex="-1"
-            aria-labelledby="environmentalEventModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-xl modal-dialog-centered">
-                <div class="modal-content rounded-4 border-0 overflow-hidden">
-                    <div class="row g-0">
-                        <div class="col-12 col-lg-5">
-                            @if($todayEnvironmentalEvent->image_path)
-                                <img src="{{ asset('storage/' . $todayEnvironmentalEvent->image_path) }}"
-                                    alt="{{ $todayEnvironmentalEvent->title }}"
-                                    class="w-100 h-100"
-                                    style="object-fit: cover; min-height: 360px;">
-                            @else
-                                <div class="bg-light h-100 d-flex align-items-center justify-content-center"
-                                    style="min-height: 360px;">
-                                    <div class="text-center p-4">
-                                        <div class="display-3 mb-3">🌎</div>
-                                        <div class="fw-bold text-muted">Calendario ambiental</div>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
 
-                        <div class="col-12 col-lg-7">
-                            <div class="modal-body p-4 p-md-5">
-                                <div class="text-uppercase small fw-semibold text-muted mb-2">
-                                    Calendario ambiental
-                                </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-                                <h2 class="fw-bold mb-3" id="environmentalEventModalLabel">
-                                    {{ $todayEnvironmentalEvent->title }}
-                                </h2>
+    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/3.0.4/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/3.0.4/js/responsive.bootstrap5.min.js"></script>
 
-                                <div class="text-muted fw-semibold mb-3">
-                                    {{ $todayEnvironmentalEvent->starts_at?->format('d/m/Y') }}
-                                    @if($todayEnvironmentalEvent->ends_at && !$todayEnvironmentalEvent->starts_at->isSameDay($todayEnvironmentalEvent->ends_at))
-                                        - {{ $todayEnvironmentalEvent->ends_at->format('d/m/Y') }}
-                                    @endif
-                                </div>
+    @if (session('success'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Correcto',
+                    text: @json(session('success')),
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: getComputedStyle(document.documentElement)
+                        .getPropertyValue('--school-primary')
+                        .trim() || '#22c55e',
+                    customClass: {
+                        popup: 'rounded-4',
+                        confirmButton: 'rounded-4 px-4 fw-semibold'
+                    }
+                });
+            });
+        </script>
+    @endif
 
-                                @if($todayEnvironmentalEvent->description)
-                                    <p class="text-muted mb-4" style="font-size: 1.05rem;">
-                                        {{ $todayEnvironmentalEvent->description }}
-                                    </p>
-                                @else
-                                    <p class="text-muted mb-4">
-                                        Hoy hay un evento ambiental programado por tu institución.
-                                    </p>
-                                @endif
+    @if (session('warning'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Advertencia',
+                    text: @json(session('warning')),
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: getComputedStyle(document.documentElement)
+                        .getPropertyValue('--school-primary')
+                        .trim() || '#22c55e',
+                    customClass: {
+                        popup: 'rounded-4',
+                        confirmButton: 'rounded-4 px-4 fw-semibold'
+                    }
+                });
+            });
+        </script>
+    @endif
 
-                                <div class="d-flex flex-column flex-md-row gap-2 justify-content-end">
-                                    <form method="POST"
-                                        action="{{ route('environmental-events.acknowledge', $todayEnvironmentalEvent) }}">
-                                        @csrf
+    @if (session('error'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: @json(session('error')),
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#dc3545',
+                    customClass: {
+                        popup: 'rounded-4',
+                        confirmButton: 'rounded-4 px-4 fw-semibold'
+                    }
+                });
+            });
+        </script>
+    @endif
 
-                                        <input type="hidden" name="redirect_to" value="show">
+    @if ($errors->any())
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Revisa la información',
+                    html: `{!! implode('<br>', $errors->all()) !!}`,
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#dc3545',
+                    customClass: {
+                        popup: 'rounded-4',
+                        confirmButton: 'rounded-4 px-4 fw-semibold'
+                    }
+                });
+            });
+        </script>
+    @endif
 
-                                        <button type="submit"
-                                                class="btn btn-outline-dark rounded-4 px-4 py-2">
-                                            Ver detalles
-                                        </button>
-                                    </form>
+    <script>
+        function ecodataDisableSubmitForm(form, loadingText = 'Procesando...') {
+            if (!form || form.dataset.submitted === 'true') {
+                return false;
+            }
 
-                                    <form method="POST"
-                                        action="{{ route('environmental-events.acknowledge', $todayEnvironmentalEvent) }}">
-                                        @csrf
+            form.dataset.submitted = 'true';
 
-                                        <button type="submit"
-                                                class="btn text-white rounded-4 px-4 py-2 fw-semibold"
-                                                style="background-color: var(--school-primary);">
-                                            Aceptar
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+            form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (button) {
+                button.disabled = true;
 
-        @push('scripts')
-            <script>
-                document.addEventListener('DOMContentLoaded', function () {
-                    const modalElement = document.getElementById('environmentalEventModal');
+                if (button.tagName === 'BUTTON') {
+                    button.dataset.originalHtml = button.innerHTML;
+                    button.innerHTML = `
+                        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                        ${loadingText}
+                    `;
+                } else {
+                    button.dataset.originalValue = button.value;
+                    button.value = loadingText;
+                }
+            });
 
-                    if (!modalElement) {
-                        return;
+            return true;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('form').forEach(function (form) {
+                if (form.classList.contains('js-confirm-delete')) {
+                    return;
+                }
+
+                form.addEventListener('submit', function (event) {
+                    if (form.dataset.submitted === 'true') {
+                        event.preventDefault();
+                        return false;
                     }
 
-                    const modal = new bootstrap.Modal(modalElement, {
-                        backdrop: 'static',
-                        keyboard: false
-                    });
-
-                    modal.show();
+                    ecodataDisableSubmitForm(form, form.dataset.loadingText || 'Procesando...');
                 });
-            </script>
-        @endpush
-    @endif
-</body>
-</html>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            });
 
-@if (session('success'))
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    Swal.fire({
-        icon: 'success',
-        title: 'Proceso completado',
-        text: @json(session('success')),
-        confirmButtonText: 'Aceptar'
-    });
-});
-</script>
-@endif
+            document.querySelectorAll('.js-confirm-delete').forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    event.preventDefault();
 
-@if ($errors->any())
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    Swal.fire({
-        icon: 'error',
-        title: 'Hay errores en el formulario',
-        html: `{!! collect($errors->all())->map(fn($e) => '<div class="text-start mb-1">• '.e($e).'</div>')->implode('') !!}`,
-        confirmButtonText: 'Revisar'
-    });
-});
-</script>
-@endif
+                    if (form.dataset.submitted === 'true') {
+                        return false;
+                    }
 
-@if (session('warning'))
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Advertencia',
-                text: @json(session('warning')),
-                confirmButtonText: 'Entendido',
-                confirmButtonColor: getComputedStyle(document.documentElement)
-                    .getPropertyValue('--school-primary')
-                    .trim(),
-                customClass: {
-                    popup: 'rounded-4',
-                    confirmButton: 'rounded-4 px-4 fw-semibold'
-                }
+                    const title = form.dataset.title || '¿Confirmar eliminación?';
+                    const text = form.dataset.text || 'Esta acción no se puede deshacer.';
+                    const confirmButtonText = form.dataset.confirmButton || 'Sí, eliminar';
+
+                    Swal.fire({
+                        icon: 'warning',
+                        title: title,
+                        text: text,
+                        showCancelButton: true,
+                        confirmButtonText: confirmButtonText,
+                        cancelButtonText: 'Cancelar',
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: getComputedStyle(document.documentElement)
+                            .getPropertyValue('--school-primary')
+                            .trim() || '#22c55e',
+                        reverseButtons: true,
+                        customClass: {
+                            popup: 'rounded-4',
+                            confirmButton: 'rounded-4 px-4 fw-semibold',
+                            cancelButton: 'rounded-4 px-4 fw-semibold'
+                        }
+                    }).then(function (result) {
+                        if (result.isConfirmed) {
+                            if (ecodataDisableSubmitForm(form, 'Eliminando...')) {
+                                form.submit();
+                            }
+                        }
+                    });
+                });
             });
         });
     </script>
-@endif
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-<script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/3.0.4/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/3.0.4/js/responsive.bootstrap5.min.js"></script>
-
-@stack('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    function recalculateResponsiveTables() {
-        if (!window.jQuery || !$.fn.dataTable) {
-            return;
-        }
-
-        setTimeout(function () {
-            $.fn.dataTable
-                .tables({ visible: true, api: true })
-                .columns.adjust()
-                .responsive.recalc();
-        }, 300);
-    }
-
-    window.addEventListener('resize', recalculateResponsiveTables);
-
-    document.addEventListener('shown.bs.collapse', recalculateResponsiveTables);
-    document.addEventListener('hidden.bs.collapse', recalculateResponsiveTables);
-
-    document.addEventListener('shown.bs.offcanvas', recalculateResponsiveTables);
-    document.addEventListener('hidden.bs.offcanvas', recalculateResponsiveTables);
-
-    recalculateResponsiveTables();
-
-    document.querySelectorAll('.js-confirm-delete').forEach(function (form) {
-        form.addEventListener('submit', function (event) {
-            event.preventDefault();
-
-            const title = form.dataset.title || '¿Confirmar eliminación?';
-            const text = form.dataset.text || 'Esta acción no se puede deshacer.';
-            const confirmButtonText = form.dataset.confirmButton || 'Sí, eliminar';
-
-            Swal.fire({
-                icon: 'warning',
-                title: title,
-                text: text,
-                showCancelButton: true,
-                confirmButtonText: confirmButtonText,
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: getComputedStyle(document.documentElement)
-                    .getPropertyValue('--school-primary')
-                    .trim() || '#6c757d',
-                reverseButtons: true,
-                customClass: {
-                    popup: 'rounded-4',
-                    confirmButton: 'rounded-4 px-4 fw-semibold',
-                    cancelButton: 'rounded-4 px-4 fw-semibold'
-                }
-            }).then(function (result) {
-                if (result.isConfirmed) {
-                    form.submit();
-                }
-            });
-        });
-    });
-});
-
- function ecodataDisableSubmitForm(form, loadingText = 'Procesando...') {
-        if (!form || form.dataset.submitted === 'true') {
-            return false;
-        }
-
-        form.dataset.submitted = 'true';
-
-        form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (button) {
-            button.disabled = true;
-
-            if (button.tagName === 'BUTTON') {
-                button.dataset.originalHtml = button.innerHTML;
-                button.innerHTML = `
-                    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
-                    ${loadingText}
-                `;
-            } else {
-                button.dataset.originalValue = button.value;
-                button.value = loadingText;
-            }
-        });
-
-        return true;
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('form').forEach(function (form) {
-            if (form.classList.contains('js-confirm-delete')) {
-                return;
-            }
-
-            form.addEventListener('submit', function (event) {
-                if (form.dataset.submitted === 'true') {
-                    event.preventDefault();
-                    return false;
-                }
-
-                ecodataDisableSubmitForm(form);
-            });
-        });
-    });
-</script>
+    @stack('scripts')
+</body>
+</html>

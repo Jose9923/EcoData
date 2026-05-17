@@ -153,6 +153,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                 Route::get('physical-variable-records/{physical_variable_record}', [PhysicalVariableRecordController::class, 'show'])
                     ->name('physical-variable-records.show');
+                
+                Route::get('physical-variable-records-export', [PhysicalVariableRecordController::class, 'export'])
+                    ->name('physical-variable-records.export');
+
             });
 
         /*
@@ -165,9 +169,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('admin.')
             ->middleware('role:super_admin|admin_colegio|docente')
             ->group(function () {
-
-                Route::get('physical-variable-records-export', [PhysicalVariableRecordController::class, 'export'])
-                    ->name('physical-variable-records.export');
 
                 Route::get('physical-variable-record-imports/create', [PhysicalVariableRecordImportController::class, 'create'])
                     ->name('physical-variable-record-imports.create');
