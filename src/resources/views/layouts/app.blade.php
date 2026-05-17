@@ -732,16 +732,6 @@
         @endpush
     @endif
 </body>
-@if(auth()->check())
-    <div style="position: fixed; bottom: 10px; right: 10px; z-index: 99999; background: white; color: black; padding: 10px; border: 1px solid red;">
-        Usuario: {{ auth()->user()->email }} <br>
-        School ID: {{ auth()->user()->school_id }} <br>
-        Colegio: {{ $currentSchool?->name ?? 'SIN COLEGIO' }} <br>
-        Primary: {{ $schoolPrimary }} <br>
-        Secondary: {{ $schoolSecondary }} <br>
-        Accent: {{ $schoolAccent }}
-    </div>
-@endif
 </html>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
