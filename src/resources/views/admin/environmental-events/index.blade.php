@@ -120,7 +120,7 @@
                             </td>
 
                             <td class="text-end">
-                                <div class="d-inline-flex gap-1">
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
                                     <a href="{{ route('admin.environmental-events.show', $event) }}"
                                     class="btn btn-outline-primary rounded-4">
                                         Ver detalle

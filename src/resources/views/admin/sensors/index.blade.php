@@ -142,27 +142,27 @@
                             </td>
 
                             <td class="text-end">
-                                <div class="d-inline-flex gap-1">
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
                                     <a href="{{ route('admin.sensors.show', $sensor) }}"
-                                    class="btn btn-outline-primary rounded-4">
+                                    class="btn btn-sm btn-outline-primary rounded-4">
                                         Ver detalle
                                     </a>
 
                                     <a href="{{ route('admin.sensors.edit', $sensor) }}"
-                                    class="btn btn-outline-secondary rounded-4">
+                                    class="btn btn-sm btn-outline-secondary rounded-4">
                                         Editar
                                     </a>
 
                                     <form action="{{ route('admin.sensors.destroy', $sensor) }}"
                                         method="POST"
-                                        class="js-confirm-delete"
+                                        class="js-confirm-delete d-inline m-0"
                                         data-title="¿Eliminar sensor?"
                                         data-text="Esta acción eliminará el sensor {{ $sensor->name }}. Si tiene información asociada, el sistema podría impedir la eliminación."
                                         data-confirm-button="Sí, eliminar">
                                         @csrf
                                         @method('DELETE')
 
-                                        <button type="submit" class="btn btn-outline-danger rounded-4">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-4">
                                             Eliminar
                                         </button>
                                     </form>
