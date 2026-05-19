@@ -117,15 +117,15 @@
                     <div class="fw-semibold text-white text-truncate">
                         {{ $school?->display_name ?? $school?->name ?? config('app.name', 'EcoData') }}
                     </div>
-                    <small class="text-secondary">Panel EcoData</small>
+                    <small class="text-white">Panel EcoData</small>
                 </div>
             </div>
         </div>
 
         <div class="border-bottom border-secondary-subtle pb-4 mb-4">
-            <div class="text-uppercase small fw-bold text-secondary">Usuario</div>
+            <div class="text-uppercase small fw-bold text-white">Usuario</div>
             <div class="mt-3 fw-semibold text-white">{{ $authUser?->name }}</div>
-            <small class="text-secondary">{{ $authUser?->email }}</small>
+            <small class="text-white">{{ $authUser?->email }}</small>
 
             @if($authUser?->roles?->isNotEmpty())
                 <div class="mt-2">
