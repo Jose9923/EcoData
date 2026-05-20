@@ -293,7 +293,7 @@
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table align-middle mb-0">
+                            <table class="table table-striped table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Nombre</th>
@@ -338,7 +338,7 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table align-middle mb-0">
+                        <table class="table table-striped table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th>Fecha</th>
@@ -384,7 +384,7 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table align-middle mb-0">
+                        <table class="table table-striped table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th>Título</th>
@@ -432,7 +432,7 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table align-middle mb-0">
+                        <table class="table table-striped table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th>Actividad</th>
@@ -485,7 +485,7 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table align-middle mb-0">
+                        <table class="table table-striped table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th>Evento</th>
