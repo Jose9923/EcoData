@@ -64,8 +64,13 @@
             </div>
         </div>
 
-        <div class="table-responsive">
-            <table class="table align-middle">
+        <div>
+            <table id="weatherStationsTable"
+                class="table table-striped table-hover align-middle nowrap w-100 mb-0 js-ecodata-datatable"
+                data-paging="false"
+                data-searching="false"
+                data-info="false"
+                data-empty="No hay estaciones meteorológicas registradas.">
                 <thead>
                     <tr>
                         <th>Estación</th>
@@ -110,18 +115,17 @@
                             </td>
 
                             <td class="text-end">
-                                <div class="d-flex flex-wrap gap-2 align-items-center">
-                                    
+                                <div class="d-inline-flex justify-content-end gap-2 flex-nowrap">
                                     <a href="{{ route('admin.weather-stations.show', $station) }}"
-                                    class="btn btn-outline-primary rounded-4">
+                                    class="btn btn-outline-primary rounded-4 text-nowrap">
                                         Ver detalle
                                     </a>
 
                                     <a href="{{ route('admin.weather-stations.edit', $station) }}"
-                                    class="btn btn-outline-secondary rounded-4">
+                                    class="btn btn-outline-secondary rounded-4 text-nowrap">
                                         Editar
                                     </a>
- 
+
                                     <form action="{{ route('admin.weather-stations.destroy', $station) }}"
                                         method="POST"
                                         class="js-confirm-delete"
@@ -131,7 +135,7 @@
                                         @csrf
                                         @method('DELETE')
 
-                                        <button type="submit" class="btn btn-outline-danger rounded-4">
+                                        <button type="submit" class="btn btn-outline-danger rounded-4 text-nowrap">
                                             Eliminar
                                         </button>
                                     </form>
@@ -150,8 +154,8 @@
         </div>
 
         @if($stations->hasPages())
-            <div class="mt-4">
-                {{ $stations->links() }}
+            <div class="p-4 border-top d-flex justify-content-center overflow-auto">
+                {{ $stations->onEachSide(1)->links() }}
             </div>
         @endif
     </section>
