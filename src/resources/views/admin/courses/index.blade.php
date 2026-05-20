@@ -68,7 +68,12 @@
 
     <section class="admin-card bg-white overflow-hidden">
         <div class="p-3 p-md-4">
-            <table id="coursesTable" class="table table-striped table-hover align-middle nowrap w-100 mb-0">
+            <table id="coursesTable"        
+                class="table table-striped table-hover align-middle nowrap w-100 mb-0 js-ecodata-datatable"
+                data-paging="false"
+                data-searching="false"
+                data-info="false"
+                data-empty="No hay grados registrados.">
                 <thead class="table-light">
                     <tr>
                         <th>Curso</th>
@@ -139,97 +144,3 @@
     </section>
 </div>
 @endsection
-@push('styles')
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.4/css/responsive.bootstrap5.min.css">
-
-    <style>
-        table.dataTable > tbody > tr.child ul.dtr-details {
-            width: 100%;
-        }
-
-        table.dataTable > tbody > tr.child ul.dtr-details > li {
-            display: flex;
-            justify-content: space-between;
-            gap: 1rem;
-            padding: .75rem 0;
-            border-bottom: 1px solid rgba(0, 0, 0, .075);
-        }
-
-        table.dataTable > tbody > tr.child span.dtr-title {
-            font-weight: 700;
-            color: var(--school-secondary);
-        }
-
-        .dt-container .dt-search input,
-        .dt-container .dt-length select {
-            border-radius: 1rem;
-            border: 1px solid rgba(0, 0, 0, .15);
-            padding: .45rem .75rem;
-        }
-
-        .dt-container .dt-paging .dt-paging-button {
-            border-radius: .75rem !important;
-        }
-    </style>
-@endpush
-
-@push('scripts')
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/3.0.4/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/3.0.4/js/responsive.bootstrap5.min.js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const table = $('#coursesTable');
-
-            if ($.fn.DataTable.isDataTable('#coursesTable')) {
-                table.DataTable().destroy();
-            }
-
-            table.DataTable({
-                responsive: true,
-                autoWidth: false,
-                paging: false,
-                searching: false,
-                info: false,
-                ordering: true,
-                columnDefs: [
-                    {
-                        targets: -1,
-                        orderable: false,
-                        searchable: false,
-                        responsivePriority: 1
-                    },
-                    {
-                        targets: 0,
-                        responsivePriority: 2
-                    },
-                    {
-                        targets: 4,
-                        responsivePriority: 3
-                    }
-                ],
-                language: {
-                    emptyTable: "No hay cursos registrados.",
-                    zeroRecords: "No se encontraron resultados",
-                    loadingRecords: "Cargando...",
-                    processing: "Procesando...",
-                    search: "Buscar:",
-                    lengthMenu: "Mostrar _MENU_ registros",
-                    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                    infoEmpty: "Mostrando 0 a 0 de 0 registros",
-                    infoFiltered: "(filtrado de _MAX_ registros totales)",
-                    paginate: {
-                        first: "Primero",
-                        last: "Último",
-                        next: "Siguiente",
-                        previous: "Anterior"
-                    }
-                }
-            });
-        });
-    </script>
-@endpush

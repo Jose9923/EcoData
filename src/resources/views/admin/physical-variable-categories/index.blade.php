@@ -57,7 +57,12 @@
 
     <section class="admin-card bg-white overflow-hidden">
         <div class="p-3 p-md-4">
-            <table id="physicalVariableCategoriesTable" class="table table-striped table-hover align-middle nowrap w-100 mb-0">
+            <table id="physicalVariableCategoriesTable"        
+                class="table table-striped table-hover align-middle nowrap w-100 mb-0 js-ecodata-datatable"
+                data-paging="false"
+                data-searching="false"
+                data-info="false"
+                data-empty="No hay grados registrados.">
                 <thead class="table-light">
                     <tr>
                         <th>Nombre</th>
@@ -182,96 +187,3 @@
     </section>
 </div>
 @endsection
-@push('styles')
-    <style>
-        table.dataTable > tbody > tr.child ul.dtr-details {
-            width: 100%;
-        }
-
-        table.dataTable > tbody > tr.child ul.dtr-details > li {
-            display: flex;
-            justify-content: space-between;
-            gap: 1rem;
-            padding: .75rem 0;
-            border-bottom: 1px solid rgba(0, 0, 0, .075);
-        }
-
-        table.dataTable > tbody > tr.child span.dtr-title {
-            font-weight: 700;
-            color: var(--school-secondary);
-        }
-
-        #physicalVariableCategoriesTable td:last-child {
-            white-space: nowrap;
-        }
-
-        @media (max-width: 768px) {
-            #physicalVariableCategoriesTable td:last-child .d-flex {
-                flex-wrap: wrap;
-                justify-content: flex-start !important;
-            }
-
-            #physicalVariableCategoriesTable td:last-child .btn {
-                padding: .35rem .65rem;
-                font-size: .875rem;
-            }
-        }
-    </style>
-@endpush
-@push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const table = $('#physicalVariableCategoriesTable');
-
-            if ($.fn.DataTable.isDataTable('#physicalVariableCategoriesTable')) {
-                table.DataTable().destroy();
-            }
-
-            table.DataTable({
-                responsive: true,
-                autoWidth: false,
-                paging: false,
-                searching: false,
-                info: false,
-                ordering: true,
-                columnDefs: [
-                    {
-                        targets: -1,
-                        orderable: false,
-                        searchable: false,
-                        responsivePriority: 1
-                    },
-                    {
-                        targets: 0,
-                        responsivePriority: 2
-                    },
-                    {
-                        targets: 2,
-                        responsivePriority: 3
-                    },
-                    {
-                        targets: 1,
-                        responsivePriority: 4
-                    }
-                ],
-                language: {
-                    emptyTable: "No hay categorías registradas.",
-                    zeroRecords: "No se encontraron resultados",
-                    loadingRecords: "Cargando...",
-                    processing: "Procesando...",
-                    search: "Buscar:",
-                    lengthMenu: "Mostrar _MENU_ registros",
-                    info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                    infoEmpty: "Mostrando 0 a 0 de 0 registros",
-                    infoFiltered: "(filtrado de _MAX_ registros totales)",
-                    paginate: {
-                        first: "Primero",
-                        last: "Último",
-                        next: "Siguiente",
-                        previous: "Anterior"
-                    }
-                }
-            });
-        });
-    </script>
-@endpush

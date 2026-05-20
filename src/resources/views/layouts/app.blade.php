@@ -954,6 +954,81 @@
                 });
             });
         });
+
+        window.ecodataDataTableLanguage = {
+            decimal: ',',
+            thousands: '.',
+            processing: 'Procesando...',
+            search: 'Buscar:',
+            lengthMenu: 'Mostrar _MENU_ registros',
+            info: 'Mostrando _START_ a _END_ de _TOTAL_ registros',
+            infoEmpty: 'Mostrando 0 a 0 de 0 registros',
+            infoFiltered: '(filtrado de _MAX_ registros totales)',
+            loadingRecords: 'Cargando...',
+            zeroRecords: 'No se encontraron resultados',
+            emptyTable: 'No hay datos disponibles en la tabla',
+            paginate: {
+                first: 'Primero',
+                previous: 'Anterior',
+                next: 'Siguiente',
+                last: 'Último'
+            },
+            aria: {
+                sortAscending: ': activar para ordenar ascendente',
+                sortDescending: ': activar para ordenar descendente'
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!window.jQuery || !$.fn.DataTable) {
+                return;
+            }
+
+            $('.js-ecodata-datatable').each(function () {
+                const table = $(this);
+
+                if ($.fn.DataTable.isDataTable(this)) {
+                    table.DataTable().destroy();
+                }
+
+                const emptyText = table.data('empty') || 'No hay datos disponibles en la tabla';
+
+                const paging = table.data('paging') !== false && table.data('paging') !== 'false';
+                const searching = table.data('searching') !== false && table.data('searching') !== 'false';
+                const info = table.data('info') !== false && table.data('info') !== 'false';
+                const pageLength = parseInt(table.data('pageLength') || table.data('page-length') || 10, 10);
+
+                const columnDefs = [
+                    {
+                        targets: -1,
+                        orderable: false,
+                        searchable: false,
+                        responsivePriority: 1
+                    },
+                    {
+                        targets: 0,
+                        responsivePriority: 2
+                    }
+                ];
+
+                table.DataTable({
+                    responsive: false,
+                    autoWidth: false,
+                    scrollX: true,
+                    paging: paging,
+                    searching: searching,
+                    info: info,
+                    ordering: true,
+                    pageLength: pageLength,
+                    lengthMenu: [5, 10, 15, 25, 50],
+                    columnDefs: columnDefs,
+                    language: {
+                        ...window.ecodataDataTableLanguage,
+                        emptyTable: emptyText
+                    }
+                });
+            });
+        });
     </script>
 
     @stack('scripts')
