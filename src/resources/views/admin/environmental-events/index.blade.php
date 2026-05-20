@@ -62,8 +62,13 @@
             </p>
         </div>
 
-        <div class="table-responsive">
-            <table class="table align-middle">
+        <div>
+            <table id="environmentalEventsTable"
+                class="table table-striped table-hover align-middle nowrap w-100 mb-0 js-ecodata-datatable"
+                data-paging="false"
+                data-searching="false"
+                data-info="false"
+                data-empty="No hay eventos ambientales registrados.">
                 <thead>
                     <tr>
                         <th>Evento</th>
@@ -81,12 +86,12 @@
                                 <div class="d-flex align-items-center gap-3">
                                     @if($event->image_path)
                                         <img src="{{ asset('storage/' . $event->image_path) }}"
-                                             alt="{{ $event->title }}"
-                                             class="rounded-4"
-                                             style="width: 72px; height: 56px; object-fit: cover;">
+                                            alt="{{ $event->title }}"
+                                            class="rounded-4"
+                                            style="width: 72px; height: 56px; object-fit: cover;">
                                     @else
                                         <div class="rounded-4 bg-light d-flex align-items-center justify-content-center"
-                                             style="width: 72px; height: 56px;">
+                                            style="width: 72px; height: 56px;">
                                             🌎
                                         </div>
                                     @endif
@@ -120,14 +125,14 @@
                             </td>
 
                             <td class="text-end">
-                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <div class="d-inline-flex justify-content-end gap-2 flex-nowrap">
                                     <a href="{{ route('admin.environmental-events.show', $event) }}"
-                                    class="btn btn-outline-primary rounded-4">
+                                    class="btn btn-outline-primary rounded-4 text-nowrap">
                                         Ver detalle
                                     </a>
 
                                     <a href="{{ route('admin.environmental-events.edit', $event) }}"
-                                    class="btn btn-outline-secondary rounded-4">
+                                    class="btn btn-outline-secondary rounded-4 text-nowrap">
                                         Editar
                                     </a>
 
@@ -140,7 +145,7 @@
                                         @csrf
                                         @method('DELETE')
 
-                                        <button type="submit" class="btn btn-outline-danger rounded-4">
+                                        <button type="submit" class="btn btn-outline-danger rounded-4 text-nowrap">
                                             Eliminar
                                         </button>
                                     </form>
@@ -159,8 +164,8 @@
         </div>
 
         @if($events->hasPages())
-            <div class="mt-4">
-                {{ $events->links() }}
+            <div class="p-4 border-top d-flex justify-content-center overflow-auto">
+                {{ $events->onEachSide(1)->links() }}
             </div>
         @endif
     </section>

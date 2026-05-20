@@ -147,8 +147,13 @@
             </div>
         </div>
 
-        <div class="table-responsive">
-            <table class="table align-middle">
+        <div>
+            <table id="fieldDiarySubmissionsTable"
+                class="table table-striped table-hover align-middle nowrap w-100 mb-0 js-ecodata-datatable"
+                data-paging="false"
+                data-searching="false"
+                data-info="false"
+                data-empty="No hay entregas registradas con los filtros seleccionados.">
                 <thead>
                     <tr>
                         <th>Actividad</th>
@@ -215,10 +220,12 @@
                             </td>
 
                             <td class="text-end">
-                                <a href="{{ route('admin.field-diary-submissions.show', $submission) }}"
-                                   class="btn btn-outline-secondary rounded-4">
-                                    Revisar
-                                </a>
+                                <div class="d-inline-flex justify-content-end gap-2 flex-nowrap">
+                                    <a href="{{ route('admin.field-diary-submissions.show', $submission) }}"
+                                    class="btn btn-outline-secondary rounded-4 text-nowrap">
+                                        Revisar
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -233,8 +240,8 @@
         </div>
 
         @if($submissions->hasPages())
-            <div class="mt-4">
-                {{ $submissions->links() }}
+            <div class="p-4 border-top d-flex justify-content-center overflow-auto">
+                {{ $submissions->onEachSide(1)->links() }}
             </div>
         @endif
     </section>

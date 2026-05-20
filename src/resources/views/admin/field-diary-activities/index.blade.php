@@ -62,8 +62,13 @@
             </p>
         </div>
 
-        <div class="table-responsive">
-            <table class="table align-middle">
+        <div>
+            <table id="fieldDiaryActivitiesTable"
+                class="table table-striped table-hover align-middle nowrap w-100 mb-0 js-ecodata-datatable"
+                data-paging="false"
+                data-searching="false"
+                data-info="false"
+                data-empty="No hay actividades de diario de campo registradas.">
                 <thead>
                     <tr>
                         <th>Actividad</th>
@@ -131,14 +136,14 @@
                             </td>
 
                             <td class="text-end">
-                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <div class="d-inline-flex justify-content-end gap-2 flex-nowrap">
                                     <a href="{{ route('admin.field-diary-activities.show', $activity) }}"
-                                    class="btn btn-outline-primary rounded-4">
+                                    class="btn btn-outline-primary rounded-4 text-nowrap">
                                         Ver detalles
                                     </a>
 
                                     <a href="{{ route('admin.field-diary-activities.edit', $activity) }}"
-                                    class="btn btn-outline-secondary rounded-4">
+                                    class="btn btn-outline-secondary rounded-4 text-nowrap">
                                         Editar
                                     </a>
 
@@ -151,7 +156,7 @@
                                         @csrf
                                         @method('DELETE')
 
-                                        <button type="submit" class="btn btn-outline-danger rounded-4">
+                                        <button type="submit" class="btn btn-outline-danger rounded-4 text-nowrap">
                                             Eliminar
                                         </button>
                                     </form>
@@ -170,8 +175,8 @@
         </div>
 
         @if($activities->hasPages())
-            <div class="mt-4">
-                {{ $activities->links() }}
+            <div class="p-4 border-top d-flex justify-content-center overflow-auto">
+                {{ $activities->onEachSide(1)->links() }}
             </div>
         @endif
     </section>

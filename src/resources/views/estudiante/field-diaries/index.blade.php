@@ -97,8 +97,13 @@
                 </p>
             </div>
 
-            <div class="table-responsive">
-                <table class="table align-middle">
+            <div>
+                <table id="myFieldDiarySubmissionsTable"
+                    class="table table-striped table-hover align-middle nowrap w-100 mb-0 js-ecodata-datatable"
+                    data-paging="false"
+                    data-searching="false"
+                    data-info="false"
+                    data-empty="No hay entregas registradas.">
                     <thead>
                         <tr>
                             <th>Actividad</th>
@@ -143,10 +148,12 @@
                                 </td>
 
                                 <td class="text-end">
-                                    <a href="{{ route('estudiante.field-diaries.show', $submission->activity) }}"
-                                    class="btn btn-outline-primary rounded-4">
-                                        Ver detalles
-                                    </a>
+                                    <div class="d-inline-flex justify-content-end gap-2 flex-nowrap">
+                                        <a href="{{ route('estudiante.field-diaries.show', $submission->activity) }}"
+                                        class="btn btn-outline-primary rounded-4 text-nowrap">
+                                            Ver detalles
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
