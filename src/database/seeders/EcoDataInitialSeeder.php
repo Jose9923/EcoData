@@ -158,7 +158,7 @@ class EcoDataInitialSeeder extends Seeder
         $users = [
             [
                 'name' => 'Super Admin EcoData',
-                'email' => 'superadmin@ecodata.com',
+                'email' => 'ecodata.superadmin@gmail.com',
                 'role' => 'super_admin',
                 'school_id' => null,
                 'grade_id' => null,
@@ -168,7 +168,7 @@ class EcoDataInitialSeeder extends Seeder
             ],
             [
                 'name' => 'Admin Colegio EcoData',
-                'email' => 'admin@ecodata.com',
+                'email' => 'ecodata.admincolegio@gmail.com',
                 'role' => 'admin_colegio',
                 'school_id' => $this->schoolId,
                 'grade_id' => null,
@@ -178,7 +178,7 @@ class EcoDataInitialSeeder extends Seeder
             ],
             [
                 'name' => 'Docente EcoData',
-                'email' => 'docente@ecodata.com',
+                'email' => 'ecodata.docente@gmail.com',
                 'role' => 'docente',
                 'school_id' => $this->schoolId,
                 'grade_id' => null,
@@ -188,7 +188,7 @@ class EcoDataInitialSeeder extends Seeder
             ],
             [
                 'name' => 'Estudiante EcoData',
-                'email' => 'estudiante@ecodata.com',
+                'email' => 'ecodata.estudiante@gmail.com',
                 'role' => 'estudiante',
                 'school_id' => $this->schoolId,
                 'grade_id' => $this->gradeId,
