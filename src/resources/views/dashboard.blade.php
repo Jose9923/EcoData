@@ -521,4 +521,5 @@
     </section>
 
 </div>
+@include('environmental-events.partials.daily-modal')
 @endsection

@@ -191,6 +191,18 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        $pendingEnvironmentalEvents = EnvironmentalEvent::query()
+            ->with('school')
+            ->where('is_active', true)
+            ->whereDate('starts_at', '<=', $today)
+            ->whereDate('ends_at', '>=', $today)
+            ->when(! $isSuperAdmin, fn ($query) => $query->where('school_id', $schoolId))
+            ->whereDoesntHave('acknowledgements', function ($query) use ($authUser) {
+                $query->where('user_id', $authUser->id);
+            })
+            ->orderBy('starts_at')
+            ->get();
+        
         $pending = [
             'users_without_document' => User::query()
                 ->when(! $isSuperAdmin, fn ($query) => $query->where('school_id', $schoolId))
@@ -250,6 +262,7 @@ class DashboardController extends Controller
             'recentFieldDiarySubmissions',
             'upcomingEnvironmentalEvents',
             'pending',
+            'pendingEnvironmentalEvents',
             'isSuperAdmin',
             'isSchoolAdmin',
             'isdocente',

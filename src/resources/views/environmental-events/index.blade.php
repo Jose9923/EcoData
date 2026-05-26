@@ -71,4 +71,5 @@
             </div>
         </section>
     @endif
+    @include('environmental-events.partials.daily-modal')
 @endsection

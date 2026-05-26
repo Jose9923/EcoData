@@ -35,4 +35,35 @@ class EnvironmentalEventAcknowledgementController extends Controller
 
         return back();
     }
+
+    public function storeMany(Request $request): RedirectResponse
+    {
+        $authUser = $request->user();
+
+        $eventIds = $request->input('event_ids', []);
+
+        $events = EnvironmentalEvent::query()
+            ->whereIn('id', $eventIds)
+            ->where('is_active', true)
+            ->whereDate('starts_at', '<=', now()->toDateString())
+            ->whereDate('ends_at', '>=', now()->toDateString())
+            ->when(! $authUser->hasRole('super_admin'), function ($query) use ($authUser) {
+                $query->where('school_id', $authUser->school_id);
+            })
+            ->get();
+
+        foreach ($events as $event) {
+            EnvironmentalEventAcknowledgement::updateOrCreate(
+                [
+                    'environmental_event_id' => $event->id,
+                    'user_id' => $authUser->id,
+                ],
+                [
+                    'acknowledged_at' => now(),
+                ]
+            );
+        }
+
+        return back();
+    }
 }

@@ -256,8 +256,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('calendario-ambiental/{environmental_event}', [EnvironmentalEventPublicController::class, 'show'])
             ->name('environmental-events.show');
 
-        Route::post('calendario-ambiental/{environmental_event}/aceptar', [EnvironmentalEventAcknowledgementController::class, 'store'])
+        Route::post('/environmental-events/{environmental_event}/acknowledge', [EnvironmentalEventAcknowledgementController::class, 'store'])
             ->name('environmental-events.acknowledge');
+        Route::post('/environmental-events/acknowledge-all', [EnvironmentalEventAcknowledgementController::class, 'storeMany'])
+            ->name('environmental-events.acknowledge-all');
     });
 });
 

@@ -36,10 +36,25 @@ class EnvironmentalEventPublicController extends Controller
             ->sortByDesc('starts_at')
             ->values();
 
+        $pendingEnvironmentalEvents = EnvironmentalEvent::query()
+            ->with('school')
+            ->where('is_active', true)
+            ->whereDate('starts_at', '<=', $today)
+            ->whereDate('ends_at', '>=', $today)
+            ->when(! $authUser->hasRole('super_admin'), function ($query) use ($authUser) {
+                $query->where('school_id', $authUser->school_id);
+            })
+            ->whereDoesntHave('acknowledgements', function ($query) use ($authUser) {
+                $query->where('user_id', $authUser->id);
+            })
+            ->orderBy('starts_at')
+            ->get();
+
         return view('environmental-events.index', [
             'todayEvents' => $todayEvents,
             'upcomingEvents' => $upcomingEvents,
             'pastEvents' => $pastEvents,
+            'pendingEnvironmentalEvents' => $pendingEnvironmentalEvents,
         ]);
     }
 
