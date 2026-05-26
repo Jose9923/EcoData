@@ -64,6 +64,10 @@ class EnvironmentalEventAcknowledgementController extends Controller
             );
         }
 
+        if ($request->input('redirect_to') === 'calendar') {
+            return redirect()->route('environmental-events.index');
+        }
+
         return back();
     }
 }

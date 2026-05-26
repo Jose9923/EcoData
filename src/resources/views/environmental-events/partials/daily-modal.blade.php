@@ -63,10 +63,19 @@
                 </div>
 
                 <div class="modal-footer border-0 pt-0">
-                    <a href="{{ route('environmental-events.index') }}"
-                       class="btn btn-outline-dark rounded-4 px-4">
-                        Ver calendario
-                    </a>
+                    <form method="POST" action="{{ route('environmental-events.acknowledge-all') }}">
+                        @csrf
+
+                        <input type="hidden" name="redirect_to" value="calendar">
+
+                        @foreach($pendingEnvironmentalEvents as $event)
+                            <input type="hidden" name="event_ids[]" value="{{ $event->id }}">
+                        @endforeach
+
+                        <button type="submit" class="btn btn-outline-dark rounded-4 px-4">
+                            Ver calendario
+                        </button>
+                    </form>
 
                     <form method="POST" action="{{ route('environmental-events.acknowledge-all') }}">
                         @csrf
