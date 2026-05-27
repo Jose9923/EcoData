@@ -91,7 +91,7 @@
         @if($isEdit && $event->image_path)
             <div class="mt-3">
                 <div class="text-muted small fw-semibold mb-2">Imagen actual</div>
-                <img src="{{ asset('storage/' . $event->image_path) }}"
+                <img src="{{ route('environmental-events.image', $event) }}"
                      alt="{{ $event->title }}"
                      class="rounded-4 border"
                      style="max-width: 260px; height: 140px; object-fit: cover;">

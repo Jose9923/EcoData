@@ -245,4 +245,185 @@
             </div>
         @endif
     </section>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const schoolSelect = document.getElementById('school_id');
+                const gradeSelect = document.getElementById('grade_id');
+                const courseSelect = document.getElementById('course_id');
+                const activitySelect = document.getElementById('activity_id');
+                const studentSelect = document.getElementById('student_id');
+
+                const gradesUrl = @json(route('admin.field-diary-submissions.ajax.grades'));
+                const coursesUrl = @json(route('admin.field-diary-submissions.ajax.courses'));
+                const activitiesUrl = @json(route('admin.field-diary-submissions.ajax.activities'));
+                const studentsUrl = @json(route('admin.field-diary-submissions.ajax.students'));
+
+                const initialSchoolId = schoolSelect?.value || @json((string) ($filters['school_id'] ?? ''));
+                const selectedGradeId = @json((string) ($filters['grade_id'] ?? ''));
+                const selectedCourseId = @json((string) ($filters['course_id'] ?? ''));
+                const selectedActivityId = @json((string) ($filters['activity_id'] ?? ''));
+                const selectedStudentId = @json((string) ($filters['student_id'] ?? ''));
+
+                function setOptions(select, items, placeholder, selectedValue = '') {
+                    if (!select) return;
+
+                    select.innerHTML = `<option value="">${placeholder}</option>`;
+
+                    items.forEach((item) => {
+                        const option = document.createElement('option');
+                        option.value = item.id;
+                        option.textContent = item.label;
+
+                        if (String(item.id) === String(selectedValue)) {
+                            option.selected = true;
+                        }
+
+                        select.appendChild(option);
+                    });
+                }
+
+                async function fetchJson(url) {
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('No fue posible cargar los filtros.');
+                    }
+
+                    return await response.json();
+                }
+
+                function buildUrl(baseUrl, params) {
+                    const url = new URL(baseUrl, window.location.origin);
+
+                    Object.entries(params).forEach(([key, value]) => {
+                        if (value !== null && value !== undefined && value !== '') {
+                            url.searchParams.set(key, value);
+                        }
+                    });
+
+                    return url.toString();
+                }
+
+                async function loadGrades(schoolId, selected = '') {
+                    if (!schoolId) {
+                        setOptions(gradeSelect, [], 'Todos');
+                        setOptions(courseSelect, [], 'Todos');
+                        setOptions(activitySelect, [], 'Todas');
+                        setOptions(studentSelect, [], 'Todos');
+                        return;
+                    }
+
+                    try {
+                        const data = await fetchJson(buildUrl(gradesUrl, { school_id: schoolId }));
+                        setOptions(gradeSelect, data, 'Todos', selected);
+                    } catch (error) {
+                        console.error(error);
+                        setOptions(gradeSelect, [], 'Error cargando grados');
+                    }
+                }
+
+                async function loadCourses(schoolId, gradeId = '', selected = '') {
+                    if (!schoolId) {
+                        setOptions(courseSelect, [], 'Todos');
+                        return;
+                    }
+
+                    try {
+                        const data = await fetchJson(buildUrl(coursesUrl, {
+                            school_id: schoolId,
+                            grade_id: gradeId,
+                        }));
+                        setOptions(courseSelect, data, 'Todos', selected);
+                    } catch (error) {
+                        console.error(error);
+                        setOptions(courseSelect, [], 'Error cargando cursos');
+                    }
+                }
+
+                async function loadActivities(schoolId, gradeId = '', courseId = '', selected = '') {
+                    if (!schoolId) {
+                        setOptions(activitySelect, [], 'Todas');
+                        return;
+                    }
+
+                    try {
+                        const data = await fetchJson(buildUrl(activitiesUrl, {
+                            school_id: schoolId,
+                            grade_id: gradeId,
+                            course_id: courseId,
+                        }));
+                        setOptions(activitySelect, data, 'Todas', selected);
+                    } catch (error) {
+                        console.error(error);
+                        setOptions(activitySelect, [], 'Error cargando actividades');
+                    }
+                }
+
+                async function loadStudents(schoolId, gradeId = '', courseId = '', selected = '') {
+                    if (!schoolId) {
+                        setOptions(studentSelect, [], 'Todos');
+                        return;
+                    }
+
+                    try {
+                        const data = await fetchJson(buildUrl(studentsUrl, {
+                            school_id: schoolId,
+                            grade_id: gradeId,
+                            course_id: courseId,
+                        }));
+                        setOptions(studentSelect, data, 'Todos', selected);
+                    } catch (error) {
+                        console.error(error);
+                        setOptions(studentSelect, [], 'Error cargando estudiantes');
+                    }
+                }
+
+                schoolSelect?.addEventListener('change', async function () {
+                    await loadGrades(this.value);
+                    await loadCourses(this.value);
+                    await loadActivities(this.value);
+                    await loadStudents(this.value);
+                });
+
+                gradeSelect?.addEventListener('change', async function () {
+                    const schoolId = schoolSelect?.value || initialSchoolId;
+
+                    await loadCourses(schoolId, this.value);
+                    await loadActivities(schoolId, this.value);
+                    await loadStudents(schoolId, this.value);
+                });
+
+                courseSelect?.addEventListener('change', async function () {
+                    const schoolId = schoolSelect?.value || initialSchoolId;
+                    const gradeId = gradeSelect?.value || '';
+
+                    await loadActivities(schoolId, gradeId, this.value);
+                    await loadStudents(schoolId, gradeId, this.value);
+                });
+
+                if (initialSchoolId && gradeSelect && gradeSelect.options.length <= 1) {
+                    loadGrades(initialSchoolId, selectedGradeId);
+                }
+
+                if (initialSchoolId && courseSelect && courseSelect.options.length <= 1) {
+                    loadCourses(initialSchoolId, selectedGradeId, selectedCourseId);
+                }
+
+                if (initialSchoolId && activitySelect && activitySelect.options.length <= 1) {
+                    loadActivities(initialSchoolId, selectedGradeId, selectedCourseId, selectedActivityId);
+                }
+
+                if (initialSchoolId && studentSelect && studentSelect.options.length <= 1) {
+                    loadStudents(initialSchoolId, selectedGradeId, selectedCourseId, selectedStudentId);
+                }
+            });
+        </script>
+    @endpush
 @endsection

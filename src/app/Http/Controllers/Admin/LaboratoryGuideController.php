@@ -160,9 +160,7 @@ class LaboratoryGuideController extends Controller
         $course = ! empty($data['course_id']) ? Course::findOrFail($data['course_id']) : null;
 
         if ($request->hasFile('pdf')) {
-            if ($laboratory_guide->pdf_path && Storage::disk('public')->exists($laboratory_guide->pdf_path)) {
-                Storage::disk('public')->delete($laboratory_guide->pdf_path);
-            }
+            $this->deleteStoredPdf($laboratory_guide->pdf_path);
 
             $laboratory_guide->pdf_path = $this->storePdf(
                 file: $request->file('pdf'),
@@ -194,9 +192,7 @@ class LaboratoryGuideController extends Controller
 
         $this->authorizeSchoolScope($authUser, $laboratory_guide->school_id);
 
-        if ($laboratory_guide->pdf_path && Storage::disk('public')->exists($laboratory_guide->pdf_path)) {
-            Storage::disk('public')->delete($laboratory_guide->pdf_path);
-        }
+        $this->deleteStoredPdf($laboratory_guide->pdf_path);
 
         $laboratory_guide->delete();
 
@@ -212,11 +208,14 @@ class LaboratoryGuideController extends Controller
         $this->authorizeSchoolScope($authUser, $laboratory_guide->school_id);
 
         abort_if(! $laboratory_guide->pdf_path, 404, 'La guía no tiene un archivo PDF asociado.');
-        abort_if(! Storage::disk('public')->exists($laboratory_guide->pdf_path), 404, 'El archivo PDF no existe.');
+
+        $disk = $this->resolveStorageDisk($laboratory_guide->pdf_path);
+
+        abort_if(! $disk, 404, 'El archivo PDF no existe.');
 
         $fileName = Str::slug($laboratory_guide->title) . '.pdf';
 
-        return Storage::disk('public')->download($laboratory_guide->pdf_path, $fileName);
+        return Storage::disk($disk)->download($laboratory_guide->pdf_path, $fileName);
     }
 
     public function getGrades(Request $request): JsonResponse
@@ -314,6 +313,32 @@ class LaboratoryGuideController extends Controller
 
         $directory = "laboratory-guides/{$schoolFolder}/{$gradeFolder}/{$courseFolder}";
 
-        return $file->storeAs($directory, $fileName, 'public');
+        return $file->storeAs($directory, $fileName, 'local');
+    }
+
+    private function deleteStoredPdf(?string $path): void
+    {
+        if (! $path) {
+            return;
+        }
+
+        foreach (['local', 'public'] as $disk) {
+            if (Storage::disk($disk)->exists($path)) {
+                Storage::disk($disk)->delete($path);
+            }
+        }
+    }
+
+    private function resolveStorageDisk(string $path): ?string
+    {
+        if (Storage::disk('local')->exists($path)) {
+            return 'local';
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            return 'public';
+        }
+
+        return null;
     }
 }

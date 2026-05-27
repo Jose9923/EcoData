@@ -90,7 +90,10 @@ class FieldDiarySubmissionsExport implements
                 $activity = $submission->activity;
                 $student = $submission->student;
 
-                return $submission->answers
+                $answers = $submission->answers
+                    ->filter(fn ($answer) => (int) $answer->question?->field_diary_activity_id === (int) $submission->field_diary_activity_id);
+
+                return $answers
                     ->sortBy(fn ($answer) => $answer->question?->order ?? 999)
                     ->map(function ($answer) use ($submission, $activity, $student) {
                         $question = $answer->question;
@@ -103,7 +106,7 @@ class FieldDiarySubmissionsExport implements
                         }
 
                         $fileUrl = $answer->answer_file_path
-                            ? rtrim(config('app.url'), '/') . '/storage/' . ltrim($answer->answer_file_path, '/')
+                            ? route('field-diaries.answers.file', $answer)
                             : null;
 
                         return [

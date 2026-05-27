@@ -72,7 +72,7 @@ class SensorController extends Controller
         return view('admin.sensors.create', [
             'sensor' => null,
             'stations' => $this->visibleStations($authUser),
-            'variables' => $this->visibleVariables($selectedSchoolId),
+            'variables' => $this->visibleVariables($selectedSchoolId, $authUser),
             'statuses' => $this->statuses(),
             'selectedStationId' => $selectedStationId,
         ]);
@@ -133,12 +133,16 @@ class SensorController extends Controller
         $selectedStationId = old('weather_station_id', $request->integer('weather_station_id') ?: $sensor->weather_station_id);
         $selectedStation = WeatherStation::find($selectedStationId);
 
+        if ($selectedStation) {
+            $this->authorizeSchoolScope($authUser, $selectedStation->school_id);
+        }
+
         $selectedSchoolId = $selectedStation?->school_id ?: $sensor->weatherStation?->school_id;
 
         return view('admin.sensors.edit', [
             'sensor' => $sensor,
             'stations' => $this->visibleStations($authUser),
-            'variables' => $this->visibleVariables($selectedSchoolId),
+            'variables' => $this->visibleVariables($selectedSchoolId, $authUser),
             'statuses' => $this->statuses(),
             'selectedStationId' => $selectedStationId,
         ]);
@@ -205,8 +209,12 @@ class SensorController extends Controller
             ->get(['id', 'school_id', 'name', 'code']);
     }
 
-    private function visibleVariables(?int $schoolId)
+    private function visibleVariables(?int $schoolId, ?User $authUser = null)
     {
+        if ($authUser && ! $authUser->hasRole('super_admin')) {
+            $schoolId = $authUser->school_id;
+        }
+
         return PhysicalVariable::query()
             ->with('category:id,name')
             ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))

@@ -160,7 +160,7 @@
 
                     @if($question->question_type === 'file')
                         @if($answer?->answer_file_path)
-                            <a href="{{ asset('storage/' . $answer->answer_file_path) }}"
+                            <a href="{{ route('field-diaries.answers.file', $answer) }}"
                                target="_blank"
                                class="btn btn-sm btn-outline-dark rounded-3">
                                 Ver archivo de evidencia

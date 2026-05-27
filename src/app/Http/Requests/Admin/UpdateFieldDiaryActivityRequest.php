@@ -11,7 +11,23 @@ class UpdateFieldDiaryActivityRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasAnyRole(['super_admin', 'admin_colegio', 'docente']) ?? false;
+        $authUser = $this->user();
+
+        if (! $authUser?->hasAnyRole(['super_admin', 'admin_colegio', 'docente'])) {
+            return false;
+        }
+
+        if ($authUser->hasRole('super_admin')) {
+            return true;
+        }
+
+        $activity = $this->route('field_diary_activity');
+
+        if (! $activity instanceof FieldDiaryActivity) {
+            $activity = FieldDiaryActivity::find($activity);
+        }
+
+        return $activity && (int) $activity->school_id === (int) $authUser->school_id;
     }
 
     public function rules(): array
@@ -26,7 +42,9 @@ class UpdateFieldDiaryActivityRequest extends FormRequest
             'school_id' => [
                 $authUser->hasRole('super_admin') ? 'required' : 'nullable',
                 'integer',
-                Rule::exists('schools', 'id')->where(fn ($query) => $query->where('is_active', true)),
+                $authUser->hasRole('super_admin')
+                    ? Rule::exists('schools', 'id')->where(fn ($query) => $query->where('is_active', true))
+                    : Rule::in([(int) $authUser->school_id]),
             ],
 
             'grade_id' => [

@@ -1,7 +1,7 @@
 <div class="col-12 col-md-6 col-xl-4">
     <div class="border rounded-4 h-100 overflow-hidden bg-white">
         @if($event->image_path)
-            <img src="{{ asset('storage/' . $event->image_path) }}"
+            <img src="{{ route('environmental-events.image', $event) }}"
                  alt="{{ $event->title }}"
                  class="w-100"
                  style="height: 180px; object-fit: cover;">

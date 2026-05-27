@@ -12,6 +12,7 @@ use App\Models\Grade;
 use App\Models\School;
 use App\Models\User;
 use App\Models\WeatherStation;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -63,6 +64,7 @@ class FieldDiaryActivityController extends Controller
 
         $selectedSchoolId = $this->resolveSelectedSchoolId($request);
         $selectedGradeId = $request->integer('grade_id') ?: null;
+        $selectedCourseId = $request->integer('course_id') ?: null;
 
         return view('admin.field-diary-activities.create', [
             'activity' => null,
@@ -74,6 +76,7 @@ class FieldDiaryActivityController extends Controller
             'questionTypes' => $this->questionTypes(),
             'selectedSchoolId' => $selectedSchoolId,
             'selectedGradeId' => $selectedGradeId,
+            'selectedCourseId' => $selectedCourseId,
         ]);
     }
 
@@ -161,6 +164,7 @@ class FieldDiaryActivityController extends Controller
             : $authUser->school_id;
 
         $selectedGradeId = old('grade_id', $request->integer('grade_id') ?: $field_diary_activity->grade_id);
+        $selectedCourseId = old('course_id', $request->integer('course_id') ?: $field_diary_activity->course_id);
 
         return view('admin.field-diary-activities.edit', [
             'activity' => $field_diary_activity,
@@ -172,6 +176,7 @@ class FieldDiaryActivityController extends Controller
             'questionTypes' => $this->questionTypes(),
             'selectedSchoolId' => $selectedSchoolId,
             'selectedGradeId' => $selectedGradeId,
+            'selectedCourseId' => $selectedCourseId,
         ]);
     }
 
@@ -256,10 +261,58 @@ class FieldDiaryActivityController extends Controller
             ->get(['id', 'name']);
     }
 
+    public function getGrades(Request $request): JsonResponse
+    {
+        $schoolId = $this->resolveSelectedSchoolId($request);
+
+        $grades = $this->visibleGrades($schoolId)
+            ->map(fn ($grade) => [
+                'id' => $grade->id,
+                'label' => $grade->label ?: $grade->name,
+            ])
+            ->values();
+
+        return response()->json($grades);
+    }
+
+    public function getCourses(Request $request): JsonResponse
+    {
+        $schoolId = $this->resolveSelectedSchoolId($request);
+        $gradeId = $request->integer('grade_id') ?: null;
+
+        $courses = $this->visibleCourses($schoolId, $gradeId)
+            ->map(fn ($course) => [
+                'id' => $course->id,
+                'label' => $course->label ?: $course->name,
+            ])
+            ->values();
+
+        return response()->json($courses);
+    }
+
+    public function getWeatherStations(Request $request): JsonResponse
+    {
+        $authUser = $request->user();
+        $schoolId = $this->resolveSelectedSchoolId($request);
+
+        $stations = $this->visibleWeatherStations($authUser, $schoolId)
+            ->map(fn ($station) => [
+                'id' => $station->id,
+                'label' => trim($station->name . ' - ' . $station->code),
+            ])
+            ->values();
+
+        return response()->json($stations);
+    }
+
     private function visibleGrades(?int $schoolId)
     {
+        if (! $schoolId) {
+            return collect();
+        }
+
         return Grade::query()
-            ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+            ->where('school_id', $schoolId)
             ->where('is_active', true)
             ->orderByRaw('CAST(name AS UNSIGNED) ASC')
             ->orderBy('name')
@@ -268,8 +321,12 @@ class FieldDiaryActivityController extends Controller
 
     private function visibleCourses(?int $schoolId, ?int $gradeId = null)
     {
+        if (! $schoolId) {
+            return collect();
+        }
+
         return Course::query()
-            ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+            ->where('school_id', $schoolId)
             ->when($gradeId, fn ($query) => $query->where('grade_id', $gradeId))
             ->where('is_active', true)
             ->orderBy('name')
@@ -278,11 +335,15 @@ class FieldDiaryActivityController extends Controller
 
     private function visibleWeatherStations(User $authUser, ?int $schoolId = null)
     {
+        if (! $schoolId) {
+            return collect();
+        }
+
         return WeatherStation::query()
             ->with('school:id,name')
             ->where('is_active', true)
             ->when(! $authUser->hasRole('super_admin'), fn ($query) => $query->where('school_id', $authUser->school_id))
-            ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+            ->where('school_id', $schoolId)
             ->orderBy('school_id')
             ->orderBy('name')
             ->get(['id', 'school_id', 'name', 'code']);

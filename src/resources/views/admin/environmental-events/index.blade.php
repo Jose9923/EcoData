@@ -85,7 +85,7 @@
                             <td>
                                 <div class="d-flex align-items-center gap-3">
                                     @if($event->image_path)
-                                        <img src="{{ asset('storage/' . $event->image_path) }}"
+                                        <img src="{{ route('environmental-events.image', $event) }}"
                                             alt="{{ $event->title }}"
                                             class="rounded-4"
                                             style="width: 72px; height: 56px; object-fit: cover;">

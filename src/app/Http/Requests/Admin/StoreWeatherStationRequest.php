@@ -24,7 +24,9 @@ class StoreWeatherStationRequest extends FormRequest
             'school_id' => [
                 $authUser->hasRole('super_admin') ? 'required' : 'nullable',
                 'integer',
-                Rule::exists('schools', 'id')->where(fn ($query) => $query->where('is_active', true)),
+                $authUser->hasRole('super_admin')
+                    ? Rule::exists('schools', 'id')->where(fn ($query) => $query->where('is_active', true))
+                    : Rule::in([(int) $authUser->school_id]),
             ],
 
             'responsible_user_id' => [
@@ -81,6 +83,7 @@ class StoreWeatherStationRequest extends FormRequest
         return [
             'school_id.required' => 'Debes seleccionar un colegio.',
             'school_id.exists' => 'El colegio seleccionado no existe o está inactivo.',
+            'school_id.in' => 'No puedes gestionar estaciones meteorológicas de un colegio diferente al tuyo.',
             'name.required' => 'Debes ingresar el nombre de la estación meteorológica.',
             'code.required' => 'Debes ingresar un código para la estación meteorológica.',
             'code.unique' => 'Ya existe una estación meteorológica con este código en el colegio seleccionado.',

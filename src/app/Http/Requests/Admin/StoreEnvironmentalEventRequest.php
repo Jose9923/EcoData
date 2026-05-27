@@ -20,7 +20,9 @@ class StoreEnvironmentalEventRequest extends FormRequest
             'school_id' => [
                 $authUser->hasRole('super_admin') ? 'required' : 'nullable',
                 'integer',
-                Rule::exists('schools', 'id')->where(fn ($query) => $query->where('is_active', true)),
+                $authUser->hasRole('super_admin')
+                    ? Rule::exists('schools', 'id')->where(fn ($query) => $query->where('is_active', true))
+                    : Rule::in([(int) $authUser->school_id]),
             ],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -49,6 +51,7 @@ class StoreEnvironmentalEventRequest extends FormRequest
         return [
             'school_id.required' => 'Debes seleccionar un colegio.',
             'school_id.exists' => 'El colegio seleccionado no existe o está inactivo.',
+            'school_id.in' => 'No puedes gestionar eventos ambientales de un colegio diferente al tuyo.',
             'title.required' => 'Debes ingresar el título del evento ambiental.',
             'starts_at.required' => 'Debes indicar la fecha de inicio.',
             'ends_at.required' => 'Debes indicar la fecha de finalización.',

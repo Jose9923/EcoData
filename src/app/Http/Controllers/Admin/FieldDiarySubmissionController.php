@@ -11,6 +11,8 @@ use App\Models\Grade;
 use App\Models\School;
 use App\Models\User;
 use App\Notifications\FieldDiarySubmissionReviewedNotification;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -26,7 +28,7 @@ class FieldDiarySubmissionController extends Controller
         $filters = $this->filters($request);
         $filters['school_id'] = $this->effectiveSchoolId($authUser, $filters['school_id']);
 
-        $submissions = FieldDiarySubmission::query()
+        $query = FieldDiarySubmission::query()
             ->with([
                 'activity.school',
                 'activity.weatherStation',
@@ -35,8 +37,11 @@ class FieldDiarySubmissionController extends Controller
                 'grade',
                 'course',
                 'reviewer',
-            ])
-            ->when($filters['school_id'], fn ($query) => $query->where('school_id', $filters['school_id']))
+            ]);
+
+        $this->applySubmissionSchoolScope($query, $filters['school_id']);
+
+        $submissions = $query
             ->when($filters['grade_id'], fn ($query) => $query->where('grade_id', $filters['grade_id']))
             ->when($filters['course_id'], fn ($query) => $query->where('course_id', $filters['course_id']))
             ->when($filters['activity_id'], fn ($query) => $query->where('field_diary_activity_id', $filters['activity_id']))
@@ -67,7 +72,7 @@ class FieldDiarySubmissionController extends Controller
             'schools' => $this->visibleSchools($authUser),
             'grades' => $this->visibleGrades($filters['school_id']),
             'courses' => $this->visibleCourses($filters['school_id'], $filters['grade_id']),
-            'activities' => $this->visibleActivities($authUser, $filters['school_id']),
+            'activities' => $this->visibleActivities($authUser, $filters['school_id'], $filters['grade_id'], $filters['course_id']),
             'students' => $this->visibleStudents($authUser, $filters['school_id'], $filters['grade_id'], $filters['course_id']),
             'statuses' => $this->statuses(),
         ]);
@@ -77,7 +82,7 @@ class FieldDiarySubmissionController extends Controller
     {
         $authUser = $request->user();
 
-        $this->authorizeSchoolScope($authUser, $field_diary_submission->school_id);
+        $this->authorizeSubmissionScope($authUser, $field_diary_submission);
 
         $field_diary_submission->load([
             'activity.school',
@@ -93,7 +98,9 @@ class FieldDiarySubmissionController extends Controller
             'answers.question',
         ]);
 
-        $answersByQuestion = $field_diary_submission->answers->keyBy('field_diary_question_id');
+        $answersByQuestion = $field_diary_submission->answers
+            ->filter(fn ($answer) => (int) $answer->question?->field_diary_activity_id === (int) $field_diary_submission->field_diary_activity_id)
+            ->keyBy('field_diary_question_id');
 
         return view('admin.field-diary-submissions.show', [
             'submission' => $field_diary_submission,
@@ -107,7 +114,7 @@ class FieldDiarySubmissionController extends Controller
     {
         $authUser = $request->user();
 
-        $this->authorizeSchoolScope($authUser, $field_diary_submission->school_id);
+        $this->authorizeSubmissionScope($authUser, $field_diary_submission);
 
         $data = $request->validate([
             'status' => ['required', Rule::in(['revisado', 'devuelto'])],
@@ -187,7 +194,7 @@ class FieldDiarySubmissionController extends Controller
         return (int) $authUser->school_id;
     }
 
-    private function authorizeSchoolScope(User $authUser, ?int $schoolId): void
+    private function authorizeSubmissionScope(User $authUser, FieldDiarySubmission $submission): void
     {
         if ($authUser->hasRole('super_admin')) {
             return;
@@ -195,10 +202,13 @@ class FieldDiarySubmissionController extends Controller
 
         abort_if(! $authUser->school_id, 403, 'Tu usuario no tiene un colegio asignado.');
 
+        $submission->loadMissing('activity');
+
         abort_if(
-            (int) $schoolId !== (int) $authUser->school_id,
+            (int) $submission->school_id !== (int) $authUser->school_id
+                || (int) $submission->activity?->school_id !== (int) $authUser->school_id,
             403,
-            'No tienes autorización para revisar entregas de otro colegio.'
+            'No tienes autorizacion para revisar entregas de otro colegio.'
         );
     }
 
@@ -211,10 +221,79 @@ class FieldDiarySubmissionController extends Controller
             ->get(['id', 'name']);
     }
 
+    public function getGrades(Request $request): JsonResponse
+    {
+        $authUser = $request->user();
+        $schoolId = $this->effectiveSchoolId($authUser, $request->integer('school_id') ?: null);
+
+        $grades = $this->visibleGrades($schoolId)
+            ->map(fn ($grade) => [
+                'id' => $grade->id,
+                'label' => $grade->label ?: $grade->name,
+            ])
+            ->values();
+
+        return response()->json($grades);
+    }
+
+    public function getCourses(Request $request): JsonResponse
+    {
+        $authUser = $request->user();
+        $schoolId = $this->effectiveSchoolId($authUser, $request->integer('school_id') ?: null);
+        $gradeId = $request->integer('grade_id') ?: null;
+
+        $courses = $this->visibleCourses($schoolId, $gradeId)
+            ->map(fn ($course) => [
+                'id' => $course->id,
+                'label' => $course->label ?: $course->name,
+            ])
+            ->values();
+
+        return response()->json($courses);
+    }
+
+    public function getActivities(Request $request): JsonResponse
+    {
+        $authUser = $request->user();
+        $schoolId = $this->effectiveSchoolId($authUser, $request->integer('school_id') ?: null);
+        $gradeId = $request->integer('grade_id') ?: null;
+        $courseId = $request->integer('course_id') ?: null;
+
+        $activities = $this->visibleActivities($authUser, $schoolId, $gradeId, $courseId)
+            ->map(fn ($activity) => [
+                'id' => $activity->id,
+                'label' => $activity->title,
+            ])
+            ->values();
+
+        return response()->json($activities);
+    }
+
+    public function getStudents(Request $request): JsonResponse
+    {
+        $authUser = $request->user();
+        $schoolId = $this->effectiveSchoolId($authUser, $request->integer('school_id') ?: null);
+        $gradeId = $request->integer('grade_id') ?: null;
+        $courseId = $request->integer('course_id') ?: null;
+
+        $students = $this->visibleStudents($authUser, $schoolId, $gradeId, $courseId)
+            ->map(fn ($student) => [
+                'id' => $student->id,
+                'label' => trim($student->name . ($student->document_number ? ' - ' . $student->document_number : '')),
+            ])
+            ->values();
+
+        return response()->json($students);
+    }
+
     private function visibleGrades(?int $schoolId)
     {
+        if (! $schoolId) {
+            return collect();
+        }
+
         return Grade::query()
-            ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+            ->where('school_id', $schoolId)
             ->where('is_active', true)
             ->orderByRaw('CAST(name AS UNSIGNED) ASC')
             ->orderBy('name')
@@ -223,29 +302,53 @@ class FieldDiarySubmissionController extends Controller
 
     private function visibleCourses(?int $schoolId, ?int $gradeId)
     {
+        if (! $schoolId) {
+            return collect();
+        }
+
         return Course::query()
-            ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+            ->where('school_id', $schoolId)
             ->when($gradeId, fn ($query) => $query->where('grade_id', $gradeId))
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'school_id', 'grade_id', 'name', 'label']);
     }
 
-    private function visibleActivities(User $authUser, ?int $schoolId)
+    private function visibleActivities(User $authUser, ?int $schoolId, ?int $gradeId = null, ?int $courseId = null)
     {
+        if (! $schoolId) {
+            return collect();
+        }
+
         return FieldDiaryActivity::query()
             ->when(! $authUser->hasRole('super_admin'), fn ($query) => $query->where('school_id', $authUser->school_id))
-            ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+            ->where('school_id', $schoolId)
+            ->when($gradeId, function ($query) use ($gradeId) {
+                $query->where(function ($subQuery) use ($gradeId) {
+                    $subQuery->whereNull('grade_id')
+                        ->orWhere('grade_id', $gradeId);
+                });
+            })
+            ->when($courseId, function ($query) use ($courseId) {
+                $query->where(function ($subQuery) use ($courseId) {
+                    $subQuery->whereNull('course_id')
+                        ->orWhere('course_id', $courseId);
+                });
+            })
             ->orderByDesc('created_at')
             ->get(['id', 'school_id', 'title']);
     }
 
     private function visibleStudents(User $authUser, ?int $schoolId, ?int $gradeId, ?int $courseId)
     {
+        if (! $schoolId) {
+            return collect();
+        }
+
         return User::query()
             ->whereHas('roles', fn ($query) => $query->where('name', 'estudiante'))
             ->when(! $authUser->hasRole('super_admin'), fn ($query) => $query->where('school_id', $authUser->school_id))
-            ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+            ->where('school_id', $schoolId)
             ->when($gradeId, fn ($query) => $query->where('grade_id', $gradeId))
             ->when($courseId, fn ($query) => $query->where('course_id', $courseId))
             ->where('is_active', true)
@@ -261,6 +364,16 @@ class FieldDiarySubmissionController extends Controller
             'revisado' => 'Revisado',
             'devuelto' => 'Devuelto',
         ];
+    }
+
+    private function applySubmissionSchoolScope(Builder $query, ?int $schoolId): void
+    {
+        if (! $schoolId) {
+            return;
+        }
+
+        $query->where('school_id', $schoolId)
+            ->whereHas('activity', fn ($activityQuery) => $activityQuery->where('school_id', $schoolId));
     }
 
     public function export(Request $request)
@@ -280,8 +393,11 @@ class FieldDiarySubmissionController extends Controller
                 'course',
                 'reviewer',
                 'answers.question',
-            ])
-            ->when($filters['school_id'], fn ($query) => $query->where('school_id', $filters['school_id']))
+            ]);
+
+        $this->applySubmissionSchoolScope($query, $filters['school_id']);
+
+        $query
             ->when($filters['grade_id'], fn ($query) => $query->where('grade_id', $filters['grade_id']))
             ->when($filters['course_id'], fn ($query) => $query->where('course_id', $filters['course_id']))
             ->when($filters['activity_id'], fn ($query) => $query->where('field_diary_activity_id', $filters['activity_id']))
@@ -317,38 +433,56 @@ class FieldDiarySubmissionController extends Controller
                 $query,
                 $school,
                 $authUser->name,
-                $this->filtersText($filters)
+                $this->filtersText($filters, $authUser)
             ),
             'diario_de_campo_ecodata_' . now()->format('Ymd_His') . '.xlsx'
         );
     }
 
-    private function filtersText(array $filters): ?string
+    private function filtersText(array $filters, User $authUser): ?string
     {
         $parts = [];
+        $isSuperAdmin = $authUser->hasRole('super_admin');
+        $schoolId = $this->effectiveSchoolId($authUser, $filters['school_id']);
 
         if ($filters['school_id']) {
-            $school = School::find($filters['school_id']);
+            $school = $isSuperAdmin
+                ? School::find($filters['school_id'])
+                : $authUser->school;
+
             $parts[] = 'Colegio: ' . ($school?->name ?? $filters['school_id']);
         }
 
         if ($filters['grade_id']) {
-            $grade = Grade::find($filters['grade_id']);
+            $grade = Grade::query()
+                ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+                ->find($filters['grade_id']);
+
             $parts[] = 'Grado: ' . ($grade?->label ?: $grade?->name ?: $filters['grade_id']);
         }
 
         if ($filters['course_id']) {
-            $course = Course::find($filters['course_id']);
+            $course = Course::query()
+                ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+                ->when($filters['grade_id'], fn ($query) => $query->where('grade_id', $filters['grade_id']))
+                ->find($filters['course_id']);
+
             $parts[] = 'Curso: ' . ($course?->label ?: $course?->name ?: $filters['course_id']);
         }
 
         if ($filters['activity_id']) {
-            $activity = FieldDiaryActivity::find($filters['activity_id']);
+            $activity = FieldDiaryActivity::query()
+                ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+                ->find($filters['activity_id']);
+
             $parts[] = 'Actividad: ' . ($activity?->title ?? $filters['activity_id']);
         }
 
         if ($filters['student_id']) {
-            $student = User::find($filters['student_id']);
+            $student = User::query()
+                ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+                ->find($filters['student_id']);
+
             $parts[] = 'Estudiante: ' . ($student?->name ?? $filters['student_id']);
         }
 

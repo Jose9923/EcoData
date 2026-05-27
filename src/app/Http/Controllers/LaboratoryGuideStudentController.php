@@ -45,8 +45,11 @@ class LaboratoryGuideStudentController extends Controller
         $this->authorizeGuideForestudiante($request, $laboratory_guide);
 
         $fileName = Str::slug($laboratory_guide->title) . '.pdf';
+        $disk = $this->resolveStorageDisk($laboratory_guide->pdf_path);
 
-        return Storage::disk('public')->response(
+        abort_if(! $disk, 404, 'El archivo PDF no existe.');
+
+        return Storage::disk($disk)->response(
             $laboratory_guide->pdf_path,
             $fileName,
             [
@@ -61,8 +64,11 @@ class LaboratoryGuideStudentController extends Controller
         $this->authorizeGuideForestudiante($request, $laboratory_guide);
 
         $fileName = Str::slug($laboratory_guide->title) . '.pdf';
+        $disk = $this->resolveStorageDisk($laboratory_guide->pdf_path);
 
-        return Storage::disk('public')->download(
+        abort_if(! $disk, 404, 'El archivo PDF no existe.');
+
+        return Storage::disk($disk)->download(
             $laboratory_guide->pdf_path,
             $fileName
         );
@@ -102,10 +108,19 @@ class LaboratoryGuideStudentController extends Controller
 
         abort_if(! $guide->pdf_path, 404, 'La guía no tiene un archivo PDF asociado.');
 
-        abort_if(
-            ! Storage::disk('public')->exists($guide->pdf_path),
-            404,
-            'El archivo PDF no existe.'
-        );
+        abort_if(! $this->resolveStorageDisk($guide->pdf_path), 404, 'El archivo PDF no existe.');
+    }
+
+    private function resolveStorageDisk(string $path): ?string
+    {
+        if (Storage::disk('local')->exists($path)) {
+            return 'local';
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            return 'public';
+        }
+
+        return null;
     }
 }

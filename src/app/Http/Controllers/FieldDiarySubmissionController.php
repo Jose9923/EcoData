@@ -54,6 +54,8 @@ class FieldDiarySubmissionController extends Controller
         $mySubmissions = FieldDiarySubmission::query()
             ->with(['activity.weatherStation', 'activity.questions'])
             ->where('user_id', $authUser->id)
+            ->where('school_id', $authUser->school_id)
+            ->whereHas('activity', fn ($query) => $query->where('school_id', $authUser->school_id))
             ->latest()
             ->get();
 
@@ -81,10 +83,11 @@ class FieldDiarySubmissionController extends Controller
             ->with('answers.question')
             ->where('field_diary_activity_id', $field_diary_activity->id)
             ->where('user_id', $authUser->id)
+            ->where('school_id', $authUser->school_id)
             ->first();
 
         $answersByQuestion = $submission
-            ? $submission->answers->keyBy('field_diary_question_id')
+            ? $this->answersForActivity($submission, $field_diary_activity)
             : collect();
 
         return view('estudiante.field-diaries.show', [
@@ -116,6 +119,12 @@ class FieldDiarySubmissionController extends Controller
             ->where('field_diary_activity_id', $activity->id)
             ->where('user_id', $authUser->id)
             ->first();
+
+        abort_if(
+            $existingSubmission && (int) $existingSubmission->school_id !== (int) $authUser->school_id,
+            403,
+            'No tienes autorizacion para modificar entregas de otro colegio.'
+        );
 
         if ($existingSubmission && in_array($existingSubmission->status, ['enviado', 'revisado'], true)) {
             return back()
@@ -181,14 +190,12 @@ class FieldDiarySubmissionController extends Controller
                         ->first();
 
                     if ($uploadedFile) {
-                        if ($existingAnswer?->answer_file_path && Storage::disk('public')->exists($existingAnswer->answer_file_path)) {
-                            Storage::disk('public')->delete($existingAnswer->answer_file_path);
-                        }
+                        $this->deleteStoredAnswerFile($existingAnswer?->answer_file_path);
 
                         $filePath = $uploadedFile->storeAs(
                             'field-diaries/user-' . $authUser->id . '/activity-' . $activity->id,
                             now()->format('Ymd_His') . '_' . $uploadedFile->getClientOriginalName(),
-                            'public'
+                            'local'
                         );
                     } else {
                         $filePath = $existingAnswer?->answer_file_path;
@@ -253,6 +260,26 @@ class FieldDiarySubmissionController extends Controller
             ->where('field_diary_question_id', $questionId)
             ->whereNotNull('answer_file_path')
             ->exists();
+    }
+
+    private function answersForActivity(FieldDiarySubmission $submission, FieldDiaryActivity $activity)
+    {
+        return $submission->answers
+            ->filter(fn ($answer) => (int) $answer->question?->field_diary_activity_id === (int) $activity->id)
+            ->keyBy('field_diary_question_id');
+    }
+
+    private function deleteStoredAnswerFile(?string $path): void
+    {
+        if (! $path) {
+            return;
+        }
+
+        foreach (['local', 'public'] as $disk) {
+            if (Storage::disk($disk)->exists($path)) {
+                Storage::disk($disk)->delete($path);
+            }
+        }
     }
 
     private function authorizeStudentActivity($authUser, FieldDiaryActivity $activity): void

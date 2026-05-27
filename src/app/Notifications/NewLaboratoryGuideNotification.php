@@ -34,13 +34,17 @@ class NewLaboratoryGuideNotification extends Notification
             ]);
 
         if ($this->shouldAttachPdf()) {
-            $mail->attach(
-                Storage::disk('public')->path($this->guide->pdf_path),
-                [
-                    'as' => Str::slug($this->guide->title) . '.pdf',
-                    'mime' => 'application/pdf',
-                ]
-            );
+            $disk = $this->resolveStorageDisk($this->guide->pdf_path);
+
+            if ($disk) {
+                $mail->attach(
+                    Storage::disk($disk)->path($this->guide->pdf_path),
+                    [
+                        'as' => Str::slug($this->guide->title) . '.pdf',
+                        'mime' => 'application/pdf',
+                    ]
+                );
+            }
         }
 
         return $mail;
@@ -52,11 +56,13 @@ class NewLaboratoryGuideNotification extends Notification
             return false;
         }
 
-        if (! Storage::disk('public')->exists($this->guide->pdf_path)) {
+        $disk = $this->resolveStorageDisk($this->guide->pdf_path);
+
+        if (! $disk) {
             return false;
         }
 
-        $sizeInBytes = Storage::disk('public')->size($this->guide->pdf_path);
+        $sizeInBytes = Storage::disk($disk)->size($this->guide->pdf_path);
 
         /*
         |--------------------------------------------------------------------------
@@ -66,5 +72,18 @@ class NewLaboratoryGuideNotification extends Notification
         | Puedes subirlo si quieres, pero para correos masivos no conviene.
         */
         return $sizeInBytes <= 10 * 1024 * 1024;
+    }
+
+    private function resolveStorageDisk(string $path): ?string
+    {
+        if (Storage::disk('local')->exists($path)) {
+            return 'local';
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            return 'public';
+        }
+
+        return null;
     }
 }

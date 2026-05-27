@@ -11,7 +11,25 @@ class UpdateSensorRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasAnyRole(['super_admin', 'admin_colegio', 'docente']) ?? false;
+        $authUser = $this->user();
+
+        if (! $authUser?->hasAnyRole(['super_admin', 'admin_colegio', 'docente'])) {
+            return false;
+        }
+
+        if ($authUser->hasRole('super_admin')) {
+            return true;
+        }
+
+        $sensor = $this->route('sensor');
+
+        if (! $sensor instanceof Sensor) {
+            $sensor = Sensor::with('weatherStation')->find($sensor);
+        } else {
+            $sensor->loadMissing('weatherStation');
+        }
+
+        return $sensor && (int) $sensor->weatherStation?->school_id === (int) $authUser->school_id;
     }
 
     public function rules(): array

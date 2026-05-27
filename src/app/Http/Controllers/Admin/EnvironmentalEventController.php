@@ -132,9 +132,7 @@ class EnvironmentalEventController extends Controller
             : (int) $authUser->school_id;
 
         if ($request->hasFile('image')) {
-            if ($environmental_event->image_path && Storage::disk('public')->exists($environmental_event->image_path)) {
-                Storage::disk('public')->delete($environmental_event->image_path);
-            }
+            $this->deleteStoredImage($environmental_event->image_path);
 
             $environmental_event->image_path = $this->storeImage($request->file('image'), $schoolId, $data['title']);
         }
@@ -159,9 +157,7 @@ class EnvironmentalEventController extends Controller
 
         $this->authorizeSchoolScope($authUser, $environmental_event->school_id);
 
-        if ($environmental_event->image_path && Storage::disk('public')->exists($environmental_event->image_path)) {
-            Storage::disk('public')->delete($environmental_event->image_path);
-        }
+        $this->deleteStoredImage($environmental_event->image_path);
 
         $environmental_event->delete();
 
@@ -214,7 +210,20 @@ class EnvironmentalEventController extends Controller
         return $file->storeAs(
             "environmental-events/school-{$schoolId}",
             $fileName,
-            'public'
+            'local'
         );
+    }
+
+    private function deleteStoredImage(?string $path): void
+    {
+        if (! $path) {
+            return;
+        }
+
+        foreach (['local', 'public'] as $disk) {
+            if (Storage::disk($disk)->exists($path)) {
+                Storage::disk($disk)->delete($path);
+            }
+        }
     }
 }

@@ -1,5 +1,11 @@
 @php
     $isEdit = isset($activity) && $activity;
+    $selectedSchoolId = auth()->user()?->hasRole('super_admin')
+        ? old('school_id', $selectedSchoolId ?? $activity?->school_id ?? '')
+        : old('school_id', $selectedSchoolId ?? $activity?->school_id ?? auth()->user()?->school_id);
+    $selectedGradeId = old('grade_id', $selectedGradeId ?? $activity?->grade_id ?? '');
+    $selectedCourseId = old('course_id', $selectedCourseId ?? $activity?->course_id ?? '');
+    $selectedWeatherStationId = old('weather_station_id', $activity?->weather_station_id ?? '');
 
     $oldQuestions = old('questions');
 
@@ -40,7 +46,7 @@
                 <option value="">Selecciona un colegio</option>
                 @foreach($schools as $school)
                     <option value="{{ $school->id }}"
-                        @selected((int) old('school_id', $selectedSchoolId ?? $activity?->school_id) === (int) $school->id)>
+                        @selected((string) $selectedSchoolId === (string) $school->id)>
                         {{ $school->name }}
                     </option>
                 @endforeach
@@ -50,6 +56,8 @@
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
+    @else
+        <input type="hidden" id="school_id" name="school_id" value="{{ $selectedSchoolId }}">
     @endif
 
     <div class="col-12 col-lg-6">
@@ -108,7 +116,7 @@
             <option value="">Todos los grados</option>
             @foreach($grades as $grade)
                 <option value="{{ $grade->id }}"
-                    @selected((int) old('grade_id', $selectedGradeId ?? $activity?->grade_id) === (int) $grade->id)>
+                    @selected((string) $selectedGradeId === (string) $grade->id)>
                     {{ $grade->label ?: $grade->name }}
                 </option>
             @endforeach
@@ -127,7 +135,7 @@
             <option value="">Todos los cursos</option>
             @foreach($courses as $course)
                 <option value="{{ $course->id }}"
-                    @selected((int) old('course_id', $activity?->course_id) === (int) $course->id)>
+                    @selected((string) $selectedCourseId === (string) $course->id)>
                     {{ $course->label ?: $course->name }}
                 </option>
             @endforeach
@@ -146,7 +154,7 @@
             <option value="">Sin estación asociada</option>
             @foreach($weatherStations as $station)
                 <option value="{{ $station->id }}"
-                    @selected((int) old('weather_station_id', $activity?->weather_station_id) === (int) $station->id)>
+                    @selected((string) $selectedWeatherStationId === (string) $station->id)>
                     {{ $station->name }} · {{ $station->code }}
                     @if(auth()->user()->hasRole('super_admin'))
                         · {{ $station->school?->name }}
@@ -312,6 +320,129 @@
         document.addEventListener('DOMContentLoaded', function () {
             const wrapper = document.getElementById('questions-wrapper');
             const addButton = document.getElementById('add-question');
+            const schoolSelect = document.getElementById('school_id');
+            const gradeSelect = document.getElementById('grade_id');
+            const courseSelect = document.getElementById('course_id');
+            const stationSelect = document.getElementById('weather_station_id');
+
+            const gradesUrl = @json(route('admin.field-diary-activities.ajax.grades'));
+            const coursesUrl = @json(route('admin.field-diary-activities.ajax.courses'));
+            const stationsUrl = @json(route('admin.field-diary-activities.ajax.weather-stations'));
+
+            const selectedGradeId = @json((string) $selectedGradeId);
+            const selectedCourseId = @json((string) $selectedCourseId);
+            const selectedWeatherStationId = @json((string) $selectedWeatherStationId);
+
+            function setOptions(select, items, placeholder, selectedValue = '') {
+                if (!select) return;
+
+                select.innerHTML = `<option value="">${placeholder}</option>`;
+
+                items.forEach((item) => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = item.label;
+
+                    if (String(item.id) === String(selectedValue)) {
+                        option.selected = true;
+                    }
+
+                    select.appendChild(option);
+                });
+            }
+
+            async function fetchJson(url) {
+                const response = await fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('No fue posible cargar los datos.');
+                }
+
+                return await response.json();
+            }
+
+            async function loadGrades(schoolId, selected = '') {
+                if (!schoolId) {
+                    setOptions(gradeSelect, [], 'Todos los grados');
+                    setOptions(courseSelect, [], 'Todos los cursos');
+                    setOptions(stationSelect, [], 'Sin estación asociada');
+                    return;
+                }
+
+                setOptions(gradeSelect, [], 'Cargando grados...');
+
+                try {
+                    const data = await fetchJson(`${gradesUrl}?school_id=${encodeURIComponent(schoolId)}`);
+                    setOptions(gradeSelect, data, 'Todos los grados', selected);
+                } catch (error) {
+                    console.error(error);
+                    setOptions(gradeSelect, [], 'Error cargando grados');
+                }
+            }
+
+            async function loadCourses(schoolId, gradeId = '', selected = '') {
+                if (!schoolId) {
+                    setOptions(courseSelect, [], 'Todos los cursos');
+                    return;
+                }
+
+                setOptions(courseSelect, [], 'Cargando cursos...');
+
+                try {
+                    const url = `${coursesUrl}?school_id=${encodeURIComponent(schoolId)}&grade_id=${encodeURIComponent(gradeId || '')}`;
+                    const data = await fetchJson(url);
+                    setOptions(courseSelect, data, 'Todos los cursos', selected);
+                } catch (error) {
+                    console.error(error);
+                    setOptions(courseSelect, [], 'Error cargando cursos');
+                }
+            }
+
+            async function loadStations(schoolId, selected = '') {
+                if (!schoolId) {
+                    setOptions(stationSelect, [], 'Sin estación asociada');
+                    return;
+                }
+
+                setOptions(stationSelect, [], 'Cargando estaciones...');
+
+                try {
+                    const data = await fetchJson(`${stationsUrl}?school_id=${encodeURIComponent(schoolId)}`);
+                    setOptions(stationSelect, data, 'Sin estación asociada', selected);
+                } catch (error) {
+                    console.error(error);
+                    setOptions(stationSelect, [], 'Error cargando estaciones');
+                }
+            }
+
+            schoolSelect?.addEventListener('change', async function () {
+                await loadGrades(this.value);
+                await loadCourses(this.value);
+                await loadStations(this.value);
+            });
+
+            gradeSelect?.addEventListener('change', async function () {
+                await loadCourses(schoolSelect?.value || '', this.value);
+            });
+
+            const initialSchoolId = schoolSelect?.value || '';
+
+            if (initialSchoolId && gradeSelect && gradeSelect.options.length <= 1) {
+                loadGrades(initialSchoolId, selectedGradeId);
+            }
+
+            if (initialSchoolId && courseSelect && courseSelect.options.length <= 1) {
+                loadCourses(initialSchoolId, selectedGradeId, selectedCourseId);
+            }
+
+            if (initialSchoolId && stationSelect && stationSelect.options.length <= 1) {
+                loadStations(initialSchoolId, selectedWeatherStationId);
+            }
 
             function refreshQuestionNumbers() {
                 wrapper.querySelectorAll('.question-item').forEach((item, index) => {

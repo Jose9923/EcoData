@@ -125,7 +125,10 @@ class DashboardController extends Controller
                 ->count(),
 
             'field_diary_submissions' => FieldDiarySubmission::query()
-                ->when(! $isSuperAdmin, fn ($query) => $query->where('school_id', $schoolId))
+                ->when(! $isSuperAdmin, function ($query) use ($schoolId) {
+                    $query->where('school_id', $schoolId)
+                        ->whereHas('activity', fn ($subQuery) => $subQuery->where('school_id', $schoolId));
+                })
                 ->when($isestudiante, fn ($query) => $query->where('user_id', $authUser->id))
                 ->count(),
         ];
@@ -176,7 +179,10 @@ class DashboardController extends Controller
 
         $recentFieldDiarySubmissions = FieldDiarySubmission::query()
             ->with(['activity.weatherStation', 'student', 'grade', 'course'])
-            ->when(! $isSuperAdmin, fn ($query) => $query->where('school_id', $schoolId))
+            ->when(! $isSuperAdmin, function ($query) use ($schoolId) {
+                $query->where('school_id', $schoolId)
+                    ->whereHas('activity', fn ($subQuery) => $subQuery->where('school_id', $schoolId));
+            })
             ->when($isestudiante, fn ($query) => $query->where('user_id', $authUser->id))
             ->latest()
             ->take(5)
@@ -243,7 +249,10 @@ class DashboardController extends Controller
 
             'field_diary_pending_review' => FieldDiarySubmission::query()
                 ->where('status', 'enviado')
-                ->when(! $isSuperAdmin, fn ($query) => $query->where('school_id', $schoolId))
+                ->when(! $isSuperAdmin, function ($query) use ($schoolId) {
+                    $query->where('school_id', $schoolId)
+                        ->whereHas('activity', fn ($subQuery) => $subQuery->where('school_id', $schoolId));
+                })
                 ->count(),
 
             'today_environmental_events' => EnvironmentalEvent::query()

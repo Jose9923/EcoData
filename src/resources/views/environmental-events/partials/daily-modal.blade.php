@@ -28,7 +28,7 @@
                             <div class="row g-3 align-items-start">
                                 @if($event->image_path)
                                     <div class="col-12 col-md-4">
-                                        <img src="{{ asset('storage/' . $event->image_path) }}"
+                                        <img src="{{ route('environmental-events.image', $event) }}"
                                              alt="{{ $event->title }}"
                                              class="img-fluid rounded-4 border w-100"
                                              style="height: 140px; object-fit: cover;">

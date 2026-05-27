@@ -138,7 +138,7 @@
         @case('file')
             @if($answer?->answer_file_path)
                 <div class="mb-3">
-                    <a href="{{ asset('storage/' . $answer->answer_file_path) }}"
+                    <a href="{{ route('field-diaries.answers.file', $answer) }}"
                        target="_blank"
                        class="btn btn-sm btn-outline-dark rounded-3">
                         Ver archivo actual

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\WeatherStation;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,14 +10,30 @@ class UpdateWeatherStationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasAnyRole(['super_admin', 'admin_colegio', 'docente']) ?? false;
+        $authUser = $this->user();
+
+        if (! $authUser?->hasAnyRole(['super_admin', 'admin_colegio', 'docente'])) {
+            return false;
+        }
+
+        if ($authUser->hasRole('super_admin')) {
+            return true;
+        }
+
+        $station = $this->route('weather_station');
+
+        if (! $station instanceof WeatherStation) {
+            $station = WeatherStation::find($station);
+        }
+
+        return $station && (int) $station->school_id === (int) $authUser->school_id;
     }
 
     public function rules(): array
     {
         $authUser = $this->user();
 
-        $stationId = $this->route('weather_station') instanceof \App\Models\WeatherStation
+        $stationId = $this->route('weather_station') instanceof WeatherStation
             ? $this->route('weather_station')->id
             : $this->route('weather_station');
 
@@ -28,7 +45,9 @@ class UpdateWeatherStationRequest extends FormRequest
             'school_id' => [
                 $authUser->hasRole('super_admin') ? 'required' : 'nullable',
                 'integer',
-                Rule::exists('schools', 'id')->where(fn ($query) => $query->where('is_active', true)),
+                $authUser->hasRole('super_admin')
+                    ? Rule::exists('schools', 'id')->where(fn ($query) => $query->where('is_active', true))
+                    : Rule::in([(int) $authUser->school_id]),
             ],
 
             'responsible_user_id' => [
@@ -78,6 +97,13 @@ class UpdateWeatherStationRequest extends FormRequest
             'installation_date' => 'fecha de instalación',
             'description' => 'descripción',
             'is_active' => 'estado',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'school_id.in' => 'No puedes gestionar estaciones meteorológicas de un colegio diferente al tuyo.',
         ];
     }
 }

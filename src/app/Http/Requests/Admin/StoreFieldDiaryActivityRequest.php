@@ -26,7 +26,9 @@ class StoreFieldDiaryActivityRequest extends FormRequest
             'school_id' => [
                 $authUser->hasRole('super_admin') ? 'required' : 'nullable',
                 'integer',
-                Rule::exists('schools', 'id')->where(fn ($query) => $query->where('is_active', true)),
+                $authUser->hasRole('super_admin')
+                    ? Rule::exists('schools', 'id')->where(fn ($query) => $query->where('is_active', true))
+                    : Rule::in([(int) $authUser->school_id]),
             ],
 
             'grade_id' => [
@@ -131,6 +133,7 @@ class StoreFieldDiaryActivityRequest extends FormRequest
     {
         return [
             'school_id.required' => 'Debes seleccionar un colegio.',
+            'school_id.in' => 'No puedes gestionar actividades de diario de campo de un colegio diferente al tuyo.',
             'title.required' => 'Debes ingresar el título de la actividad.',
             'entry_type.required' => 'Debes seleccionar el tipo de actividad.',
             'entry_type.in' => 'El tipo de actividad seleccionado no es válido.',

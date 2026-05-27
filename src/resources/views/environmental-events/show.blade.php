@@ -29,7 +29,7 @@
         <div class="row g-4 align-items-start">
             <div class="col-12 col-lg-5">
                 @if($event->image_path)
-                    <img src="{{ asset('storage/' . $event->image_path) }}"
+                    <img src="{{ route('environmental-events.image', $event) }}"
                          alt="{{ $event->title }}"
                          class="img-fluid rounded-4 border w-100"
                          style="max-height: 420px; object-fit: cover;">

@@ -18,7 +18,9 @@ use App\Http\Controllers\Admin\UserImportController;
 use App\Http\Controllers\Admin\WeatherStationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EnvironmentalEventAcknowledgementController;
+use App\Http\Controllers\EnvironmentalEventImageController;
 use App\Http\Controllers\EnvironmentalEventPublicController;
+use App\Http\Controllers\FieldDiaryAnswerFileController;
 use App\Http\Controllers\FieldDiarySubmissionController;
 use App\Http\Controllers\LaboratoryGuideStudentController;
 use App\Http\Controllers\ProfileController;
@@ -59,6 +61,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     */
     Route::middleware(EnsureSchoolAssigned::class)->group(function () {
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
+        Route::get('/field-diaries/answers/{field_diary_answer}/file', [FieldDiaryAnswerFileController::class, 'show'])
+            ->name('field-diaries.answers.file');
+
+        Route::get('/environmental-events/{environmental_event}/image', [EnvironmentalEventImageController::class, 'show'])
+            ->name('environmental-events.image');
 
         /*
         |--------------------------------------------------------------------------
@@ -188,6 +196,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                 Route::resource('laboratory-guides', LaboratoryGuideController::class)->except(['show']);
 
+                Route::get('field-diary-activities/ajax/grades', [FieldDiaryActivityController::class, 'getGrades'])
+                    ->name('field-diary-activities.ajax.grades');
+
+                Route::get('field-diary-activities/ajax/courses', [FieldDiaryActivityController::class, 'getCourses'])
+                    ->name('field-diary-activities.ajax.courses');
+
+                Route::get('field-diary-activities/ajax/weather-stations', [FieldDiaryActivityController::class, 'getWeatherStations'])
+                    ->name('field-diary-activities.ajax.weather-stations');
+
                 Route::resource('field-diary-activities', FieldDiaryActivityController::class);
 
                 Route::get('field-diary-submissions', [AdminFieldDiarySubmissionController::class, 'index'])
@@ -195,6 +212,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                 Route::get('field-diary-submissions-export', [AdminFieldDiarySubmissionController::class, 'export'])
                     ->name('field-diary-submissions.export');
+
+                Route::get('field-diary-submissions/ajax/grades', [AdminFieldDiarySubmissionController::class, 'getGrades'])
+                    ->name('field-diary-submissions.ajax.grades');
+
+                Route::get('field-diary-submissions/ajax/courses', [AdminFieldDiarySubmissionController::class, 'getCourses'])
+                    ->name('field-diary-submissions.ajax.courses');
+
+                Route::get('field-diary-submissions/ajax/activities', [AdminFieldDiarySubmissionController::class, 'getActivities'])
+                    ->name('field-diary-submissions.ajax.activities');
+
+                Route::get('field-diary-submissions/ajax/students', [AdminFieldDiarySubmissionController::class, 'getStudents'])
+                    ->name('field-diary-submissions.ajax.students');
 
                 Route::get('field-diary-submissions/{field_diary_submission}', [AdminFieldDiarySubmissionController::class, 'show'])
                     ->name('field-diary-submissions.show');
