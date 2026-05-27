@@ -28,7 +28,10 @@ class NewFieldDiaryActivityNotification extends Notification
             ->markdown('emails.field-diaries.activity-created', [
                 'user' => $notifiable,
                 'activity' => $this->activity,
-                'url' => route('estudiante.field-diaries.index'),
+                'url' => route('mail.field-diaries.redirect', [
+                    'activity' => $this->activity->id,
+                    'context' => 'activity',
+                ]),
             ]);
     }
 }

@@ -23,6 +23,7 @@ use App\Http\Controllers\EnvironmentalEventPublicController;
 use App\Http\Controllers\FieldDiaryAnswerFileController;
 use App\Http\Controllers\FieldDiarySubmissionController;
 use App\Http\Controllers\LaboratoryGuideStudentController;
+use App\Http\Controllers\MailRedirectController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Middleware\EnsureSchoolAssigned;
 use Illuminate\Http\Request;
@@ -67,6 +68,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/environmental-events/{environmental_event}/image', [EnvironmentalEventImageController::class, 'show'])
             ->name('environmental-events.image');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Redirecciones seguras desde correos
+        |--------------------------------------------------------------------------
+        */
+        Route::prefix('mail')
+            ->name('mail.')
+            ->group(function () {
+                Route::get('laboratory-guides/redirect', [MailRedirectController::class, 'laboratoryGuides'])
+                    ->name('laboratory-guides.redirect');
+
+                Route::get('field-diaries/redirect', [MailRedirectController::class, 'fieldDiaries'])
+                    ->name('field-diaries.redirect');
+
+                Route::get('environmental-events/redirect', [MailRedirectController::class, 'environmentalEvents'])
+                    ->name('environmental-events.redirect');
+
+                Route::get('reports/redirect', [MailRedirectController::class, 'reports'])
+                    ->name('reports.redirect');
+            });
 
         /*
         |--------------------------------------------------------------------------

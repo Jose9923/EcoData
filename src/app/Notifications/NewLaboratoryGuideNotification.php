@@ -30,7 +30,7 @@ class NewLaboratoryGuideNotification extends Notification
             ->markdown('emails.laboratory-guides.created', [
                 'user' => $notifiable,
                 'guide' => $this->guide,
-                'url' => route('estudiante.laboratory-guides.index'),
+                'url' => route('mail.laboratory-guides.redirect', ['guide' => $this->guide->id]),
             ]);
 
         if ($this->shouldAttachPdf()) {

@@ -31,7 +31,10 @@ class FieldDiarySubmissionReviewedNotification extends Notification
                 'user' => $notifiable,
                 'submission' => $this->submission,
                 'activity' => $this->submission->activity,
-                'url' => route('estudiante.field-diaries.index'),
+                'url' => route('mail.field-diaries.redirect', [
+                    'submission' => $this->submission->id,
+                    'context' => 'review',
+                ]),
             ]);
     }
 }

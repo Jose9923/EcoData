@@ -28,7 +28,7 @@ Se ha publicado una nueva guía de laboratorio en **EcoData**.
 @endif
 @endcomponent
 
-Puedes consultarla desde tu panel de estudiante.
+Puedes consultarla desde tu panel de EcoData.
 
 @component('mail::button', ['url' => $url])
 Ver mis guías
