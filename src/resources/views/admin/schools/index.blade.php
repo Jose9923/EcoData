@@ -81,7 +81,7 @@
                 data-paging="false"
                 data-searching="false"
                 data-info="false"
-                data-empty="No hay registros disponibles.">
+                data-empty="No hay colegios registrados.">
                 <thead class="table-light">
                     <tr>
                         <th>Colegio</th>

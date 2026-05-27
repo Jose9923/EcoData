@@ -68,7 +68,8 @@
                 data-paging="false"
                 data-searching="false"
                 data-info="false"
-                data-empty="No hay actividades de diario de campo registradas.">
+                data-empty="No hay actividades de diario registradas."
+                data-zero="No hay actividades de diario registradas.">
                 <thead>
                     <tr>
                         <th>Actividad</th>
@@ -81,7 +82,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($activities as $activity)
+                    @foreach($activities as $activity)
                         <tr>
                             <td>
                                 <div class="fw-semibold">{{ $activity->title }}</div>
@@ -163,13 +164,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-5">
-                                No hay actividades de diario de campo registradas.
-                            </td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>

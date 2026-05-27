@@ -80,7 +80,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($events as $event)
+                    @foreach($events as $event)
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center gap-3">
@@ -152,13 +152,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-5">
-                                No hay eventos ambientales registrados.
-                            </td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>

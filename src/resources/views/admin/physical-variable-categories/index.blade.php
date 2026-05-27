@@ -62,7 +62,7 @@
                 data-paging="false"
                 data-searching="false"
                 data-info="false"
-                data-empty="No hay grados registrados.">
+                data-empty="No hay categorías de variables físicas registradas.">
                 <thead class="table-light">
                     <tr>
                         <th>Nombre</th>

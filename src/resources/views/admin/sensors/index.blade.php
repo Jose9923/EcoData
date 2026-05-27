@@ -83,7 +83,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($sensors as $sensor)
+                    @foreach($sensors as $sensor)
                         <tr>
                             <td>
                                 <div class="fw-semibold">{{ $sensor->name }}</div>
@@ -174,13 +174,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-5">
-                                No hay sensores registrados.
-                            </td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>

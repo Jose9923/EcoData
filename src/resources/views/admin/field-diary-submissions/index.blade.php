@@ -166,7 +166,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($submissions as $submission)
+                    @foreach($submissions as $submission)
                         @php
                             $statusClass = match($submission->status) {
                                 'borrador' => 'text-bg-warning',
@@ -228,13 +228,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-5">
-                                No hay entregas registradas con los filtros seleccionados.
-                            </td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>

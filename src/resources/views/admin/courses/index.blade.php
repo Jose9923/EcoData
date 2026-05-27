@@ -73,7 +73,7 @@
                 data-paging="false"
                 data-searching="false"
                 data-info="false"
-                data-empty="No hay grados registrados.">
+                data-empty="No hay cursos registrados.">
                 <thead class="table-light">
                     <tr>
                         <th>Curso</th>

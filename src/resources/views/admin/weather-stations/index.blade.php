@@ -83,7 +83,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($stations as $station)
+                    @foreach($stations as $station)
                         <tr>
                             <td>
                                 <div class="fw-semibold">{{ $station->name }}</div>
@@ -142,13 +142,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-5">
-                                No hay estaciones meteorológicas registradas.
-                            </td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>

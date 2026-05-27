@@ -992,6 +992,7 @@
                 }
 
                 const emptyText = table.data('empty') || 'No hay datos disponibles en la tabla';
+                const zeroText = table.data('zero') || window.ecodataDataTableLanguage.zeroRecords || 'No se encontraron resultados';
 
                 const paging = table.data('paging') !== false && table.data('paging') !== 'false';
                 const searching = table.data('searching') !== false && table.data('searching') !== 'false';
@@ -1024,7 +1025,8 @@
                     columnDefs: columnDefs,
                     language: {
                         ...window.ecodataDataTableLanguage,
-                        emptyTable: emptyText
+                        emptyTable: emptyText,
+                        zeroRecords: zeroText
                     }
                 });
             });
