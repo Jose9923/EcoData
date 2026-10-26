@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class PasswordResetLinkController extends Controller
@@ -21,12 +23,17 @@ class PasswordResetLinkController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+        $email = Str::lower(trim((string) $request->input('email')));
+        $key = 'password-reset:'.hash('sha256', $email.'|'.$request->ip());
 
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with('success', 'Te hemos enviado por correo electrónico el enlace para restablecer tu contraseña.')
-            : back()->withErrors(['email' => 'No encontramos un usuario registrado con ese correo electrónico.']);
+        try {
+            RateLimiter::attempt($key, 1, function () use ($email): void {
+                Password::sendResetLink(['email' => $email, 'is_active' => true]);
+            }, 60);
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+
+        return back()->with('success', 'Si el correo corresponde a una cuenta habilitada, recibirás un enlace para establecer tu contraseña.');
     }
 }

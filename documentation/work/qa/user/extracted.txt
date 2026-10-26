@@ -1,0 +1,1265 @@
+EcoData  ·  Documentación de la aplicación
+1
+Manual de usuario
+EcoData
+Guía de uso para estudiantes, docentes, administradores de colegio y administradores generales.
+Edición 1.0 · 15 de octubre de 2026
+Referencia del código e9bc600
+Plataforma web para organizar mediciones ambientales y actividades pedagógicas por institución educativa.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+2
+Contenido
+Seleccione un capítulo para ir a su página. Los marcadores del PDF permiten volver a navegar por los capítulos.
+3
+1 Propósito y alcance del manual
+4
+2 Roles y permisos de trabajo
+5
+3 Acceso y recuperación de la cuenta
+6
+4 Navegación y Dashboard
+8
+5 Mi perfil y contraseña
+10
+6 Registrar una medición ambiental
+12
+7 Consultar editar y exportar registros físicos
+14
+8 Consultar guías de laboratorio como estudiante
+15
+9 Completar y enviar Mi Diario de Campo
+17
+10 Publicar y administrar guías de laboratorio
+19
+11 Crear una actividad de Diario de Campo
+21
+12 Revisión y devolución de entregas
+23
+13 Consultar y gestionar eventos ambientales
+25
+14 Configuración de colegios y grupos
+28
+15 Crear y mantener usuarios
+29
+16 Importar usuarios desde Excel
+31
+17 Categorías y variables físicas
+33
+18 Estaciones meteorológicas
+35
+19 Sensores y mantenimiento
+37
+20 Alcance del cargue CSV meteorológico
+38
+21 Problemas habituales y respuesta recomendada
+39
+22 Rutinas recomendadas y glosario
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+3
+1 Propósito y alcance del manual
+EcoData organiza la información ambiental y el trabajo pedagógico de una institución educativa.
+Permite registrar mediciones, administrar variables e infraestructura, distribuir guías de laboratorio,
+desarrollar actividades de Diario de Campo y consultar eventos ambientales.
+Este manual está dirigido a estudiantes, docentes, administradores de colegio y superadministradores.
+Describe los controles y reglas presentes en la versión del código revisada el 15 de octubre de 2026. La
+dirección de acceso, los nombres de colegios, los usuarios, las mediciones y las actividades dependen de la
+instalación de cada institución.
+Las imágenes son reconstrucciones ilustrativas basadas en las plantillas Blade del proyecto. Sirven para ubicar
+campos, botones y grupos de navegación; los datos de ejemplo no corresponden a personas ni resultados
+reales. El contenido describe el comportamiento identificado mediante la revisión estática del código.
+Cómo seguir los procedimientos
+Antes de comenzar una tarea, identifique el rol indicado y los datos que debe tener disponibles. Las rutas de
+navegación se escriben como Menú > Módulo. Los nombres entre comillas corresponden a textos de la
+interfaz. Cuando una función exige una relación previa, cree primero el colegio, grado, curso, variable o
+estación correspondiente.
+Los pasos de creación terminan al guardar y revisar el mensaje de confirmación y el registro resultante. Si
+aparecen errores, corrija los campos señalados y vuelva a guardar. No interprete una pantalla abierta, un
+archivo seleccionado o un botón pulsado como evidencia suficiente de que la información quedó almacenada.
+Alcance de esta versión
+El cargue masivo de usuarios en Excel y las exportaciones Excel tienen implementación en el código. El Cargue
+CSV meteorológico muestra una interfaz de preparación, pero no dispone del procesamiento necesario para
+importar archivos. Las rutas de reportes por correo referencian un controlador que no está incluido en la
+versión revisada; por ello no se ofrece un procedimiento de uso de esos reportes.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+4
+2 Roles y permisos de trabajo
+El menú cambia según el rol de la cuenta. Además de mostrar u ocultar opciones, el sistema
+comprueba el colegio asociado y las reglas de cada operación.
+Función
+Superadmin
+Admin de
+colegio
+Docente
+Estudiante
+Mi perfil, Dashboard y eventos
+Sí
+Sí
+Sí
+Sí
+Colegios y categorías globales
+Gestiona
+No
+No
+No
+Usuarios, cargue Excel, grados y
+cursos
+Todos los
+colegios
+Su colegio
+No
+No
+Variables físicas
+Todos los
+colegios
+Su colegio
+No
+No
+Estaciones y sensores
+Todos los
+colegios
+Su colegio
+No
+No
+Consultar, crear y exportar registros
+físicos
+Todos los
+colegios
+Su colegio
+Su colegio
+Su colegio
+Editar registros físicos
+Todos los
+colegios
+Su colegio
+Su colegio
+Solo registros
+propios
+Guías, actividades y revisión del
+Diario
+Gestiona
+Gestiona en su
+colegio
+Gestiona en su
+colegio
+Consulta sus
+guías y entrega
+actividades
+Calendario ambiental administrativo
+Gestiona
+Su colegio
+Su colegio
+No
+Pantalla Cargue CSV
+Visible, sin
+importación
+implementada
+Visible, sin
+importación
+implementada
+Visible, sin
+importación
+implementada
+No
+El superadministrador puede seleccionar un colegio cuando el formulario lo requiere. El administrador de
+colegio, el docente y el estudiante trabajan con el colegio asignado a su cuenta. Tener una dirección de otra
+pantalla no concede permisos para usarla.
+Las guías y las actividades estudiantiles pueden dirigirse a todo el colegio, a un grado o a un curso. En esos
+módulos, la asignación académica del estudiante determina lo que puede consultar. En Registros físicos, la
+consulta y la exportación abarcan el colegio; no se restringen automáticamente a los registros propios del
+estudiante.
+La revisión docente se controla por colegio: el código no limita al docente a las actividades creadas por él ni a
+una lista personal de cursos. La institución debe definir la distribución del trabajo entre sus docentes. El manual
+describe esta autorización efectiva y no presupone restricciones adicionales.
+Una cuenta con rol administrador de colegio, docente o estudiante y sin colegio asignado se dirige a la
+pantalla de colegio requerido. Puede consultar su perfil, pero necesita que administración complete la
+asignación para utilizar los módulos internos.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+5
+3 Acceso y recuperación de la cuenta
+Necesita la dirección de EcoData proporcionada por la institución y una cuenta existente con correo
+electrónico y contraseña.
+Figura 1. Formulario de inicio de sesión. Vista ilustrativa con datos de ejemplo.
+Iniciar sesión
+1. Abra la dirección institucional de EcoData. La página inicial dirige a Iniciar sesión.
+ 
+2. Escriba el correo de la cuenta en Correo electrónico y la clave en Contraseña.
+ 
+3. Si corresponde, active Recordar sesión en un equipo de uso personal.
+ 
+4. Pulse Entrar a EcoData. El sistema abre el Dashboard o la página protegida que había solicitado.
+ 
+5. Compruebe el nombre, correo, rol y colegio mostrados en el menú antes de registrar información.
+ 
+Si aparece “Las credenciales proporcionadas no son correctas”, revise el correo y la contraseña. La contraseña
+distingue mayúsculas, minúsculas y símbolos. Si no recuerda la clave, utilice la recuperación; si no tiene una
+cuenta o su asignación es incorrecta, solicite revisión al administrador de la institución.
+Recuperar la contraseña
+1. En Iniciar sesión, pulse ¿Olvidaste tu contraseña?.
+ 
+2. En Recuperar contraseña, escriba el correo asociado a la cuenta y pulse Enviar enlace.
+ 
+3. Abra el mensaje de recuperación recibido en ese correo y siga su enlace.
+ 
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+6
+4. Complete la nueva contraseña y su confirmación en la pantalla de restablecimiento. Regrese al ingreso con
+ la nueva clave.
+La recepción del enlace depende de la configuración de correo del servidor y de la dirección registrada. Si no
+llega, revise la carpeta de correo no deseado y comunique al responsable el correo utilizado y la hora
+aproximada de la solicitud. No comparta la contraseña ni el enlace de recuperación.
+Finalizar el trabajo
+Utilice Cerrar sesión al final del menú lateral. El sistema termina la sesión y regresa a la página inicial. Cerrar
+una pestaña no equivale a cerrar la sesión, especialmente si se seleccionó Recordar sesión. Los cambios de un
+formulario que aún no se haya guardado no se conservan por cerrar sesión.
+Aunque existe una ruta de registro en el código, el inicio de sesión no ofrece un enlace de creación de cuenta y
+el registro básico no asigna colegio ni rol. El procedimiento operativo de este manual utiliza cuentas creadas o
+importadas por administración.
+4 Navegación y Dashboard
+El Dashboard ofrece un resumen inicial de la información a la que accede su cuenta. El menú lateral
+permite pasar de ese resumen a cada módulo.
+Figura 2. Vista del Dashboard y navegación para una cuenta de administración. Vista ilustrativa con datos de ejemplo.
+Zona del menú
+Contenido principal
+Dashboard
+Indicadores, registros recientes, guías, entregas y eventos según el rol.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+7
+Zona del menú
+Contenido principal
+Mi perfil
+Datos personales, asignación visible y cambio de contraseña.
+Administración
+Colegios, Usuarios, Cargue masivo de usuarios, Grados y Cursos.
+EcoData
+Categorías, Variables físicas, Registros físicos, Cargue CSV, Estaciones meteorológicas
+y Sensores.
+Pedagogía
+Guías de laboratorio, Calendario ambiental, Diario de Campo y Revisión Diario.
+Estudiante
+Mis guías de laboratorio y Mi Diario de Campo.
+Eventos ambientales
+Consulta interna de eventos activos del colegio.
+Cerrar sesión
+Finalización de la sesión.
+Pulse el nombre de un grupo para desplegar sus opciones. En pantallas pequeñas, abra primero Menú de
+navegación. Las tablas pueden requerir desplazamiento horizontal para ver todas sus columnas y acciones. La
+apariencia utiliza los colores y el escudo configurados para el colegio.
+Los indicadores del Dashboard resumen cantidades, no acciones pendientes que deban resolverse
+automáticamente. Un docente puede consultar los datos del colegio y los pendientes de revisión. El estudiante
+recibe un resumen de sus guías y actividades; los registros físicos recientes de su Dashboard se filtran por
+asignación académica.
+El listado completo de Registros físicos permite consultar el colegio y puede mostrar más información que el
+resumen del Dashboard estudiantil. Por ello, una diferencia entre el contador del inicio y el número de filas del
+listado no implica necesariamente pérdida de registros.
+Si aparece Mensaje ambiental del día, lea el aviso y pulse Aceptar, Aceptar todos o Ver calendario. Estas
+acciones registran que la cuenta vio los eventos mostrados. El aviso no se cierra mediante clic fuera de la
+ventana ni con Escape en la implementación revisada.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+8
+5 Mi perfil y contraseña
+Todos los roles pueden consultar su perfil. El usuario modifica sus datos personales; la asignación de
+colegio, grado, curso y rol se gestiona desde administración.
+Figura 3. Mi perfil y formularios para actualizar datos y contraseña. Vista ilustrativa con datos de ejemplo.
+Actualizar información personal
+1. Abra Mi perfil.
+ 
+2. Revise en Resumen el nombre, correo, identificación, rol, colegio, grado y curso.
+ 
+3. En Actualizar perfil, corrija Nombre, Tipo de identificación, Número de identificación y Correo electrónico.
+ 
+4. Pulse Guardar perfil y compruebe el mensaje “Perfil actualizado correctamente”.
+ 
+Campo
+Regla relevante
+Nombre
+Obligatorio; hasta 255 caracteres.
+Correo electrónico
+Obligatorio, formato válido y sin duplicar el de otra cuenta; hasta 255 caracteres.
+Tipo de identificación
+Obligatorio. El selector ofrece CC, TI, CE, PPT, NIT y PAS.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+9
+Campo
+Regla relevante
+Número de identificación
+Obligatorio, sin duplicar el de otra cuenta; hasta 50 caracteres.
+Los datos de asignación aparecen en el resumen para comprobarlos. Si su curso o colegio es incorrecto,
+comuníquelo al administrador; cambiar nombre o correo no corrige esa asignación. Una asignación
+equivocada puede impedir que aparezcan las guías y actividades esperadas.
+Cambiar la contraseña
+1. En la sección Cambiar contraseña, introduzca Contraseña actual.
+ 
+2. Escriba Nueva contraseña con al menos ocho caracteres y repítala en Confirmar nueva contraseña.
+ 
+3. Pulse Actualizar contraseña.
+ 
+4. Compruebe “Contraseña actualizada correctamente” y use la nueva contraseña en el siguiente ingreso.
+ 
+Si el sistema indica que la contraseña actual no es correcta, revise ese campo o utilice la recuperación desde el
+inicio de sesión. Si la confirmación no coincide, escriba de nuevo ambos campos de la clave nueva. El cambio
+de perfil y el cambio de contraseña se guardan con botones separados.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+10
+6 Registrar una medición ambiental
+Superadministrador, administrador de colegio, docente y estudiante pueden crear registros físicos.
+Deben existir variables activas para el colegio seleccionado.
+Figura 4. Contexto y fecha de una nueva medición ambiental. Vista ilustrativa con datos de ejemplo.
+1. Abra EcoData > Registros físicos y pulse + Nuevo registro.
+ 
+2. Si es superadministrador, seleccione Colegio. En los demás roles el colegio se asigna automáticamente.
+ 
+3. Seleccione Grado y luego Curso cuando la medición corresponda a un grupo; deje Todos / Sin asignar
+ cuando proceda.
+4. Elija Categoría para reducir las variables mostradas, o mantenga Todas las categorías.
+ 
+5. Seleccione la Estación meteorológica, si aplica, y el Origen del dato. Para una captura escrita por el usuario
+ utilice Manual.
+6. Indique Fecha y hora de la medición y añada Observaciones que ayuden a interpretar el dato.
+ 
+7. En Variables disponibles, complete al menos una medición y revise la unidad, el mínimo, el máximo y los
+ decimales admitidos.
+8. Pulse Guardar registro y compruebe “Registro físico guardado correctamente” en el listado.
+ 
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+11
+La fecha y hora identifican la medición, no necesariamente el momento de diligenciar el formulario. Las
+observaciones son opcionales. La categoría sirve para acotar el formulario; el registro conserva las variables
+que se hayan enviado y tengan valor.
+Figura 5. Campos de las variables y límites indicados durante la captura. Vista ilustrativa con datos de ejemplo.
+Tipo de variable
+Cómo responder
+Entero
+Escriba un número sin fracción y dentro de los límites configurados.
+Decimal
+Escriba un número dentro del rango y con la cantidad de decimales permitida.
+Texto
+Introduzca una descripción en el área de texto.
+Sí / No
+Seleccione expresamente Sí o No; dejar vacío significa no registrar esa variable.
+Fecha
+Seleccione la fecha correspondiente a esa variable.
+Dejar una variable vacía es distinto de introducir cero o seleccionar No. Complete únicamente las variables
+medidas. Un registro sin ninguna variable se rechaza con “Debes registrar al menos una variable física”.
+El origen ofrece Manual, Estación meteorológica y Cargue CSV. Es una clasificación del registro. Seleccionar
+Estación meteorológica no inicia comunicación con un dispositivo; seleccionar Cargue CSV en este formulario
+tampoco importa un archivo.
+Si no aparecen variables, compruebe el colegio y la categoría. Si persiste el problema, administración debe
+revisar que haya variables activas. Si aparece un error cargando grados o cursos, vuelva a seleccionar el colegio
+o recargue la página antes de diligenciarla.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+12
+7 Consultar editar y exportar registros físicos
+El listado reúne mediciones y permite localizar registros por contexto, fecha, variable y origen.
+Figura 6. Listado de registros físicos y controles de filtrado. Vista ilustrativa con datos de ejemplo.
+Buscar información
+1. Abra EcoData > Registros físicos.
+ 
+2. Escriba en Filtrar un nombre, identificación, correo, variable, colegio u observación que ayude a encontrar la
+ medición.
+3. Combine las fechas Desde y Hasta con los selectores disponibles: colegio, grado, curso, categoría, estación,
+ origen y variable.
+4. Pulse Filtrar. Ajuste Registros para mostrar 10, 15, 25 o 50 filas por página.
+ 
+5. Abra Ver detalle en la fila deseada para revisar todas sus variables; el resumen de la tabla puede mostrar
+ solo parte de ellas.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+13
+6. Use Limpiar filtros para recuperar el listado sin las condiciones seleccionadas.
+ 
+Editar un registro
+Los administradores y docentes pueden editar los registros del ámbito de su colegio; el estudiante solo ve
+Editar en sus propios registros. Antes de modificar, confirme la fecha, el autor y las variables de la fila. Abrir un
+registro ajeno desde una dirección no autoriza su edición.
+1. Pulse Editar en la fila correcta.
+ 
+2. Corrija fecha, observaciones y valores necesarios. Compruebe que continúan diligenciadas las variables que
+ desea conservar.
+3. Guarde los cambios y revise el detalle actualizado.
+ 
+En esta versión, el guardado de una edición reemplaza el conjunto de valores del registro por los valores
+enviados. Si filtra el formulario de edición y deja variables fuera de lo enviado, puede perder sus valores
+anteriores. Revise cuidadosamente el registro completo antes de guardar.
+La edición muestra estación y origen, pero el código de actualización no persiste cambios de esos dos campos.
+La asignación de colegio, grado y curso de un registro tampoco se modifica al guardar como estudiante.
+Solicite soporte si necesita corregir esos datos.
+Exportar
+Primero aplique los filtros con Filtrar. Después pulse Exportar Excel. Se solicita el archivo
+registros_variables_fisicas.xlsx con los registros que cumplen los filtros, dentro del alcance autorizado de la
+cuenta. La exportación no se limita a la página actualmente visible. Guarde el archivo descargado en la
+ubicación institucional destinada a estos datos.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+14
+8 Consultar guías de laboratorio como estudiante
+Las guías son archivos PDF publicados para su colegio y, cuando se especifica, para su grado o curso.
+Figura 7. Guías disponibles para un estudiante. Vista ilustrativa con datos de ejemplo.
+1. Abra Estudiante > Mis guías de laboratorio.
+ 
+2. Busque la tarjeta de la guía indicada por el docente y lea título, descripción, grado, curso y fecha de
+ publicación.
+3. Pulse Ver PDF para abrir el documento dentro de una ventana de EcoData.
+ 
+4. Si necesita mayor espacio o el visor integrado no muestra el archivo, pulse Abrir en otra pestaña.
+ 
+5. Pulse Descargar PDF para guardar una copia y trabajar con ella según las indicaciones docentes.
+ 
+6. Cierre el visor para regresar a las tarjetas; use la paginación si hay más guías.
+ 
+Una guía se muestra cuando está activa, corresponde al colegio y grupo de su cuenta y su publicación ya está
+disponible. Una guía sin grado o curso específico puede dirigirse a todo el colegio. La publicación futura
+impide la consulta antes de la fecha y hora configuradas.
+Si aparece “No hay guías de laboratorio disponibles para tu grupo”, revise primero su asignación en Mi perfil.
+El docente o administrador debe confirmar el destino de la guía, su estado y su fecha de publicación.
+Descargar un PDF no envía una respuesta al docente ni registra una entrega de Diario de Campo.
+Si el visor presenta “El archivo PDF no existe” o la guía no tiene un archivo asociado, informe el título de la guía
+al responsable. Si el archivo abre en otra pestaña pero no dentro de la ventana, puede trabajar con la descarga.
+No cambie manualmente la dirección para intentar abrir guías de otro grupo.
+Una copia descargada conserva el contenido del momento de la descarga. Si el docente reemplaza el PDF,
+consulte nuevamente EcoData para obtener la versión disponible. El módulo no muestra un historial de
+versiones para el estudiante.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+15
+9 Completar y enviar Mi Diario de Campo
+El Diario de Campo permite responder actividades de observación, reto o portafolio. Las respuestas se
+pueden guardar como borrador antes de enviarlas. La disponibilidad se compara con la fecha del
+servidor, configurado en UTC; confirme con el docente el plazo efectivo si tiene dudas sobre su
+equivalencia local.
+Figura 8. Instrucciones y disponibilidad de una actividad para el estudiante. Vista ilustrativa con datos de ejemplo.
+Comenzar una actividad
+1. Abra Estudiante > Mi Diario de Campo.
+ 
+2. En Actividades disponibles, localice la actividad indicada. Revise su tipo, fechas, estación asociada y estado
+ de su entrega.
+3. Abra la actividad y lea todas las instrucciones antes de responder.
+ 
+4. Complete cada pregunta con el tipo de respuesta solicitado: texto, número, fecha, lista, selección o archivo.
+ 
+5. Si necesita continuar después, pulse Guardar borrador. Compruebe “Borrador guardado correctamente”.
+ 
+6. Cuando termine, revise las respuestas obligatorias y pulse Enviar respuestas.
+ 
+7. Compruebe “Actividad enviada correctamente” y el estado Enviado. Desde ese momento espere la revisión
+ docente.
+Guardar borrador permite omitir respuestas obligatorias todavía pendientes, pero las respuestas que sí
+introduzca deben tener el tipo válido. No hay un guardado automático descrito en el formulario: utilice el
+botón antes de salir o cambiar de página.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+16
+Figura 9. Preguntas y acciones para guardar o enviar respuestas. Vista ilustrativa con datos de ejemplo.
+Estado
+Significado y acción disponible
+Pendiente
+Todavía no hay una entrega guardada para esa actividad.
+Borrador
+Puede continuar, modificar respuestas y enviar.
+Enviado
+El envío quedó registrado y las respuestas se bloquean para el estudiante.
+Revisado
+La entrega tiene revisión y permanece bloqueada.
+Devuelto
+Puede leer las observaciones, corregir y reenviar mientras la actividad esté disponible.
+Archivos de evidencia
+Cada pregunta de archivo permite adjuntar un archivo de hasta 5 MB. Se admiten JPG, JPEG, PNG, WEBP, PDF,
+DOC, DOCX, XLS, XLSX y CSV. Al editar un borrador, un nuevo archivo sustituye al anterior de esa pregunta; si
+no selecciona otro, se conserva el existente.
+La actividad debe estar activa, dentro de sus fechas y dirigida a su colegio, grado y curso. Una fecha de cierre
+vencida impide abrir, guardar o reenviar, incluso si la entrega aparece en Mis entregas. Informe al docente
+cuando una corrección pendiente encuentre el mensaje “Esta actividad ya cerró”.
+Revise la retroalimentación cuando el estado sea Revisado o Devuelto. La pantalla muestra estado, nota, fecha
+de revisión y comentarios. Guardar o reenviar una devolución cambia el estado de la entrega; conserve el
+sentido de las correcciones solicitadas antes de enviarla nuevamente.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+17
+10 Publicar y administrar guías de laboratorio
+Disponible para superadministrador, administrador de colegio y docente. Prepare un PDF legible de
+hasta 10 MB y defina a qué estudiantes se dirige.
+Figura 10. Publicación de una guía PDF para un colegio o grupo. Vista ilustrativa con datos de ejemplo.
+1. Abra Pedagogía > Guías de laboratorio y seleccione la opción de nueva guía.
+ 
+2. Seleccione el Colegio si su rol lo permite. Complete Grado y Curso, o deje Todos los grados / Todos los
+ cursos para una publicación general.
+3. Escriba el Título y una Descripción que explique qué debe hacer el estudiante.
+ 
+4. Seleccione la Fecha de publicación cuando desee programar disponibilidad y adjunte el archivo PDF.
+ 
+5. Revise el interruptor Guía activa. Una guía inactiva no se ofrece al estudiante.
+ 
+6. Pulse Guardar guía y compruebe “Guía de laboratorio cargada correctamente”.
+ 
+7. Compruebe en el listado el destino, la fecha y el estado. Descargue el PDF desde la fila para verificar que
+ corresponde al material esperado.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+18
+Dato
+Condición
+Título
+Obligatorio; máximo 255 caracteres.
+Colegio
+Debe ser válido y permitido para la cuenta.
+Grado y curso
+Opcionales; deben pertenecer al colegio y ser compatibles entre sí.
+PDF
+Obligatorio al crear; formato PDF y máximo 10 MB.
+Fecha de publicación
+Opcional; al crear sin fecha, se utiliza el momento actual.
+Guía activa
+Determina si los estudiantes pueden encontrarla, junto con fecha y asignación.
+La creación de una guía activa intenta notificar a los estudiantes activos de su destino. La recepción depende
+del correo configurado. El mensaje no sustituye la verificación del módulo: una fecha de publicación futura
+puede hacer que el aviso llegue antes de que la guía pueda consultarse.
+Modificar o retirar una guía
+Use Editar para cambiar sus datos. El PDF es opcional al editar: dejar el campo vacío conserva el actual; cargar
+otro reemplaza el archivo anterior. Guarde y revise la fila. Desactivar la guía la retira de la consulta estudiantil
+sin utilizar la acción Eliminar.
+Eliminar borra la guía y su archivo almacenado. Antes de confirmar, compruebe el título y conserve una copia
+institucional si necesita el material. El listado permite filtrar para localizar guías; no dispone de un editor de
+PDF ni de un historial visible de versiones.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+19
+11 Crear una actividad de Diario de Campo
+Disponible para superadministrador, administrador de colegio y docente. Defina el propósito, los
+destinatarios, el plazo y las preguntas antes de publicarla.
+Figura 11. Formulario para crear una actividad de Diario de Campo. Vista ilustrativa con datos de ejemplo.
+1. Abra Pedagogía > Diario de Campo y seleccione la opción de nueva actividad.
+ 
+2. Seleccione colegio cuando corresponda y el Tipo de actividad: Observación, Reto o Portafolio.
+ 
+3. Escriba Título y Descripción e instrucciones. Indique qué observar, qué evidencia preparar y cómo
+ responder.
+4. Seleccione Grado, Curso y, si aplica, Estación meteorológica asociada. Los destinos vacíos abarcan todos los
+ grados o cursos del colegio.
+5. Defina Estado, Fecha de inicio y Fecha de cierre. El cierre no puede ser anterior al inicio.
+ 
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+20
+6. En Preguntas de la actividad, escriba el texto de la primera pregunta y elija su tipo, orden y obligatoriedad.
+ 
+7. Use + Agregar pregunta para añadir las restantes. Revise las opciones de selección y el orden completo.
+ 
+8. Pulse Guardar actividad. Compruebe el mensaje de creación y abra el detalle para revisar las preguntas
+ antes de comenzar a recibir entregas.
+Figura 12. Configuración del texto tipo orden y obligatoriedad de las preguntas. Vista ilustrativa con datos de ejemplo.
+Tipo de pregunta
+Configuración y uso
+Respuesta corta
+Texto de extensión breve.
+Respuesta larga
+Área de texto para observaciones o explicación.
+Número
+Respuesta numérica.
+Fecha
+Selector de fecha.
+Lista desplegable
+Una opción; escriba las opciones una por línea.
+Selección única
+Una opción mediante controles de selección.
+Selección múltiple
+Permite varias opciones; cada una debe ocupar una línea.
+Archivo / evidencia
+Archivo del estudiante dentro de los formatos y límite indicados en este manual.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+21
+Debe existir al menos una pregunta. Todas necesitan texto y tipo. Las de lista desplegable, selección única o
+múltiple requieren opciones. El orden, si se indica, debe ser un entero desde 1. La marca Obligatoria se exige al
+enviar, no al guardar borrador.
+Al crear una actividad activa, el sistema intenta avisar a sus estudiantes activos por correo. La disponibilidad
+real sigue dependiendo de sus fechas y destino. Una actividad inactiva o fuera de plazo no se puede
+responder.
+Precaución necesaria al editar
+En la versión revisada, guardar cualquier edición de una actividad elimina y vuelve a crear todas sus preguntas;
+las respuestas asociadas se eliminan por la relación de datos. Esto ocurre aunque solo cambie el título, la fecha
+o el estado. No edite actividades que ya tengan entregas. Cree una actividad nueva para una versión distinta y
+solicite soporte si necesita corregir fechas o recuperar disponibilidad sin perder respuestas.
+La acción Eliminar también retira la actividad y sus datos relacionados. Compruebe si existen entregas antes de
+confirmar. Para preservar trabajos ya recibidos, no utilice edición o eliminación como una operación rutinaria
+de cierre.
+12 Revisión y devolución de entregas
+Disponible para superadministrador, administrador de colegio y docente. El acceso Revisión Diario
+reúne las entregas dentro del alcance del colegio.
+Figura 13. Resultado de revisión y retroalimentación docente. Vista ilustrativa con datos de ejemplo.
+Localizar una entrega
+1. Abra Pedagogía > Revisión Diario.
+ 
+2. Seleccione Estado: Enviado para comenzar por trabajos pendientes de revisión.
+ 
+3. Combine Actividad, Grado, Curso y Estudiante. El superadministrador puede seleccionar Colegio.
+ 
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+22
+4. Use Filtrar para buscar por actividad, estudiante, documento o correo y pulse Filtrar.
+ 
+5. Abra la acción de revisión de la fila. Compruebe estudiante, asignación, actividad y fecha de envío.
+ 
+Guardar la revisión
+1. Lea las respuestas y abra los archivos de evidencia disponibles.
+ 
+2. Seleccione Resultado de revisión: Revisado si el trabajo queda concluido, o Devuelto para corrección si el
+ estudiante debe ajustarlo.
+3. Introduzca una Nota si corresponde. El sistema acepta un número entre 0 y 100, con decimales.
+ 
+4. Escriba Retroalimentación concreta: qué está logrado, qué debe corregirse y qué se espera en el reenvío.
+ 
+5. Pulse Guardar revisión y compruebe “Entrega revisada correctamente” o “Entrega devuelta para corrección”.
+ 
+La nota y la retroalimentación son opcionales en la validación, pero una devolución resulta más clara si explica
+las correcciones. El sistema registra quién revisó y cuándo. También intenta notificar la revisión al estudiante
+activo; este puede consultar el resultado en su Diario de Campo.
+El listado incluye Borrador, Enviado, Revisado y Devuelto. Trabaje preferentemente sobre Enviado para no
+cerrar un borrador que el estudiante aún prepara. La interfaz no obliga a que la entrega se encuentre en
+Enviado antes de guardar una revisión.
+Antes de devolver, compruebe que la actividad continúa disponible. Si ya cerró, el estudiante no podrá entrar
+para corregir. No amplíe fechas mediante una edición ordinaria de la actividad con entregas: la limitación
+descrita en el capítulo anterior puede borrar respuestas. Escale ese caso al responsable técnico.
+Exportar resultados
+Aplique los filtros y luego pulse Exportar Excel. Se descarga un archivo cuyo nombre comienza por
+diario_de_campo_ecodata_ y añade fecha y hora. La exportación respeta los filtros y el colegio autorizado, e
+incluye las entregas y respuestas correspondientes. Cambiar Registros solo ajusta la paginación; no limita el
+conjunto exportado.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+23
+13 Consultar y gestionar eventos ambientales
+Eventos ambientales es la consulta interna para todos los roles. Pedagogía > Calendario ambiental
+permite administrar eventos a docentes y administradores.
+Figura 14. Formulario de publicación de un evento ambiental. Vista ilustrativa con datos de ejemplo.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+24
+Figura 15. Consulta de eventos ambientales para usuarios autenticados. Vista ilustrativa con datos de ejemplo.
+Consulta y avisos
+1. Abra Eventos ambientales.
+ 
+2. Revise Eventos de hoy, Próximos eventos y Eventos anteriores.
+ 
+3. Abra el detalle del evento para leer la descripción completa y consultar sus fechas e imagen.
+ 
+4. Cuando aparezca Mensaje ambiental del día, lea los avisos y pulse Aceptar, Aceptar todos o Ver calendario.
+ 
+Solo se ofrecen eventos activos. Los usuarios del colegio ven los de su institución; el superadministrador puede
+consultar todos. Eventos anteriores muestra hasta ocho eventos pasados en esta vista. Una confirmación de
+lectura queda asociada a su cuenta y al evento; no es una inscripción ni una certificación de asistencia.
+Crear un evento
+1. Abra Pedagogía > Calendario ambiental y seleccione la opción de nuevo evento.
+ 
+2. Seleccione Colegio cuando corresponda, escriba Título y añada Descripción.
+ 
+3. Seleccione Fecha de inicio y Fecha de finalización. Para un evento de un día, use la misma fecha.
+ 
+4. Adjunte una imagen opcional y defina el Estado activo.
+ 
+5. Pulse Guardar evento y compruebe el mensaje de creación. Abra su detalle para verificar fechas e
+ información.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+25
+Campo
+Validación
+Título
+Obligatorio; hasta 255 caracteres.
+Fechas de inicio y finalización
+Ambas obligatorias. La finalización debe ser igual o posterior al inicio.
+Imagen
+Opcional, JPG, JPEG, PNG o WEBP; hasta 4 MB.
+Descripción
+Opcional.
+Estado
+Debe seleccionarse; los inactivos no aparecen en la consulta interna.
+La pantalla administrativa permite buscar, ver, editar y eliminar. Una actualización debe comprobarse en el
+detalle. Eliminar retira el evento y su imagen asociada; confirme que seleccionó el evento correcto. La consulta
+del calendario requiere iniciar sesión aunque su controlador utilice la palabra público internamente.
+Aceptar un aviso no elimina el evento del calendario. Si un usuario ya lo confirmó, el sistema deja de incluirlo
+entre sus avisos pendientes de ese evento; no se registra una confirmación nueva por cada día de duración.
+14 Configuración de colegios y grupos
+El superadministrador crea colegios. El superadministrador y el administrador de colegio preparan
+grados y cursos. Realice esta configuración antes de asignar usuarios y publicar actividades por grupo.
+Figura 16. Formulario de colegio e identidad visual. Vista ilustrativa con datos de ejemplo.
+Crear un colegio
+1. Abra Administración > Colegios y seleccione Nuevo colegio.
+ 
+2. Escriba el nombre. El slug es un identificador opcional; si lo define, no debe repetir el de otro colegio.
+ 
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+26
+3. Seleccione color primario, secundario y de acento, y el estado.
+ 
+4. Adjunte el escudo si dispone de él: debe ser una imagen de hasta 2 MB.
+ 
+5. Pulse Crear colegio. Revise el nombre, los colores y el estado en el listado.
+ 
+Los colores deben tener formato hexadecimal válido, como #059669. El nombre admite hasta 255 caracteres.
+La configuración visual se utiliza en la navegación y las pantallas del colegio; no modifica por sí sola la
+asignación de usuarios.
+Figura 17. Listado de grados y etiquetas del colegio. Vista ilustrativa con datos de ejemplo.
+Crear los grados
+1. Abra Administración > Grados y seleccione Nuevo grado.
+ 
+2. Seleccione Colegio si su rol lo permite.
+ 
+3. Complete Nombre, por ejemplo 9, y una Etiqueta opcional, por ejemplo Noveno.
+ 
+4. Defina el estado y pulse Crear grado.
+ 
+El nombre del grado debe ser único dentro del colegio. Una etiqueta permite mostrar una denominación más
+descriptiva. Los formularios dependientes normalmente ofrecen los grados activos.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+27
+Figura 18. Curso asociado a colegio y grado. Vista ilustrativa con datos de ejemplo.
+Crear los cursos
+1. Abra Administración > Cursos y seleccione Nuevo curso.
+ 
+2. Seleccione primero Colegio y después un Grado activo perteneciente a él.
+ 
+3. Escriba Nombre y, si lo desea, Etiqueta. Defina el estado.
+ 
+4. Pulse Crear curso y compruebe su relación con el grado.
+ 
+El nombre del curso debe ser único dentro del mismo colegio y grado. No se permite asignar un grado de otra
+institución. Si un curso no aparece al configurar un usuario o actividad, compruebe primero el grado
+seleccionado y el estado del catálogo.
+Para correcciones ordinarias utilice Editar y revise las relaciones antes de guardar. Eliminar un colegio, grado o
+curso puede afectar información relacionada; varias relaciones del proyecto se eliminan en cascada. No use la
+eliminación como sustituto automático de un cambio de estado. Prepare previamente una revisión con el
+responsable técnico cuando existan datos académicos o históricos.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+28
+15 Crear y mantener usuarios
+Disponible para superadministrador y administrador de colegio. Prepare nombre, correo,
+identificación, rol y asignación académica de cada persona.
+Figura 19. Listado de usuarios y asignación académica. Vista ilustrativa con datos de ejemplo.
+1. Abra Administración > Usuarios y seleccione Nuevo usuario.
+ 
+2. Complete Nombre, Correo electrónico, Tipo de identificación y Número de identificación.
+ 
+3. Defina Contraseña con al menos ocho caracteres y repítala en Confirmar contraseña.
+ 
+4. Seleccione Colegio cuando corresponda y el Rol adecuado.
+ 
+5. Para un estudiante, complete Grado y Curso según su matrícula para que reciba el material de su grupo.
+ 
+6. Revise Usuario activo y pulse Crear usuario.
+ 
+7. Compruebe el registro creado y su asignación. El código envía una notificación de creación; la recepción
+ depende del servicio de correo.
+Dato
+Regla o efecto
+Correo y documento
+Obligatorios y únicos en el conjunto de usuarios.
+Nombre
+Obligatorio; hasta 255 caracteres.
+Identificación
+El formulario ofrece CC, TI, CE, PPT, NIT y PAS.
+Contraseña
+Obligatoria al crear, mínimo ocho caracteres y confirmación coincidente.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+29
+Dato
+Regla o efecto
+Colegio
+El administrador de colegio solo asigna usuarios a su propia institución.
+Rol
+El administrador de colegio no puede asignar ni gestionar superadministradores.
+Grado y curso
+Opcionales en la validación, pero necesarios para contenidos dirigidos a grupos
+específicos.
+Actualizar una cuenta
+Localice la cuenta con los filtros y abra Editar. Corrija datos, rol, colegio o asignación dentro de sus permisos y
+pulse Guardar cambios. En edición, dejar Nueva contraseña vacía conserva la existente; si introduce una, debe
+cumplir la longitud y coincidir con la confirmación.
+Una cuenta con colegio vacío y rol docente, estudiante o administrador de colegio no puede utilizar los
+módulos internos. Revise la asignación cuando una persona informe “colegio requerido”. Para
+superadministrador, no tener colegio puede ser válido.
+No puede eliminar su propia cuenta desde este módulo. La eliminación de otras cuentas puede afectar guías o
+entregas vinculadas; verifique los registros y las necesidades de conservación antes de confirmar. El estado
+Usuario activo se guarda y se usa en algunas selecciones y notificaciones, pero esta versión no comprueba ese
+estado en el controlador de inicio de sesión. No lo trate como garantía de bloqueo de acceso.
+16 Importar usuarios desde Excel
+Disponible para superadministrador y administrador de colegio. Utilice la plantilla descargada desde la
+aplicación y un archivo XLSX o XLS de hasta 10 MB.
+Figura 20. Archivo Excel y modo de importación de usuarios. Vista ilustrativa con datos de ejemplo.
+1. Abra Administración > Cargue masivo de usuarios.
+ 
+2. Pulse Descargar plantilla Excel y guarde una copia de trabajo.
+ 
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+30
+3. Complete la primera hoja de usuarios. Consulte las hojas auxiliares de instrucciones, tipos de documento,
+ roles, colegios, grados y cursos.
+4. Conserve los encabezados de la plantilla y elimine o reemplace cualquier fila de ejemplo antes de cargar sus
+ datos.
+5. Seleccione el Archivo Excel y el Modo de importación.
+ 
+6. Pulse Procesar archivo. Revise Resultado del cargue: Creados, Actualizados, Omitidos y Errores.
+ 
+7. Corrija las filas reportadas y prepare un nuevo cargue. Verifique una muestra de las cuentas en Usuarios.
+ 
+Columna
+Contenido esperado
+name
+Nombre de la persona.
+email
+Correo válido; se normaliza a minúsculas.
+document_type
+CC, TI, CE, PPT, NIT o PAS.
+document_number
+Número de identificación; conserve ceros iniciales usando formato de texto.
+role
+Nombre del rol de la plantilla: super_admin, admin_colegio, docente o estudiante
+según permiso.
+school
+Nombre o slug de un colegio existente; administración de colegio queda limitada al
+propio.
+grade
+Nombre o etiqueta de un grado activo de ese colegio.
+course
+Nombre o etiqueta de un curso activo del grado indicado.
+password
+Contraseña inicial para cuentas nuevas.
+is_active
+Use 1 para activo y 0 para inactivo, de forma consistente.
+Solo crear nuevos omite una fila si ya existe una cuenta con el documento o correo. Crear o actualizar modifica
+los datos y el rol de la cuenta coincidente, o crea una cuenta nueva. Si el documento y el correo pertenecen a
+dos usuarios distintos, la fila genera error; corrija la identidad antes de reintentar.
+Para asignar un curso debe indicar primero un grado válido. El administrador de colegio no puede importar
+usuarios de otra institución ni superadministradores. Las filas con error no impiden necesariamente que otras
+filas del archivo se creen o actualicen: revise el resumen completo antes de repetir un archivo.
+En esta versión, password solo se utiliza para usuarios nuevos; no cambia la clave de una cuenta que se
+actualiza. Si se deja vacío al crear, el código utiliza una contraseña predeterminada compartida. Complete una
+contraseña inicial individual y gestione su cambio con la persona. La aplicación no fuerza ese cambio
+automáticamente.
+El importador procesa únicamente la primera hoja. Los mensajes “Fila de datos” cuentan las filas de usuarios
+procesadas después de detectar encabezados, no necesariamente el número visual de fila en Excel. No
+modifique los encabezados por traducciones libres; mantenga los de la plantilla para que el sistema los
+identifique.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+31
+17 Categorías y variables físicas
+Las categorías son globales y las gestiona únicamente el superadministrador. Las variables pertenecen
+a un colegio y las gestionan el superadministrador o su administrador.
+Figura 21. Configuración de una categoría global de variables. Vista ilustrativa con datos de ejemplo.
+Crear una categoría
+1. Abra EcoData > Categorías de variables.
+ 
+2. Seleccione Nueva categoría y complete Nombre, Slug opcional, Descripción y Estado.
+ 
+3. Pulse Crear categoría. Revise el listado y utilice un nombre que facilite encontrar variables relacionadas.
+ 
+El nombre admite hasta 255 caracteres y el slug debe ser único. Si intenta eliminar una categoría que ya tiene
+variables, la aplicación la desactiva y muestra una advertencia en lugar de eliminarla. Una categoría inactiva
+deja de ofrecerse en los formularios que seleccionan categorías activas.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+32
+Figura 22. Tipo unidad y límites de una variable física. Vista ilustrativa con datos de ejemplo.
+Configurar una variable
+1. Abra EcoData > Variables físicas y seleccione Nueva variable física.
+ 
+2. Seleccione Colegio cuando corresponda y una Categoría activa.
+ 
+3. Escriba Nombre, Unidad y Descripción. Defina Slug si necesita un identificador específico.
+ 
+4. Seleccione Tipo de dato: decimal, entero, texto, booleano o fecha.
+ 
+5. Para datos numéricos, defina Valor mínimo y Valor máximo. Para decimales, indique la cantidad admitida.
+ 
+6. Revise el estado y pulse Crear variable.
+ 
+7. Compruebe su aparición en un nuevo registro físico del colegio antes de comenzar la captura habitual.
+ 
+Configuración
+Regla
+Rango numérico
+Mínimo y máximo obligatorios para enteros y decimales; el mínimo no puede superar
+el máximo.
+Entero
+Los límites deben ser enteros y la cantidad de decimales debe ser cero.
+Decimal
+Debe especificar de 0 a 10 decimales.
+Texto, booleano y fecha
+No requieren los límites numéricos.
+Slug
+Opcional; único dentro del colegio.
+Estado activo
+Determina si la variable se ofrece para nuevos registros.
+Aunque el formulario permite configurar de 0 a 10 decimales, la base de datos de esta versión conserva cuatro
+cifras decimales en los límites y valores numéricos. Configure como máximo cuatro decimales si necesita
+preservar la precisión; solicite una ampliación técnica antes de trabajar con mayor detalle.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+33
+La unidad orienta la captura: por ejemplo, temperatura en °C o precipitación en mm. Evite cambiar el
+significado, la unidad o el tipo de una variable con datos históricos sin una revisión previa, porque los registros
+y reportes siguen vinculados a esa variable.
+Editar permite corregir la configuración. Eliminar no es una operación necesaria para registrar mediciones;
+compruebe dependencias y conservación de datos con el responsable técnico. Una variable inactiva no se
+carga en el formulario ordinario de edición de registros, por lo que editar registros antiguos puede requerir
+una revisión especial.
+18 Estaciones meteorológicas
+Disponible para superadministrador y administrador de colegio. Una estación agrupa información de
+ubicación, responsable, sensores y registros asociados.
+Figura 23. Listado de estaciones del colegio. Vista ilustrativa con datos de ejemplo.
+1. Abra EcoData > Estaciones meteorológicas y seleccione Nueva estación meteorológica.
+ 
+2. Seleccione el Colegio cuando corresponda.
+ 
+3. Escriba Nombre y Código. Utilice un código que distinga la estación dentro del colegio.
+ 
+4. Seleccione un Responsable activo del colegio, si se ha definido.
+ 
+5. Complete Ubicación, Latitud, Longitud, Altitud y Fecha de instalación cuando disponga de esos datos.
+ 
+6. Añada Descripción, seleccione Estado y pulse Guardar estación.
+ 
+7. Abra el detalle y revise los datos antes de asociar sensores o mediciones.
+ 
+Campo
+Condición
+Nombre
+Obligatorio; hasta 255 caracteres.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+34
+Campo
+Condición
+Código
+Obligatorio; hasta 100 caracteres y único dentro del colegio.
+Responsable
+Opcional; debe pertenecer al colegio y estar activo.
+Latitud
+Opcional; número entre -90 y 90.
+Longitud
+Opcional; número entre -180 y 180.
+Altitud
+Opcional; número entre -500 y 9000.
+Instalación, ubicación y descripción
+Información complementaria; la fecha debe ser válida.
+Estado
+Obligatorio; las selecciones de estaciones ofrecen las activas.
+Las coordenadas describen el lugar de instalación. No se ha documentado una verificación automática en un
+mapa. Si no dispone de una coordenada fiable, deje el campo opcional sin dato en lugar de inventarla.
+El responsable ayuda a identificar a la persona encargada; asignarlo no crea una integración con el equipo. Una
+estación registrada en EcoData es un elemento de inventario y contexto para mediciones. El código revisado
+no aporta una conexión automática de lectura de sensores.
+Use Editar para mantener ubicación, responsable y estado. Antes de Eliminar, revise los sensores y registros
+relacionados: eliminar una estación puede eliminar sus sensores por la relación de datos. Si la estación ya tiene
+historial, coordine la operación con el responsable técnico.
+Aunque algunos componentes internos mencionan al docente, el menú y las rutas actuales de estaciones y
+sensores permiten la administración solo a superadministradores y administradores de colegio.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+35
+19 Sensores y mantenimiento
+Disponible para superadministrador y administrador de colegio. Cree primero una estación activa y, si
+relacionará la medición, una variable física activa del mismo colegio.
+Figura 24. Identificación y características de un sensor. Vista ilustrativa con datos de ejemplo.
+1. Abra EcoData > Sensores y seleccione Nuevo sensor.
+ 
+2. Seleccione Estación meteorológica y, si aplica, Variable física.
+ 
+3. Escriba Nombre y Código del sensor.
+ 
+4. Complete Marca, Modelo y Número de serie cuando estén disponibles.
+ 
+5. Indique Unidad de medida, Rango de medición y Precisión a partir de la documentación del equipo.
+ 
+6. Registre Fecha de instalación, Último mantenimiento y Próximo mantenimiento, si corresponde.
+ 
+7. Seleccione Estado del sensor, revise Estado activo, añada Observaciones y pulse Guardar sensor.
+ 
+8. Abra el detalle para comprobar estación, variable, identificación y calendario registrado.
+ 
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+36
+Figura 25. Fechas de mantenimiento estado y observaciones del sensor. Vista ilustrativa con datos de ejemplo.
+Dato
+Regla o interpretación
+Estación
+Obligatoria, activa y dentro del colegio autorizado.
+Variable física
+Opcional; activa y del colegio de la estación.
+Nombre y código
+Obligatorios. El código debe ser único en esa estación.
+Estado operativo
+Operativo, En mantenimiento, Fallando, Inactivo o Retirado.
+Estado activo
+Bandera adicional de disponibilidad del registro.
+Próximo mantenimiento
+No puede ser anterior al último mantenimiento si ambos se registran.
+Unidad, rango y precisión
+Campos descriptivos; no calibran el equipo ni modifican los límites de la variable física.
+Estado del sensor y Estado activo representan datos distintos. Por ejemplo, un sensor puede conservar su ficha
+activa mientras su estado sea En mantenimiento. Revise ambos cuando interprete los indicadores del
+Dashboard: los sensores activos y operativos se contabilizan de forma diferente a los que tienen incidencias.
+Después de realizar un mantenimiento real, use Editar para registrar la fecha, el estado y las observaciones
+correspondientes. El formulario conserva información administrativa; el código revisado no demuestra que
+programe automáticamente una orden o una notificación de mantenimiento.
+Eliminar retira la ficha del sensor. Antes de confirmar, verifique el nombre, código y estación para evitar retirar
+el elemento incorrecto. Si solo necesita describir una incidencia o retirar el equipo de servicio, actualice su
+estado de acuerdo con la política de conservación de la institución.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+37
+20 Alcance del cargue CSV meteorológico
+La opción EcoData > Cargue CSV es visible para superadministrador, administrador de colegio y
+docente, pero su procesamiento no está implementado en la versión revisada.
+La pantalla presenta Estación meteorológica, Origen del dato, Separador del archivo, Archivo CSV y
+Observaciones del cargue. También muestra los controles Descargar plantilla CSV y Cargar CSV. Estas
+referencias visuales no significan que el archivo se procese.
+Elemento
+Estado en esta versión
+Selección de estación
+Se cargan estaciones activas dentro del alcance del usuario.
+Separador
+La pantalla ofrece coma o punto y coma.
+Archivo CSV
+Existe el control para seleccionar un archivo.
+Descargar plantilla CSV
+El botón no tiene implementación de descarga.
+Cargar CSV
+El formulario no tiene una ruta de procesamiento implementada.
+Resultado de importación
+No puede confirmarse ni documentarse como disponible.
+No utilice este módulo para un cargue real ni considere seleccionado un archivo como información
+incorporada al sistema. Para registros necesarios en esta versión, utilice EcoData > Registros físicos > + Nuevo
+registro y verifique después cada medición.
+Como referencia de diseño, la pantalla muestra las columnas recorded_at, temperature, humidity, pressure,
+rainfall, wind_speed y wind_direction. recorded_at contiene fecha y hora, y las demás representan variables
+meteorológicas. Esta estructura es una propuesta visible en la interfaz, no un contrato de importación validado
+por un procesador.
+El desarrollo y la habilitación de un importador deben ser confirmados por el responsable técnico antes de
+preparar cargas de producción. El cargue masivo de usuarios descrito en el capítulo 16 es un módulo distinto y
+utiliza archivos Excel; no recibe estos CSV meteorológicos.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+38
+21 Problemas habituales y respuesta
+recomendada
+Identifique el módulo y el mensaje exacto antes de repetir una operación. Algunas situaciones
+dependen de la asignación de la cuenta o de la configuración de la aplicación.
+Situación
+Qué comprobar o hacer
+No puedo iniciar sesión
+Revise correo y contraseña. Use ¿Olvidaste tu contraseña? si necesita restablecerla.
+Mi usuario no tiene colegio
+asignado
+Solicite al administrador la asignación. Verifique los datos visibles en Mi perfil.
+No aparece una opción del menú
+Compare su rol con la matriz de permisos. No todos los perfiles administran todos los
+módulos.
+No hay guías o actividades para mi
+grupo
+Revise colegio, grado y curso; el responsable debe confirmar estado, destino y fechas
+de publicación o vigencia.
+Esta actividad ya cerró
+Informe al docente. Una devolución no extiende automáticamente el plazo; las
+ediciones de actividades con entregas requieren soporte por el riesgo de pérdida de
+respuestas.
+Una entrega enviada no permite
+escribir
+Es el bloqueo previsto para Enviado y Revisado. Una corrección requiere que el
+docente la devuelva y que la actividad siga disponible.
+El registro no permite guardar
+Complete al menos una variable y revise fecha, tipo de dato, mínimo, máximo y
+decimales.
+Correo o documento ya existe
+Busque la cuenta existente y corrija o actualice esa identidad; no cree una segunda
+cuenta de la misma persona.
+El archivo supera el límite
+Use PDF de guía hasta 10 MB, evidencia de Diario hasta 5 MB, imagen de evento hasta
+4 MB o escudo hasta 2 MB.
+Error cargando grados, cursos o
+variables
+Recargue y seleccione el colegio y grado otra vez. Si persiste, informe al responsable
+técnico.
+No llegó una notificación
+Revise el correo de la cuenta y correo no deseado. La configuración de envío debe
+comprobarla soporte.
+Cargue CSV no produce registros
+Es una función visual sin importación implementada en esta versión.
+Error 403 o no autorizado
+La cuenta no tiene permiso o el recurso pertenece a otro ámbito; también puede
+ocurrir por fechas de actividad.
+Error 404 o archivo inexistente
+El recurso puede haberse retirado o faltar en almacenamiento. Informe título e
+identificador visible al responsable.
+Al solicitar ayuda, incluya el nombre del módulo, la operación realizada, el texto completo del mensaje, la fecha
+y hora aproximadas, y el título o identificador del registro. Explique si el error apareció al abrir, guardar,
+descargar o exportar. No envíe contraseñas, claves de recuperación ni información de otras personas que no
+sea necesaria para resolver el caso.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+39
+Si una operación de creación muestra un error después de guardar, consulte el listado antes de repetirla:
+algunas acciones intentan notificar por correo después de almacenar datos. Verifique que el registro no exista
+ya para evitar duplicados.
+Si observa respuestas que desaparecieron después de editar una actividad, deje de modificarla y escale
+inmediatamente el caso con su título. La recuperación dependerá de los respaldos disponibles; el módulo no
+ofrece deshacer ni un historial de versiones.
+22 Rutinas recomendadas y glosario
+Estas rutinas reúnen los pasos anteriores para facilitar el trabajo diario sin sustituir la revisión de cada
+formulario.
+Rutina del estudiante
+1. Ingrese y confirme su nombre y grupo.
+ 
+2. Lea los eventos ambientales pendientes.
+ 
+3. Consulte las guías de laboratorio indicadas por el docente.
+ 
+4. Registre las mediciones solicitadas y revise que aparezcan en Registros físicos.
+ 
+5. Abra Mi Diario de Campo, guarde avances como borrador y envíe antes del cierre.
+ 
+6. Consulte la retroalimentación y corrija las entregas devueltas dentro del plazo.
+ 
+7. Cierre sesión.
+ 
+Rutina del docente
+1. Revise el Dashboard y los registros del colegio necesarios para la clase.
+ 
+2. Publique guías y actividades con destinatarios y fechas correctos; compruebe las preguntas antes de recibir
+ trabajos.
+3. En Revisión Diario, filtre Enviado y registre retroalimentación y resultado.
+ 
+4. Confirme disponibilidad antes de devolver una entrega.
+ 
+5. Exporte los registros o entregas necesarios para la actividad académica y conserve los archivos en el
+ repositorio institucional.
+Rutina de administración
+Prepare los catálogos en este orden: colegio, grados, cursos, usuarios, categorías globales, variables, estaciones
+y sensores. Después verifique una cuenta de cada rol con la asignación adecuada. Revise los resúmenes del
+cargue Excel y mantenga consistentes los nombres usados por la institución.
+Término
+Significado en EcoData
+Colegio
+Institución que delimita la información y la asignación de usuarios.
+Grado / Curso
+Organización académica utilizada para dirigir contenidos y clasificar registros.
+Categoría
+Agrupación global de variables físicas.
+
+EcoData  |  Manual de usuario
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+40
+Término
+Significado en EcoData
+Variable física
+Definición de un dato, su tipo, unidad y límites.
+Registro físico
+Conjunto de uno o varios valores capturados con fecha, autor y contexto.
+Estación / Sensor
+Fichas de la infraestructura y los dispositivos de medición.
+Guía de laboratorio
+PDF publicado para un colegio o grupo.
+Actividad de Diario
+Formulario pedagógico con preguntas y vigencia.
+Entrega
+Respuestas guardadas por un estudiante para una actividad.
+Borrador / Enviado
+Trabajo editable en preparación / trabajo remitido para revisión.
+Revisado / Devuelto
+Revisión concluida / trabajo que necesita correcciones.
+Slug
+Identificador de texto utilizado en catálogos; puede generarse a partir del nombre.
+Exportación
+Descarga de los datos consultados en un archivo Excel.
+Importación
+Lectura de un archivo para crear o actualizar datos, disponible aquí para usuarios
+Excel.
+Para conocer instalación, respaldos, estructura de datos, configuración de correo, dependencias y limitaciones
+de implementación, consulte el Manual técnico de EcoData que acompaña este documento.

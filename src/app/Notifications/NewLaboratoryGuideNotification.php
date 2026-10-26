@@ -3,19 +3,36 @@
 namespace App\Notifications;
 
 use App\Models\LaboratoryGuide;
-use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class NewLaboratoryGuideNotification extends Notification
+class NewLaboratoryGuideNotification extends QueuedMailNotification
 {
-    use Queueable;
-
     public function __construct(
         protected LaboratoryGuide $guide
     ) {
+        $this->afterCommit();
+        if ($guide->published_at?->isFuture()) {
+            $this->delay($guide->published_at);
+        }
+    }
+
+    public function shouldSend(object $notifiable, string $channel): bool
+    {
+        $guide = $this->guide->fresh();
+        $notifiable->refresh()->unsetRelation('roles');
+        if (! $guide) {
+            return false;
+        }
+        $this->guide = $guide;
+
+        return $notifiable->is_active && $notifiable->hasVerifiedEmail()
+            && $notifiable->hasRole('estudiante') && $guide->is_active
+            && (! $guide->published_at || $guide->published_at->isPast())
+            && (int) $notifiable->school_id === (int) $guide->school_id
+            && (! $guide->grade_id || (int) $guide->grade_id === (int) $notifiable->grade_id)
+            && (! $guide->course_id || (int) $guide->course_id === (int) $notifiable->course_id);
     }
 
     public function via(object $notifiable): array
@@ -40,7 +57,7 @@ class NewLaboratoryGuideNotification extends Notification
                 $mail->attach(
                     Storage::disk($disk)->path($this->guide->pdf_path),
                     [
-                        'as' => Str::slug($this->guide->title) . '.pdf',
+                        'as' => Str::slug($this->guide->title).'.pdf',
                         'mime' => 'application/pdf',
                     ]
                 );

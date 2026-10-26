@@ -2,11 +2,14 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "laravel/laravel",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "EcoData: gestión escolar de mediciones ambientales y diarios de campo.",
+    "keywords": [
+        "laravel",
+        "framework"
+    ],
     "license": "MIT",
     "require": {
-        "php": "^8.3",
+        "php": "^8.4",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
         "maatwebsite/excel": "^3.1",
@@ -36,10 +39,8 @@
     "scripts": {
         "setup": [
             "composer install",
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
-            "@php artisan key:generate",
-            "@php artisan migrate --force",
-            "npm install --ignore-scripts",
+            "@php scripts/prepare-environment.php",
+            "npm ci --ignore-scripts",
             "npm run build"
         ],
         "dev": [

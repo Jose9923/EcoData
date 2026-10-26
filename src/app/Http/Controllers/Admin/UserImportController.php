@@ -41,7 +41,7 @@ class UserImportController extends Controller
 
         if (! $headerInfo) {
             return back()->withErrors([
-                'file' => 'No se encontró una fila de encabezados válida. Verifica que la hoja contenga las columnas name, email, document_type, document_number, role, school, grade, course, password e is_active.',
+                'file' => 'No se encontró una fila de encabezados válida. Verifica que la hoja contenga las columnas name, email, document_type, document_number, role, school, grade, course e is_active. Las contraseñas se establecen mediante una invitación individual.',
             ]);
         }
 

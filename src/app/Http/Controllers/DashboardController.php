@@ -49,18 +49,7 @@ class DashboardController extends Controller
                 ->when(! $isSuperAdmin, fn ($query) => $query->where('school_id', $schoolId))
                 ->count(),
 
-            'physical_records' => PhysicalVariableRecord::query()
-                ->when(! $isSuperAdmin, fn ($query) => $query->where('school_id', $schoolId))
-                ->when($isestudiante, function ($query) use ($authUser) {
-                    $query->where(function ($subQuery) use ($authUser) {
-                        $subQuery->whereNull('grade_id')
-                            ->orWhere('grade_id', $authUser->grade_id);
-                    })->where(function ($subQuery) use ($authUser) {
-                        $subQuery->whereNull('course_id')
-                            ->orWhere('course_id', $authUser->course_id);
-                    });
-                })
-                ->count(),
+            'physical_records' => PhysicalVariableRecord::query()->visibleTo($authUser)->count(),
 
             'laboratory_guides' => LaboratoryGuide::query()
                 ->where('is_active', true)
@@ -142,20 +131,9 @@ class DashboardController extends Controller
             ->get();
 
         $recentRecords = PhysicalVariableRecord::query()
+            ->visibleTo($authUser)
             ->with(['school', 'grade', 'course', 'user', 'weatherStation'])
-            ->when(! $isSuperAdmin, fn ($query) => $query->where('school_id', $schoolId))
-            ->when($isestudiante, function ($query) use ($authUser) {
-                $query->where(function ($subQuery) use ($authUser) {
-                    $subQuery->whereNull('grade_id')
-                        ->orWhere('grade_id', $authUser->grade_id);
-                })->where(function ($subQuery) use ($authUser) {
-                    $subQuery->whereNull('course_id')
-                        ->orWhere('course_id', $authUser->course_id);
-                });
-            })
-            ->latest('recorded_at')
-            ->take(5)
-            ->get();
+            ->latest('recorded_at')->take(5)->get();
 
         $recentGuides = LaboratoryGuide::query()
             ->with(['school', 'grade', 'course', 'creator'])
@@ -208,7 +186,7 @@ class DashboardController extends Controller
             })
             ->orderBy('starts_at')
             ->get();
-        
+
         $pending = [
             'users_without_document' => User::query()
                 ->when(! $isSuperAdmin, fn ($query) => $query->where('school_id', $schoolId))

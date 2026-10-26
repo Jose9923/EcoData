@@ -12,14 +12,15 @@ Se ha creado una cuenta para ti en la plataforma **EcoData**.
 
 **Rol asignado:** {{ $roleName ?? 'Usuario' }}
 
-**Contraseña temporal:** {{ $temporaryPassword }}
 @endcomponent
 
-Por seguridad, te recomendamos cambiar tu contraseña después de iniciar sesión.
+Establece tu propia contraseña para completar el acceso. Este enlace es individual, de un solo uso y vence en {{ $expiresInMinutes }} minutos.
 
-@component('mail::button', ['url' => $loginUrl])
-Ingresar a EcoData
+@component('mail::button', ['url' => $activationUrl])
+Establecer mi contraseña
 @endcomponent
+
+Si el enlace venció, solicita uno nuevo desde «Olvidé mi contraseña» en la pantalla de ingreso.
 
 Gracias,  
 **Equipo EcoData**

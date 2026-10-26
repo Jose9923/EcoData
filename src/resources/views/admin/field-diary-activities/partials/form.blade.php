@@ -7,11 +7,13 @@
     $selectedCourseId = old('course_id', $selectedCourseId ?? $activity?->course_id ?? '');
     $selectedWeatherStationId = old('weather_station_id', $activity?->weather_station_id ?? '');
 
+    $hasSubmissions = $isEdit && $activity->submissions_count > 0;
     $oldQuestions = old('questions');
 
     if ($oldQuestions === null && $isEdit) {
         $oldQuestions = $activity->questions->map(function ($question) {
             return [
+                'id' => $question->id,
                 'question_text' => $question->question_text,
                 'question_type' => $question->question_type,
                 'options_text' => is_array($question->options) ? implode(PHP_EOL, $question->options) : '',
@@ -215,6 +217,12 @@
     </div>
 </div>
 
+@if($hasSubmissions)
+    <div class="alert alert-info rounded-4 mt-4">
+        Esta actividad ya tiene entregas. Puedes actualizar instrucciones, fechas, estado y corregir el texto u orden de preguntas.
+        El colegio, grado, curso, tipo, opciones y obligatoriedad se conservan. Para cambiar la estructura, crea otra actividad.
+    </div>
+@endif
 <section class="border rounded-4 p-4 mt-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
         <div>
@@ -225,7 +233,7 @@
         </div>
 
         <button type="button"
-                id="add-question"
+                id="add-question" @disabled($hasSubmissions)
                 class="btn btn-outline-dark rounded-4 px-4">
             + Agregar pregunta
         </button>
@@ -238,11 +246,12 @@
     <div id="questions-wrapper" class="d-flex flex-column gap-3">
         @foreach($oldQuestions as $index => $question)
             <div class="question-item border rounded-4 p-4 bg-light">
+                <input type="hidden" name="questions[{{ $index }}][id]" value="{{ $question['id'] ?? '' }}">
                 <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
                     <div class="fw-bold">Pregunta <span class="question-number">{{ $loop->iteration }}</span></div>
 
                     <button type="button"
-                            class="btn btn-sm btn-outline-danger rounded-3 remove-question">
+                            class="btn btn-sm btn-outline-danger rounded-3 remove-question" @disabled($hasSubmissions)>
                         Eliminar
                     </button>
                 </div>
@@ -319,6 +328,18 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const wrapper = document.getElementById('questions-wrapper');
+            const hasSubmissions = @json((bool) $hasSubmissions);
+            if (hasSubmissions) {
+                document.querySelectorAll('#school_id, #grade_id, #course_id, [name$="[question_type]"], [name$="[is_required]"]').forEach((field) => {
+                    const preserved = document.createElement('input');
+                    preserved.type = 'hidden';
+                    preserved.name = field.name;
+                    preserved.value = field.value;
+                    field.after(preserved);
+                    field.disabled = true;
+                });
+                wrapper.querySelectorAll('[name$="[options_text]"]').forEach((field) => field.readOnly = true);
+            }
             const addButton = document.getElementById('add-question');
             const schoolSelect = document.getElementById('school_id');
             const gradeSelect = document.getElementById('grade_id');
@@ -477,6 +498,7 @@
                 const typeSelect = item.querySelector('.question-type');
 
                 removeButton.addEventListener('click', function () {
+                    if (hasSubmissions) return;
                     const total = wrapper.querySelectorAll('.question-item').length;
 
                     if (total <= 1) {
@@ -496,6 +518,7 @@
             wrapper.querySelectorAll('.question-item').forEach(bindQuestionEvents);
 
             addButton.addEventListener('click', function () {
+                if (hasSubmissions) return;
                 const total = wrapper.querySelectorAll('.question-item').length;
                 const first = wrapper.querySelector('.question-item');
                 const clone = first.cloneNode(true);

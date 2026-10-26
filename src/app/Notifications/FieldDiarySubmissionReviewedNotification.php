@@ -3,17 +3,30 @@
 namespace App\Notifications;
 
 use App\Models\FieldDiarySubmission;
-use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 
-class FieldDiarySubmissionReviewedNotification extends Notification
+class FieldDiarySubmissionReviewedNotification extends QueuedMailNotification
 {
-    use Queueable;
-
     public function __construct(
         protected FieldDiarySubmission $submission
     ) {
+        $this->afterCommit();
+    }
+
+    public function shouldSend(object $notifiable, string $channel): bool
+    {
+        $submission = $this->submission->fresh();
+        $notifiable->refresh()->unsetRelation('roles');
+        if (! $submission) {
+            return false;
+        }
+        $this->submission = $submission;
+
+        return $notifiable->is_active && $notifiable->hasVerifiedEmail()
+            && $notifiable->hasRole('estudiante')
+            && (int) $submission->user_id === (int) $notifiable->id
+            && (int) $submission->school_id === (int) $notifiable->school_id
+            && in_array($submission->status, ['revisado', 'devuelto'], true);
     }
 
     public function via(object $notifiable): array

@@ -196,6 +196,13 @@
 
         <form method="POST" action="{{ route('admin.field-diary-submissions.review', $submission) }}">
             @csrf
+            <input type="hidden" name="revision" value="{{ old('revision', $revision) }}">
+            @error('revision')
+                <div class="alert alert-danger rounded-4">{{ $message }}</div>
+            @enderror
+            @if(! in_array($submission->status, ['enviado', 'revisado'], true))
+                <div class="alert alert-info rounded-4">El estudiante todavía puede editar esta entrega. Espera su envío para revisarla.</div>
+            @endif
 
             <div class="row g-4">
                 <div class="col-12 col-lg-4">
@@ -259,7 +266,7 @@
                     Cancelar
                 </a>
 
-                <button type="submit"
+                <button type="submit" @disabled(! in_array($submission->status, ['enviado', 'revisado'], true))
                         class="btn text-white btn-lg rounded-4 px-4 fw-semibold"
                         style="background-color: var(--school-primary);">
                     Guardar revisión

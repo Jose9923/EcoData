@@ -3,82 +3,72 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use Illuminate\Auth\Notifications\ResetPassword;
+use App\Notifications\ResetPasswordNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
-use Livewire\Volt\Volt;
+use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
 
 class PasswordResetTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_reset_password_link_screen_can_be_rendered(): void
+    public function test_reset_request_and_reset_form_can_be_rendered(): void
     {
-        $response = $this->get('/forgot-password');
-
-        $response
-            ->assertSeeVolt('pages.auth.forgot-password')
-            ->assertStatus(200);
+        $this->get('/forgot-password')->assertOk();
+        $this->get('/reset-password/example-token')->assertOk();
     }
 
-    public function test_reset_password_link_can_be_requested(): void
+    public function test_reset_link_is_sent_for_active_user(): void
     {
         Notification::fake();
-
         $user = User::factory()->create();
-
-        Volt::test('pages.auth.forgot-password')
-            ->set('email', $user->email)
-            ->call('sendPasswordResetLink');
-
-        Notification::assertSentTo($user, ResetPassword::class);
-    }
-
-    public function test_reset_password_screen_can_be_rendered(): void
-    {
-        Notification::fake();
-
-        $user = User::factory()->create();
-
-        Volt::test('pages.auth.forgot-password')
-            ->set('email', $user->email)
-            ->call('sendPasswordResetLink');
-
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) {
-            $response = $this->get('/reset-password/'.$notification->token);
-
-            $response
-                ->assertSeeVolt('pages.auth.reset-password')
-                ->assertStatus(200);
-
-            return true;
+        $this->post('/forgot-password', ['email' => $user->email])->assertSessionHas('success');
+        Notification::assertSentTo($user, ResetPasswordNotification::class, function ($notification) use ($user) {
+            return Password::broker()->tokenExists($user, $notification->token);
         });
     }
 
-    public function test_password_can_be_reset_with_valid_token(): void
+    public function test_missing_and_inactive_accounts_receive_same_generic_response_without_mail(): void
     {
         Notification::fake();
+        $user = User::factory()->create(['is_active' => false]);
+        $inactive = $this->post('/forgot-password', ['email' => $user->email])
+            ->assertSessionHas('success');
+        $message = session('success');
+        $this->post('/forgot-password', ['email' => 'missing@example.test'])
+            ->assertSessionHas('success', $message);
+        Notification::assertNothingSent();
+    }
 
+    public function test_reset_sets_password_verifies_email_and_consumes_token(): void
+    {
+        $user = User::factory()->unverified()->create();
+        $token = Password::broker()->createToken($user);
+        $payload = ['email' => $user->email, 'token' => $token,
+            'password' => 'new-password', 'password_confirmation' => 'new-password'];
+        $this->post('/reset-password', $payload)->assertRedirect(route('login'));
+        $this->assertTrue(Hash::check('new-password', $user->fresh()->password));
+        $this->assertTrue($user->fresh()->hasVerifiedEmail());
+        $this->assertFalse(Password::broker()->tokenExists($user, $token));
+        $this->post('/reset-password', $payload)->assertSessionHasErrors('email');
+    }
+
+    public function test_expired_token_and_inactive_user_cannot_reset_password(): void
+    {
         $user = User::factory()->create();
-
-        Volt::test('pages.auth.forgot-password')
-            ->set('email', $user->email)
-            ->call('sendPasswordResetLink');
-
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
-            $component = Volt::test('pages.auth.reset-password', ['token' => $notification->token])
-                ->set('email', $user->email)
-                ->set('password', 'password')
-                ->set('password_confirmation', 'password');
-
-            $component->call('resetPassword');
-
-            $component
-                ->assertRedirect('/login')
-                ->assertHasNoErrors();
-
-            return true;
-        });
+        $token = Password::broker()->createToken($user);
+        $this->travel(config('auth.passwords.users.expire') + 1)->minutes();
+        $this->post('/reset-password', ['email' => $user->email, 'token' => $token,
+            'password' => 'new-password', 'password_confirmation' => 'new-password'])
+            ->assertSessionHasErrors('email');
+        $this->travelBack();
+        $token = Password::broker()->createToken($user);
+        $user->update(['is_active' => false]);
+        $this->post('/reset-password', ['email' => $user->email, 'token' => $token,
+            'password' => 'new-password', 'password_confirmation' => 'new-password'])
+            ->assertSessionHasErrors('email');
+        $this->assertTrue(Hash::check('password', $user->fresh()->password));
     }
 }

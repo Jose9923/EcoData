@@ -2,10 +2,22 @@
 
 namespace App\Models;
 
+use App\Policies\PhysicalVariableRecordPolicy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class PhysicalVariableRecord extends Model
 {
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        return PhysicalVariableRecordPolicy::scopeQuery($query, $user);
+    }
+
+    public function audits()
+    {
+        return $this->hasMany(PhysicalVariableRecordAudit::class)->latest('id');
+    }
+
     protected $fillable = [
         'school_id',
         'grade_id',

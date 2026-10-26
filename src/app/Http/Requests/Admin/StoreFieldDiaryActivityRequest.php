@@ -11,7 +11,8 @@ class StoreFieldDiaryActivityRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasAnyRole(['super_admin', 'admin_colegio', 'docente']) ?? false;
+        return $this->user()?->hasAnyRole(['super_admin', 'admin_colegio', 'docente'])
+            && ($this->user()->hasRole('super_admin') || $this->user()->school_id);
     }
 
     public function rules(): array
@@ -90,6 +91,9 @@ class StoreFieldDiaryActivityRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
             foreach ($this->input('questions', []) as $index => $question) {
                 $type = $question['question_type'] ?? null;
 

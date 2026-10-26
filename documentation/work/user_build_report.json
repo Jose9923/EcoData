@@ -1,0 +1,95 @@
+{
+  "file": "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\output\\pdf\\EcoData_Manual_de_Usuario.pdf",
+  "chapters": [
+    {
+      "title": "1 Propósito y alcance del manual",
+      "page": 3
+    },
+    {
+      "title": "2 Roles y permisos de trabajo",
+      "page": 4
+    },
+    {
+      "title": "3 Acceso y recuperación de la cuenta",
+      "page": 5
+    },
+    {
+      "title": "4 Navegación y Dashboard",
+      "page": 6
+    },
+    {
+      "title": "5 Mi perfil y contraseña",
+      "page": 8
+    },
+    {
+      "title": "6 Registrar una medición ambiental",
+      "page": 10
+    },
+    {
+      "title": "7 Consultar editar y exportar registros físicos",
+      "page": 12
+    },
+    {
+      "title": "8 Consultar guías de laboratorio como estudiante",
+      "page": 14
+    },
+    {
+      "title": "9 Completar y enviar Mi Diario de Campo",
+      "page": 15
+    },
+    {
+      "title": "10 Publicar y administrar guías de laboratorio",
+      "page": 17
+    },
+    {
+      "title": "11 Crear una actividad de Diario de Campo",
+      "page": 19
+    },
+    {
+      "title": "12 Revisión y devolución de entregas",
+      "page": 21
+    },
+    {
+      "title": "13 Consultar y gestionar eventos ambientales",
+      "page": 23
+    },
+    {
+      "title": "14 Configuración de colegios y grupos",
+      "page": 25
+    },
+    {
+      "title": "15 Crear y mantener usuarios",
+      "page": 28
+    },
+    {
+      "title": "16 Importar usuarios desde Excel",
+      "page": 29
+    },
+    {
+      "title": "17 Categorías y variables físicas",
+      "page": 31
+    },
+    {
+      "title": "18 Estaciones meteorológicas",
+      "page": 33
+    },
+    {
+      "title": "19 Sensores y mantenimiento",
+      "page": 35
+    },
+    {
+      "title": "20 Alcance del cargue CSV meteorológico",
+      "page": 37
+    },
+    {
+      "title": "21 Problemas habituales y respuesta recomendada",
+      "page": 38
+    },
+    {
+      "title": "22 Rutinas recomendadas y glosario",
+      "page": 39
+    }
+  ],
+  "figures": 25,
+  "missing_images": []
+}

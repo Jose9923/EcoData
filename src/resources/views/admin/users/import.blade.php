@@ -5,7 +5,7 @@
     <section class="admin-hero p-4 p-md-5">
         <h1 class="h2 fw-bold mb-2">Cargue masivo de usuarios</h1>
         <p class="mb-0 admin-hero-subtitle">
-            Descarga la plantilla, complétala y sube el archivo Excel para crear o actualizar usuarios.
+            Descarga la plantilla, complétala y sube el archivo Excel para crear o actualizar usuarios. Las cuentas nuevas activas reciben una invitación individual por correo; no incluyas contraseñas en el archivo.
         </p>
     </section>
 
@@ -85,6 +85,17 @@
                     </div>
                 </div>
             </div>
+
+            @if(!empty($summary['warnings']))
+                <div class="alert alert-warning rounded-4">
+                    <h6 class="fw-bold">Avisos de invitación</h6>
+                    <ul class="mb-0">
+                        @foreach($summary['warnings'] as $warning)
+                            <li>{{ $warning }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             @if(!empty($summary['errors']))
                 <div class="alert alert-warning rounded-4 mb-0">

@@ -49,9 +49,10 @@
                     @error('email') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>
 
+                @if($user)
                 <div class="col-12 col-md-6">
                     <label class="form-label fw-semibold">
-                        {{ isset($user) ? 'Nueva contraseña' : 'Contraseña' }}
+                        Nueva contraseña (opcional)
                     </label>
                     <input type="password" name="password" class="form-control rounded-4">
                     @error('password') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
@@ -61,6 +62,11 @@
                     <label class="form-label fw-semibold">Confirmar contraseña</label>
                     <input type="password" name="password_confirmation" class="form-control rounded-4">
                 </div>
+                @else
+                <div class="col-12">
+                    <div class="alert alert-info rounded-4 mb-0">La cuenta activa recibirá una invitación individual por correo para establecer su contraseña. El enlace vence y solo se puede usar una vez.</div>
+                </div>
+                @endif
 
                 <div class="col-12 col-md-6">
                     <label class="form-label fw-semibold">Colegio</label>

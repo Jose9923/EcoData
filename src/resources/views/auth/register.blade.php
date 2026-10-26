@@ -8,7 +8,7 @@
         </p>
         <h1 class="display-6 fw-bold text-white mb-2">Crear cuenta</h1>
         <p class="text-white-50 mb-0">
-            Registra un nuevo usuario para acceder a la plataforma.
+            Solicita una cuenta. Un administrador debe asignarte colegio y rol y habilitar tu acceso.
         </p>
     </div>
 
@@ -50,7 +50,7 @@
 
                 <button type="submit" class="btn text-white rounded-4 px-4 py-3 fw-semibold"
                         style="background-color: #059669; border-color: #059669;">
-                    Registrarme
+                    Solicitar cuenta
                 </button>
             </div>
         </form>

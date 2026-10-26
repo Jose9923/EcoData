@@ -1,3 +1,5 @@
+import './vendor-ui';
+import './layout';
 import * as bootstrap from 'bootstrap';
 
 window.bootstrap = bootstrap;
@@ -313,3 +315,20 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('shown.bs.modal', (event) => {
     initSearchableSelects(event.target);
 });
+
+function loadMeasurementCharts() {
+    if (!document.getElementById('measurement-charts')) return;
+    import('./charts').then(({ initCharts }) => initCharts()).catch(() => {
+        const status = document.getElementById('charts-load-status');
+        if (status) {
+            status.hidden = false;
+            status.textContent = 'No se pudieron cargar los gráficos. Puedes consultar los datos en las tablas o recargar la página.';
+        }
+    });
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadMeasurementCharts, { once: true });
+} else {
+    loadMeasurementCharts();
+}

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use App\Models\FieldDiaryActivity;
 use App\Models\FieldDiaryQuestion;
+use App\Services\FieldDiaryAccess;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -11,23 +12,12 @@ class UpdateFieldDiaryActivityRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $authUser = $this->user();
-
-        if (! $authUser?->hasAnyRole(['super_admin', 'admin_colegio', 'docente'])) {
-            return false;
-        }
-
-        if ($authUser->hasRole('super_admin')) {
-            return true;
-        }
-
         $activity = $this->route('field_diary_activity');
-
         if (! $activity instanceof FieldDiaryActivity) {
             $activity = FieldDiaryActivity::find($activity);
         }
 
-        return $activity && (int) $activity->school_id === (int) $authUser->school_id;
+        return $activity && app(FieldDiaryAccess::class)->canManageSchool($this->user(), (int) $activity->school_id);
     }
 
     public function rules(): array
@@ -95,6 +85,7 @@ class UpdateFieldDiaryActivityRequest extends FormRequest
             'is_active' => ['required', 'boolean'],
 
             'questions' => ['required', 'array', 'min:1'],
+            'questions.*.id' => ['nullable', 'integer', 'distinct'],
             'questions.*.question_text' => ['required', 'string'],
             'questions.*.question_type' => ['required', Rule::in(FieldDiaryQuestion::QUESTION_TYPES)],
             'questions.*.options_text' => ['nullable', 'string'],
@@ -106,6 +97,9 @@ class UpdateFieldDiaryActivityRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
             foreach ($this->input('questions', []) as $index => $question) {
                 $type = $question['question_type'] ?? null;
 

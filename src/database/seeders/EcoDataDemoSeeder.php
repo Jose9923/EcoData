@@ -13,21 +13,37 @@ use Illuminate\Support\Str;
 class EcoDataDemoSeeder extends Seeder
 {
     private array $schoolIds = [];
+
     private array $gradeIds = [];
+
     private array $courseIds = [];
+
     private array $userIds = [];
+
     private array $userBySchool = [];
+
     private array $roleIds = [];
+
     private array $categoryIds = [];
+
     private array $variableIds = [];
+
     private array $recordIds = [];
+
     private array $weatherStationIds = [];
+
     private array $fieldDiaryActivityIds = [];
+
     private array $fieldDiaryQuestionIds = [];
+
     private array $fieldDiarySubmissionIds = [];
 
     public function run(): void
     {
+        if (! app()->environment(['local', 'testing']) || ! config('ecodata.allow_demo_seed')) {
+            throw new \RuntimeException('La carga demo requiere local/testing, ECODATA_ALLOW_DEMO_SEED=true y una base descartable.');
+        }
+
         $this->cleanDemoTables();
 
         $this->seedRolesAndPermissions();
@@ -290,7 +306,7 @@ class EcoDataDemoSeeder extends Seeder
                 'role' => 'docente',
                 'school_index' => $schoolIndex,
                 'document_type' => 'CC',
-                'document_number' => '9000001' . $i,
+                'document_number' => '9000001'.$i,
             ];
         }
 
@@ -303,7 +319,7 @@ class EcoDataDemoSeeder extends Seeder
                 'role' => 'estudiante',
                 'school_index' => $schoolIndex,
                 'document_type' => 'TI',
-                'document_number' => '9000002' . $i,
+                'document_number' => '9000002'.$i,
             ];
         }
 
@@ -502,7 +518,7 @@ class EcoDataDemoSeeder extends Seeder
                 'grade_id' => $this->gradeIds[$i],
                 'course_id' => $this->courseIds[$i],
                 'title' => "Guía de laboratorio ambiental {$i}",
-                'description' => "Guía demo para analizar variables ambientales, estación meteorológica y registros físicos.",
+                'description' => 'Guía demo para analizar variables ambientales, estación meteorológica y registros físicos.',
                 'pdf_path' => 'laboratory-guides/demo-guia-ambiental.pdf',
                 'published_at' => now()->subDays(15 - $i),
                 'is_active' => true,
@@ -526,13 +542,13 @@ class EcoDataDemoSeeder extends Seeder
                 'school_id' => $schoolId,
                 'responsible_user_id' => $this->userBySchool[$schoolId] ?? null,
                 'name' => "Estación Meteorológica Demo {$i}",
-                'code' => 'EMD-' . str_pad((string) $i, 3, '0', STR_PAD_LEFT),
+                'code' => 'EMD-'.str_pad((string) $i, 3, '0', STR_PAD_LEFT),
                 'location' => "Patio central - Colegio Demo {$i}",
                 'latitude' => 4.10 + ($i / 100),
                 'longitude' => -73.60 - ($i / 100),
                 'altitude' => 450 + $i,
                 'altitude_meters' => 450 + $i,
-                'description' => "Estación demo para pruebas de sensores, responsables y relación con registros.",
+                'description' => 'Estación demo para pruebas de sensores, responsables y relación con registros.',
                 'installed_at' => now()->subMonths($i)->toDateString(),
                 'is_active' => true,
                 'created_at' => now(),
@@ -555,7 +571,7 @@ class EcoDataDemoSeeder extends Seeder
                 'weather_station_id' => $this->weatherStationIds[$i] ?? null,
                 'physical_variable_id' => $this->variableIds[$i] ?? null,
                 'name' => "Sensor Demo {$i}",
-                'code' => 'SEN-' . str_pad((string) $i, 3, '0', STR_PAD_LEFT),
+                'code' => 'SEN-'.str_pad((string) $i, 3, '0', STR_PAD_LEFT),
                 'sensor_type' => $this->sensorTypeByIndex($i),
                 'model' => $this->sensorModelByIndex($i),
                 'unit' => DB::table('physical_variables')->where('id', $this->variableIds[$i])->value('unit'),
@@ -604,8 +620,8 @@ class EcoDataDemoSeeder extends Seeder
                 'school_id' => $this->schoolIds[$i],
                 'created_by' => $this->userBySchool[$this->schoolIds[$i]] ?? $this->userIds[1],
                 'title' => $title,
-                'slug' => Str::slug($title . '-' . $i),
-                'description' => "Evento ambiental demo para probar calendario, modal y visualización pública interna.",
+                'slug' => Str::slug($title.'-'.$i),
+                'description' => 'Evento ambiental demo para probar calendario, modal y visualización pública interna.',
                 'event_date' => now()->addDays($i)->toDateString(),
                 'starts_at' => now()->addDays($i)->setTime(8, 0),
                 'ends_at' => now()->addDays($i)->setTime(10, 0),
@@ -637,7 +653,7 @@ class EcoDataDemoSeeder extends Seeder
                 'weather_station_id' => $this->weatherStationIds[$i] ?? null,
                 'created_by' => $this->userBySchool[$schoolId] ?? $this->userIds[1],
                 'title' => "Diario de Campo Ambiental {$i}",
-                'description' => "Actividad demo para observar, registrar e interpretar variables ambientales del entorno escolar.",
+                'description' => 'Actividad demo para observar, registrar e interpretar variables ambientales del entorno escolar.',
                 'entry_type' => ['observacion', 'reto', 'portafolio'][($i - 1) % 3],
                 'starts_at' => now()->subDays(2),
                 'ends_at' => now()->addDays(10 + $i),

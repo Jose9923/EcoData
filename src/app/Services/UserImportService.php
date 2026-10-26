@@ -6,7 +6,7 @@ use App\Models\Course;
 use App\Models\Grade;
 use App\Models\School;
 use App\Models\User;
-use App\Notifications\UserCreatedNotification;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
@@ -20,20 +20,24 @@ class UserImportService
             'updated' => 0,
             'skipped' => 0,
             'errors' => [],
+            'warnings' => [],
         ];
 
         if (! $authUser) {
             $summary['errors'][] = 'No fue posible identificar el usuario autenticado para aplicar las reglas de importación.';
+
             return $summary;
         }
 
         if (! $authUser->hasAnyRole(['super_admin', 'admin_colegio'])) {
             $summary['errors'][] = 'No tienes autorización para importar usuarios.';
+
             return $summary;
         }
 
         if (! $authUser->hasRole('super_admin') && ! $authUser->school_id) {
             $summary['errors'][] = 'Tu usuario no tiene un colegio asignado. No es posible importar usuarios.';
+
             return $summary;
         }
 
@@ -47,6 +51,7 @@ class UserImportService
 
                 if ($requiredError) {
                     $summary['errors'][] = "Fila de datos {$line}: {$requiredError}";
+
                     continue;
                 }
 
@@ -54,6 +59,7 @@ class UserImportService
 
                 if (! $role) {
                     $summary['errors'][] = "Fila de datos {$line}: el rol '{$normalized['role']}' no existe o no está permitido para tu usuario.";
+
                     continue;
                 }
 
@@ -61,6 +67,7 @@ class UserImportService
 
                 if (! $school && $role->name !== 'super_admin') {
                     $summary['errors'][] = "Fila de datos {$line}: debes indicar un colegio válido para usuarios que no sean super_admin.";
+
                     continue;
                 }
 
@@ -71,6 +78,7 @@ class UserImportService
 
                     if (! $grade) {
                         $summary['errors'][] = "Fila de datos {$line}: el grado '{$normalized['grade']}' no existe o no pertenece al colegio indicado.";
+
                         continue;
                     }
                 }
@@ -80,6 +88,7 @@ class UserImportService
                 if ($normalized['course']) {
                     if (! $grade) {
                         $summary['errors'][] = "Fila de datos {$line}: para asignar curso debes indicar primero un grado válido.";
+
                         continue;
                     }
 
@@ -87,6 +96,7 @@ class UserImportService
 
                     if (! $course) {
                         $summary['errors'][] = "Fila de datos {$line}: el curso '{$normalized['course']}' no existe o no pertenece al colegio y grado indicados.";
+
                         continue;
                     }
                 }
@@ -107,6 +117,7 @@ class UserImportService
                     && (int) $existingByDocument->id !== (int) $existingByEmail->id
                 ) {
                     $summary['errors'][] = "Fila de datos {$line}: el documento y el correo pertenecen a usuarios diferentes.";
+
                     continue;
                 }
 
@@ -114,6 +125,7 @@ class UserImportService
 
                 if ($mode === 'create_only' && $existingUser) {
                     $summary['skipped']++;
+
                     continue;
                 }
 
@@ -122,6 +134,7 @@ class UserImportService
 
                     if ($scopeError) {
                         $summary['errors'][] = "Fila de datos {$line}: {$scopeError}";
+
                         continue;
                     }
                 }
@@ -138,35 +151,55 @@ class UserImportService
                 ];
 
                 if (! $existingUser) {
-                    $plainPassword = $normalized['password'] ?: 'Cambio123*';
+                    $payload['password'] = Hash::make(Str::random(64));
 
-                    $payload['password'] = Hash::make($plainPassword);
-                    $payload['email_verified_at'] = now();
+                    $user = DB::transaction(function () use ($payload, $role): User {
+                        $user = User::create($payload);
+                        $user->syncRoles([$role->name]);
 
-                    $user = User::create($payload);
-                    $user->syncRoles([$role->name]);
+                        return $user;
+                    });
 
                     if ($user->is_active) {
                         try {
-                            $user->notify(new UserCreatedNotification(
-                                temporaryPassword: $plainPassword,
-                                roleName: $role->name
-                            ));
+                            $user->sendAccountInvitation($role->name);
                         } catch (\Throwable $e) {
                             report($e);
+                            $summary['warnings'][] = "Fila de datos {$line}: cuenta creada; no se pudo preparar la invitación. Usa la recuperación de contraseña.";
                         }
                     }
 
                     $summary['created']++;
+
                     continue;
                 }
 
-                $existingUser->update($payload);
-                $existingUser->syncRoles([$role->name]);
+                $requiresInvitation = $payload['is_active']
+                    && (! $existingUser->is_active || $existingUser->email !== $payload['email']);
+
+                DB::transaction(function () use ($existingUser, $payload, $role): void {
+                    $existingUser->fill($payload);
+                    if ($existingUser->isDirty('email')) {
+                        $existingUser->email_verified_at = null;
+                        $existingUser->remember_token = Str::random(60);
+                    }
+                    $existingUser->save();
+                    $existingUser->syncRoles([$role->name]);
+                });
+
+                if ($requiresInvitation) {
+                    try {
+                        $existingUser->sendAccountInvitation($role->name);
+                    } catch (\Throwable $exception) {
+                        report($exception);
+                        $summary['warnings'][] = "Fila de datos {$line}: cuenta actualizada; no se pudo preparar la invitación. Usa la recuperación de contraseña.";
+                    }
+                }
 
                 $summary['updated']++;
             } catch (\Throwable $e) {
-                $summary['errors'][] = "Fila de datos {$line}: {$e->getMessage()}";
+                report($e);
+                $summary['errors'][] = "Fila de datos {$line}: no se pudo guardar el usuario. Revisa los datos e inténtalo de nuevo.";
             }
         }
 
@@ -184,7 +217,6 @@ class UserImportService
             'school' => trim((string) ($row['school'] ?? $row['colegio'] ?? '')),
             'grade' => trim((string) ($row['grade'] ?? $row['grado'] ?? '')),
             'course' => trim((string) ($row['course'] ?? $row['curso'] ?? '')),
-            'password' => trim((string) ($row['password'] ?? $row['contrasena'] ?? '')),
             'is_active' => $this->toBoolean($row['is_active'] ?? $row['activo'] ?? true),
         ];
     }
@@ -254,7 +286,7 @@ class UserImportService
     protected function resolveSchool(?string $value, User $authUser): ?School
     {
         if (! $authUser->hasRole('super_admin')) {
-            return $authUser->school;
+            return $authUser->school?->is_active ? $authUser->school : null;
         }
 
         if (! $value) {
@@ -291,9 +323,10 @@ class UserImportService
         $slug = Str::slug($value);
 
         return School::query()
-            ->where('name', $value)
-            ->orWhere('slug', $value)
-            ->orWhere('slug', $slug)
+            ->where('is_active', true)
+            ->where(function ($query) use ($value, $slug) {
+                $query->where('name', $value)->orWhere('slug', $value)->orWhere('slug', $slug);
+            })
             ->first();
     }
 

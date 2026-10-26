@@ -4,10 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\FieldDiaryActivity;
 use App\Models\FieldDiarySubmission;
+use App\Services\FieldDiaryAccess;
+use App\Services\FieldDiaryRevision;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class FieldDiarySubmissionController extends Controller
@@ -69,7 +75,7 @@ class FieldDiarySubmissionController extends Controller
     {
         $authUser = $request->user();
 
-        $this->authorizeStudentActivity($authUser, $field_diary_activity);
+        app(FieldDiaryAccess::class)->authorizeStudent($authUser, $field_diary_activity);
 
         $field_diary_activity->load([
             'school',
@@ -86,6 +92,9 @@ class FieldDiarySubmissionController extends Controller
             ->where('school_id', $authUser->school_id)
             ->first();
 
+        $isOpen = app(FieldDiaryAccess::class)->isOpen($field_diary_activity);
+        abort_unless($isOpen || $submission, 403, 'Esta actividad no está disponible.');
+
         $answersByQuestion = $submission
             ? $this->answersForActivity($submission, $field_diary_activity)
             : collect();
@@ -94,158 +103,186 @@ class FieldDiarySubmissionController extends Controller
             'activity' => $field_diary_activity,
             'submission' => $submission,
             'answersByQuestion' => $answersByQuestion,
+            'canEdit' => $isOpen && (! $submission || in_array($submission->status, ['borrador', 'devuelto'], true)),
+            'isOpen' => $isOpen,
+            'revision' => app(FieldDiaryRevision::class)->token($field_diary_activity, $submission),
         ]);
     }
 
-    public function save(Request $request, FieldDiaryActivity $field_diary_activity): RedirectResponse
+    public function save(Request $request, FieldDiaryActivity $field_diary_activity): RedirectResponse|JsonResponse
     {
         return $this->persistSubmission($request, $field_diary_activity, 'borrador');
     }
 
-    public function submit(Request $request, FieldDiaryActivity $field_diary_activity): RedirectResponse
+    public function submit(Request $request, FieldDiaryActivity $field_diary_activity): RedirectResponse|JsonResponse
     {
         return $this->persistSubmission($request, $field_diary_activity, 'enviado');
     }
 
-    private function persistSubmission(Request $request, FieldDiaryActivity $activity, string $status): RedirectResponse
+    private function persistSubmission(Request $request, FieldDiaryActivity $activity, string $status): RedirectResponse|JsonResponse
     {
         $authUser = $request->user();
-
-        $this->authorizeStudentActivity($authUser, $activity);
-
-        $activity->load('questions');
-
-        $existingSubmission = FieldDiarySubmission::query()
-            ->where('field_diary_activity_id', $activity->id)
-            ->where('user_id', $authUser->id)
-            ->first();
-
-        abort_if(
-            $existingSubmission && (int) $existingSubmission->school_id !== (int) $authUser->school_id,
-            403,
-            'No tienes autorizacion para modificar entregas de otro colegio.'
-        );
-
-        if ($existingSubmission && in_array($existingSubmission->status, ['enviado', 'revisado'], true)) {
-            return back()
-                ->with('warning', 'Esta actividad ya fue enviada o revisada y no puede modificarse.')
-                ->withInput();
+        app(FieldDiaryAccess::class)->authorizeWrite($authUser, $activity);
+        $request->validate([
+            'revision' => ['required', 'string', 'size:64'],
+            'autosave' => ['sometimes', 'boolean'],
+            'answers' => ['sometimes', 'array'],
+            'files' => ['sometimes', 'array'],
+        ], ['revision.required' => 'Recarga la página antes de guardar esta actividad.']);
+        $autosave = $request->boolean('autosave');
+        if ($autosave && ($status !== 'borrador' || $request->allFiles())) {
+            throw ValidationException::withMessages(['files' => 'Los archivos se guardan con Guardar borrador o Enviar respuestas.']);
         }
 
-        $rules = [];
+        $newFiles = [];
+        try {
+            $result = DB::transaction(function () use ($request, $activity, $authUser, $status, $autosave, &$newFiles) {
+                // All activity edits and student writes acquire these locks in the same order.
+                $activity = FieldDiaryActivity::query()->lockForUpdate()->findOrFail($activity->id);
+                app(FieldDiaryAccess::class)->authorizeWrite($authUser, $activity);
+                $activity->load('questions');
+                $submission = FieldDiarySubmission::query()
+                    ->where('field_diary_activity_id', $activity->id)
+                    ->where('user_id', $authUser->id)
+                    ->lockForUpdate()->first();
+                abort_if($submission && (int) $submission->school_id !== (int) $authUser->school_id, 403);
+                if ($submission && ! in_array($submission->status, ['borrador', 'devuelto'], true)) {
+                    $this->conflict($request, 'La entrega ya fue enviada o revisada. Recarga la página para consultar su estado.');
+                }
+                $revision = app(FieldDiaryRevision::class);
+                if (! hash_equals($revision->token($activity, $submission), (string) $request->input('revision'))) {
+                    $this->conflict($request, 'El diario cambió en otra sesión o fue revisado. Copia tus cambios y recarga antes de continuar.');
+                }
 
-        foreach ($activity->questions as $question) {
-            $baseKey = 'answers.' . $question->id;
-
-            if ($question->question_type === 'file') {
-                $rules['files.' . $question->id] = [
-                    $question->is_required && $status === 'enviado' && ! $this->hasExistingFile($existingSubmission, $question->id)
-                        ? 'required'
-                        : 'nullable',
-                    'file',
-                    'max:5120',
-                    'mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx,csv',
-                ];
-                continue;
-            }
-
-            $rules[$baseKey] = $this->rulesForQuestion($question, $status);
-        }
-
-        $messages = [
-            'required' => 'Este campo es obligatorio.',
-            'file' => 'Debes subir un archivo válido.',
-            'mimes' => 'El archivo debe estar en un formato permitido.',
-            'max' => 'El archivo no puede superar los 5 MB.',
-            'numeric' => 'La respuesta debe ser numérica.',
-            'date' => 'La respuesta debe ser una fecha válida.',
-        ];
-
-        $validated = $request->validate($rules, $messages);
-
-        DB::transaction(function () use ($request, $activity, $authUser, $status, &$existingSubmission) {
-            $submission = FieldDiarySubmission::updateOrCreate(
-                [
-                    'field_diary_activity_id' => $activity->id,
-                    'user_id' => $authUser->id,
-                ],
-                [
-                    'school_id' => $authUser->school_id,
-                    'grade_id' => $authUser->grade_id,
-                    'course_id' => $authUser->course_id,
-                    'status' => $status,
-                    'submitted_at' => $status === 'enviado' ? now() : $existingSubmission?->submitted_at,
-                ]
-            );
-
-            foreach ($activity->questions as $question) {
-                $answerText = null;
-                $filePath = null;
-
-                if ($question->question_type === 'file') {
-                    $uploadedFile = $request->file('files.' . $question->id);
-
-                    $existingAnswer = $submission->answers()
-                        ->where('field_diary_question_id', $question->id)
-                        ->first();
-
-                    if ($uploadedFile) {
-                        $this->deleteStoredAnswerFile($existingAnswer?->answer_file_path);
-
-                        $filePath = $uploadedFile->storeAs(
-                            'field-diaries/user-' . $authUser->id . '/activity-' . $activity->id,
-                            now()->format('Ymd_His') . '_' . $uploadedFile->getClientOriginalName(),
-                            'local'
-                        );
-                    } else {
-                        $filePath = $existingAnswer?->answer_file_path;
-                    }
-                } else {
-                    $rawAnswer = $request->input('answers.' . $question->id);
-
-                    if (is_array($rawAnswer)) {
-                        $answerText = json_encode(array_values($rawAnswer), JSON_UNESCAPED_UNICODE);
-                    } else {
-                        $answerText = filled($rawAnswer) ? trim((string) $rawAnswer) : null;
+                $allowedIds = $activity->questions->pluck('id')->map(fn ($id) => (string) $id)->all();
+                foreach (['answers', 'files'] as $key) {
+                    $received = $key === 'files' ? $request->file('files', []) : $request->input('answers', []);
+                    if (array_diff(array_map('strval', array_keys($received)), $allowedIds)) {
+                        throw ValidationException::withMessages([$key => 'Una respuesta no corresponde a esta actividad.']);
                     }
                 }
 
-                $submission->answers()->updateOrCreate(
-                    [
-                        'field_diary_question_id' => $question->id,
-                    ],
-                    [
-                        'answer_text' => $answerText,
-                        'answer_file_path' => $filePath,
-                    ]
-                );
-            }
-        });
+                $rules = [];
+                foreach ($activity->questions as $question) {
+                    if ($question->question_type === 'file') {
+                        if (! $autosave) {
+                            $rules['files.'.$question->id] = [
+                                $question->is_required && $status === 'enviado' && ! $this->hasExistingFile($submission, $question->id) ? 'required' : 'nullable',
+                                'file', 'max:5120', 'mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx,csv',
+                            ];
+                        }
 
-        return redirect()
-            ->route('estudiante.field-diaries.show', $activity)
-            ->with(
-                'success',
-                $status === 'enviado'
-                    ? 'Actividad enviada correctamente.'
-                    : 'Borrador guardado correctamente.'
-            );
+                        continue;
+                    }
+                    if ($autosave && ! array_key_exists($question->id, $request->input('answers', []))) {
+                        continue;
+                    }
+                    $key = 'answers.'.$question->id;
+                    $rules[$key] = $this->rulesForQuestion($question, $status);
+                    if ($question->question_type === 'checkbox') {
+                        $rules[$key.'.*'] = ['string', Rule::in($question->options ?? [])];
+                    }
+                }
+                $request->validate($rules, [
+                    'required' => 'Este campo es obligatorio.',
+                    'file' => 'Debes subir un archivo válido.',
+                    'mimes' => 'El archivo debe estar en un formato permitido.',
+                    'max' => 'El archivo no puede superar los 5 MB.',
+                    'numeric' => 'La respuesta debe ser numérica.',
+                    'date' => 'La respuesta debe ser una fecha válida.',
+                    'in' => 'Selecciona una de las opciones de la pregunta.',
+                ]);
+
+                $submission ??= new FieldDiarySubmission([
+                    'field_diary_activity_id' => $activity->id,
+                    'user_id' => $authUser->id,
+                    'school_id' => $authUser->school_id,
+                    'grade_id' => $authUser->grade_id,
+                    'course_id' => $authUser->course_id,
+                ]);
+                $submission->status = $status === 'enviado' ? 'enviado' : ($submission->status === 'devuelto' ? 'devuelto' : 'borrador');
+                if ($status === 'enviado') {
+                    $submission->submitted_at = now();
+                    $submission->score = null;
+                    $submission->reviewed_by = null;
+                    $submission->reviewed_at = null;
+                }
+                $submission->save();
+
+                foreach ($activity->questions as $question) {
+                    if ($question->question_type === 'file') {
+                        $uploadedFile = $request->file('files.'.$question->id);
+                        if ($autosave || ! $uploadedFile) {
+                            continue;
+                        }
+                        $oldPath = $submission->answers()->where('field_diary_question_id', $question->id)->value('answer_file_path');
+                        // Unique file names per question avoid collisions between evidence uploads.
+                        $path = $uploadedFile->store('field-diaries/user-'.$authUser->id.'/activity-'.$activity->id.'/question-'.$question->id, 'local');
+                        abort_unless($path, 500, 'No se pudo guardar el archivo. Intenta nuevamente.');
+                        $newFiles[] = $path;
+                        $payload = ['answer_text' => null, 'answer_file_path' => $path];
+                        if ($oldPath) {
+                            DB::afterCommit(function () use ($oldPath) {
+                                try {
+                                    $this->deleteStoredAnswerFile($oldPath);
+                                } catch (\Throwable $exception) {
+                                    // Cleanup failure must never remove the newly committed evidence.
+                                    report($exception);
+                                }
+                            });
+                        }
+                    } else {
+                        if ($autosave && ! array_key_exists($question->id, $request->input('answers', []))) {
+                            continue;
+                        }
+                        $raw = $request->input('answers.'.$question->id);
+                        $payload = [
+                            'answer_text' => is_array($raw) ? json_encode(array_values($raw), JSON_UNESCAPED_UNICODE) : (filled($raw) ? trim((string) $raw) : null),
+                            'answer_file_path' => null,
+                        ];
+                    }
+                    $submission->answers()->updateOrCreate(['field_diary_question_id' => $question->id], $payload);
+                }
+                $submission->unsetRelation('answers');
+
+                return [
+                    'revision' => $revision->token($activity, $submission),
+                    'status' => $submission->status,
+                    'saved_at' => now()->toIso8601String(),
+                ];
+            });
+        } catch (\Throwable $exception) {
+            foreach ($newFiles as $path) {
+                Storage::disk('local')->delete($path);
+            }
+            throw $exception;
+        }
+
+        $message = $status === 'enviado' ? 'Actividad enviada correctamente.' : 'Borrador guardado correctamente.';
+        if ($request->expectsJson()) {
+            return response()->json([...$result, 'message' => $message]);
+        }
+
+        return redirect()->route('estudiante.field-diaries.show', $activity)->with('success', $message);
+    }
+
+    private function conflict(Request $request, string $message): never
+    {
+        if ($request->expectsJson()) {
+            throw new HttpResponseException(response()->json(['message' => $message, 'reload_required' => true], 409));
+        }
+        throw ValidationException::withMessages(['revision' => $message]);
     }
 
     private function rulesForQuestion($question, string $status): array
     {
-        $rules = [];
-
-        if ($question->is_required && $status === 'enviado') {
-            $rules[] = 'required';
-        } else {
-            $rules[] = 'nullable';
-        }
+        $rules = [$question->is_required && $status === 'enviado' ? 'required' : 'nullable'];
 
         return match ($question->question_type) {
             'number' => [...$rules, 'numeric'],
             'date' => [...$rules, 'date'],
             'checkbox' => [...$rules, 'array'],
+            'select', 'radio' => [...$rules, 'string', Rule::in($question->options ?? [])],
             default => [...$rules, 'string'],
         };
     }
@@ -279,33 +316,6 @@ class FieldDiarySubmissionController extends Controller
             if (Storage::disk($disk)->exists($path)) {
                 Storage::disk($disk)->delete($path);
             }
-        }
-    }
-
-    private function authorizeStudentActivity($authUser, FieldDiaryActivity $activity): void
-    {
-        abort_if(! $authUser->school_id, 403, 'Tu usuario no tiene un colegio asignado.');
-
-        abort_if(! $activity->is_active, 404);
-
-        abort_if((int) $activity->school_id !== (int) $authUser->school_id, 403);
-
-        if ($activity->grade_id !== null) {
-            abort_if((int) $activity->grade_id !== (int) $authUser->grade_id, 403);
-        }
-
-        if ($activity->course_id !== null) {
-            abort_if((int) $activity->course_id !== (int) $authUser->course_id, 403);
-        }
-
-        $today = now()->toDateString();
-
-        if ($activity->starts_at) {
-            abort_if($activity->starts_at->toDateString() > $today, 403, 'Esta actividad aún no está disponible.');
-        }
-
-        if ($activity->ends_at) {
-            abort_if($activity->ends_at->toDateString() < $today, 403, 'Esta actividad ya cerró.');
         }
     }
 }

@@ -4,29 +4,24 @@ namespace App\Exports;
 
 use App\Exports\Concerns\AppliesSchoolExcelBranding;
 use App\Models\School;
+use App\Support\MeasurementDecimal;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithCustomStartCell;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
 use Maatwebsite\Excel\Concerns\WithDrawings;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Cell\StringValueBinder;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class PhysicalVariableRecordsExport implements
-    FromCollection,
-    WithHeadings,
-    WithTitle,
-    WithStyles,
-    WithEvents,
-    WithDrawings,
-    ShouldAutoSize,
-    WithCustomStartCell
+class PhysicalVariableRecordsExport extends StringValueBinder implements FromCollection, ShouldAutoSize, WithCustomStartCell, WithCustomValueBinder, WithDrawings, WithEvents, WithHeadings, WithStyles, WithTitle
 {
     use AppliesSchoolExcelBranding;
 
@@ -34,7 +29,8 @@ class PhysicalVariableRecordsExport implements
         protected Builder $query,
         protected ?School $school = null,
         protected ?string $generatedBy = null,
-        protected ?string $filtersText = null
+        protected ?string $filtersText = null,
+        protected bool $includeIdentity = false
     ) {}
 
     public function title(): string
@@ -53,13 +49,13 @@ class PhysicalVariableRecordsExport implements
             return [];
         }
 
-        $fullPath = storage_path('app/public/' . $this->school->shield_path);
+        $fullPath = storage_path('app/public/'.$this->school->shield_path);
 
         if (! file_exists($fullPath)) {
             return [];
         }
 
-        $drawing = new Drawing();
+        $drawing = new Drawing;
         $drawing->setName('Escudo');
         $drawing->setDescription('Escudo del colegio');
         $drawing->setPath($fullPath);
@@ -95,22 +91,22 @@ class PhysicalVariableRecordsExport implements
                         } elseif ($variable?->data_type === 'date' && $resolved) {
                             $resolved = Carbon::parse($resolved)->format('Y-m-d');
                         } elseif (in_array($variable?->data_type, ['integer', 'decimal'], true) && $resolved !== null) {
-                            $resolved = number_format((float) $resolved, $variable->decimals ?? 0, '.', '');
+                            $resolved = MeasurementDecimal::format($resolved, $variable->decimals ?? 0);
                         }
 
                         if ($resolved !== null && $resolved !== '—' && $variable?->unit) {
-                            $resolved .= ' ' . $variable->unit;
+                            $resolved .= ' '.$variable->unit;
                         }
 
                         return ($variable?->category?->name ?: 'Sin categoría')
-                            . ' / '
-                            . ($variable?->name ?: 'Variable')
-                            . ': '
-                            . ($resolved ?? '—');
+                            .' / '
+                            .($variable?->name ?: 'Variable')
+                            .': '
+                            .($resolved ?? '—');
                     })
                     ->implode(' | ');
 
-                return [
+                $row = [
                     'Fecha' => optional($record->recorded_at)->format('Y-m-d H:i'),
                     'Colegio' => $record->school?->name,
                     'Grado' => $grade,
@@ -118,19 +114,24 @@ class PhysicalVariableRecordsExport implements
                     'Estación meteorológica' => $record->weatherStation?->name ?: 'Sin estación asociada',
                     'Código estación' => $record->weatherStation?->code ?: '—',
                     'Origen del dato' => $this->sourceTypes()[$record->source_type] ?? 'Manual',
-                    'Registrado por' => $record->user?->name,
+                    'Registrado por' => $this->includeIdentity ? $record->user?->name : 'Participante',
                     'Tipo identificación usuario' => $record->user?->document_type,
                     'Número identificación usuario' => $record->user?->document_number,
                     'Correo usuario' => $record->user?->email,
                     'Observaciones' => $record->observations,
                     'Variables capturadas' => $values,
                 ];
+                if (! $this->includeIdentity) {
+                    unset($row['Tipo identificación usuario'], $row['Número identificación usuario'], $row['Correo usuario']);
+                }
+
+                return $row;
             });
     }
 
     public function headings(): array
     {
-        return [
+        $headings = [
             'Fecha',
             'Colegio',
             'Grado',
@@ -145,6 +146,13 @@ class PhysicalVariableRecordsExport implements
             'Observaciones',
             'Variables capturadas',
         ];
+
+        return $this->includeIdentity ? $headings : array_values(array_diff($headings, ['Tipo identificación usuario', 'Número identificación usuario', 'Correo usuario']));
+    }
+
+    private function lastColumn(): string
+    {
+        return $this->includeIdentity ? 'N' : 'K';
     }
 
     public function styles(Worksheet $sheet)
@@ -158,8 +166,8 @@ class PhysicalVariableRecordsExport implements
             $this->filtersText
         );
 
-        $this->applyTableHeaderStyle($sheet, 'B8:N8', $this->school);
-        $this->applyBodyStyle($sheet, 'B9:N5000', $this->school);
+        $this->applyTableHeaderStyle($sheet, 'B8:'.$this->lastColumn().'8', $this->school);
+        $this->applyBodyStyle($sheet, 'B9:'.$this->lastColumn().'5000', $this->school);
 
         return [];
     }
@@ -171,9 +179,9 @@ class PhysicalVariableRecordsExport implements
                 $sheet = $event->sheet->getDelegate();
 
                 $sheet->freezePane('B9');
-                $sheet->setAutoFilter('B8:N8');
+                $sheet->setAutoFilter('B8:'.$this->lastColumn().'8');
 
-                foreach (range('B', 'N') as $col) {
+                foreach (range('B', $this->lastColumn()) as $col) {
                     $sheet->getColumnDimension($col)->setAutoSize(true);
                 }
 
@@ -181,7 +189,7 @@ class PhysicalVariableRecordsExport implements
                 $sheet->getColumnDimension('H')->setWidth(28);
                 $sheet->getColumnDimension('L')->setWidth(30);
                 $sheet->getColumnDimension('M')->setWidth(45);
-                $sheet->getColumnDimension('N')->setWidth(75);
+                $sheet->getColumnDimension($this->lastColumn())->setWidth(75);
 
                 $sheet->getRowDimension(8)->setRowHeight(28);
 
@@ -189,7 +197,7 @@ class PhysicalVariableRecordsExport implements
                 $sheet->setCellValue('J4', 'Cada fila corresponde a un registro físico capturado. Las columnas "Estación meteorológica" y "Origen del dato" indican si el dato fue manual, tomado desde estación o cargado por CSV.');
 
                 $this->applyInfoPanelStyle($sheet, 'I2:J4', $this->school);
-                $this->applyZebraRows($sheet, 9, 500, 2, 14);
+                $this->applyZebraRows($sheet, 9, 500, 2, count($this->headings()) + 1);
             },
         ];
     }

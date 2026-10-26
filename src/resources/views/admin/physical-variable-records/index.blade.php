@@ -32,7 +32,7 @@
                     <label class="form-label fw-semibold">Filtrar</label>
                     <input type="text" name="search" value="{{ $filters['search'] }}"
                            class="form-control form-control-lg rounded-4"
-                           placeholder="Buscar por observaciones, usuario, correo, documento, colegio o variable...">
+                           placeholder="Buscar por observaciones, colegio o variable...">
                 </div>
 
                 <div class="col-6 col-md-4 col-xl-2">
@@ -144,6 +144,9 @@
                     <a href="{{ route('admin.physical-variable-records.index') }}" class="btn btn-outline-secondary rounded-4 px-4">
                         Limpiar filtros
                     </a>
+                    <a href="{{ route('charts.index', request()->only(['variable_id', 'weather_station_id', 'date_from', 'date_to'])) }}" class="btn btn-outline-primary rounded-4 px-4">
+                        Ver gráficos
+                    </a>
                     <a href="{{ route('admin.physical-variable-records.export', request()->query()) }}"
                        class="btn btn-outline-success rounded-4 px-4">
                         Exportar Excel
@@ -196,12 +199,12 @@
                                 <div><strong>Origen:</strong> {{ $sourceTypes[$record->source_type] ?? 'Manual' }}</div>
                             </td>
                             <td>
-                                <div class="fw-semibold">{{ $record->user?->name ?? '—' }}</div>
-                                <small class="text-secondary d-block">{{ $record->user?->email }}</small>
-                                <small class="text-secondary">
-                                    {{ $record->user?->document_type ?: '—' }}
-                                    {{ $record->user?->document_number ?: '' }}
-                                </small>
+                                @if(auth()->user()->hasRole('estudiante'))
+                                    {{ (int) $record->user_id === (int) auth()->id() ? 'Mi registro' : 'Participante' }}
+                                @else
+                                    <div class="fw-semibold">{{ $record->user?->name ?? '—' }}</div>
+                                    <small class="text-secondary">{{ $record->user?->email }}</small>
+                                @endif
                             </td>
                             <td class="small text-secondary">
                                 @foreach($previewValues as $value)
@@ -214,7 +217,7 @@
                                         } elseif ($variable?->data_type === 'date' && $resolved) {
                                             $resolved = \Illuminate\Support\Carbon::parse($resolved)->format('Y-m-d');
                                         } elseif (in_array($variable?->data_type, ['integer', 'decimal'], true) && $resolved !== null) {
-                                            $resolved = number_format((float) $resolved, $variable->decimals ?? 0, '.', '');
+                                            $resolved = \App\Support\MeasurementDecimal::format($resolved, $variable->decimals ?? 0);
                                         }
 
                                         if ($resolved !== null && $resolved !== '—' && $variable?->unit) {

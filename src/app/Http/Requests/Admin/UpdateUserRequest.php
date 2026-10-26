@@ -30,6 +30,11 @@ class UpdateUserRequest extends FormRequest
             && ! $targetUser->hasRole('super_admin');
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['email' => strtolower(trim((string) $this->input('email')))]);
+    }
+
     public function rules(): array
     {
         $authUser = $this->user();
@@ -59,7 +64,7 @@ class UpdateUserRequest extends FormRequest
 
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
 
-            'document_type' => ['required', 'string', 'max:20'],
+            'document_type' => ['required', Rule::in(['CC', 'TI', 'CE', 'PPT', 'NIT', 'PAS'])],
 
             'document_number' => [
                 'required',
@@ -69,20 +74,19 @@ class UpdateUserRequest extends FormRequest
             ],
 
             'school_id' => [
-                $isSuperAdmin ? 'nullable' : 'required',
+                $isSuperAdmin && $this->input('role') === 'super_admin' ? 'nullable' : 'required',
                 'integer',
                 $isSuperAdmin
-                    ? Rule::exists('schools', 'id')
+                    ? Rule::exists('schools', 'id')->where('is_active', true)
                     : Rule::in([(int) $authUser?->school_id]),
             ],
 
             'grade_id' => [
+                'required_with:course_id',
                 'nullable',
                 'integer',
                 Rule::exists('grades', 'id')->where(function ($query) use ($effectiveSchoolId) {
-                    if ($effectiveSchoolId) {
-                        $query->where('school_id', $effectiveSchoolId);
-                    }
+                    $query->where('school_id', $effectiveSchoolId)->where('is_active', true);
                 }),
             ],
 
@@ -90,9 +94,7 @@ class UpdateUserRequest extends FormRequest
                 'nullable',
                 'integer',
                 Rule::exists('courses', 'id')->where(function ($query) use ($effectiveSchoolId) {
-                    if ($effectiveSchoolId) {
-                        $query->where('school_id', $effectiveSchoolId);
-                    }
+                    $query->where('school_id', $effectiveSchoolId)->where('is_active', true);
 
                     if ($this->grade_id) {
                         $query->where('grade_id', $this->grade_id);

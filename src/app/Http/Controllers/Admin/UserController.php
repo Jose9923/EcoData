@@ -12,10 +12,12 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
-use App\Notifications\UserCreatedNotification;
 
 class UserController extends Controller
 {
@@ -38,13 +40,13 @@ class UserController extends Controller
             })
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {
-                    $subQuery->where('name', 'like', '%' . $search . '%')
-                        ->orWhere('email', 'like', '%' . $search . '%')
-                        ->orWhere('document_number', 'like', '%' . $search . '%')
-                        ->orWhereHas('school', fn ($q) => $q->where('name', 'like', '%' . $search . '%'))
-                        ->orWhereHas('grade', fn ($q) => $q->where('name', 'like', '%' . $search . '%')->orWhere('label', 'like', '%' . $search . '%'))
-                        ->orWhereHas('course', fn ($q) => $q->where('name', 'like', '%' . $search . '%')->orWhere('label', 'like', '%' . $search . '%'))
-                        ->orWhereHas('roles', fn ($q) => $q->where('name', 'like', '%' . $search . '%'));
+                    $subQuery->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('email', 'like', '%'.$search.'%')
+                        ->orWhere('document_number', 'like', '%'.$search.'%')
+                        ->orWhereHas('school', fn ($q) => $q->where('name', 'like', '%'.$search.'%'))
+                        ->orWhereHas('grade', fn ($q) => $q->where('name', 'like', '%'.$search.'%')->orWhere('label', 'like', '%'.$search.'%'))
+                        ->orWhereHas('course', fn ($q) => $q->where('name', 'like', '%'.$search.'%')->orWhere('label', 'like', '%'.$search.'%'))
+                        ->orWhereHas('roles', fn ($q) => $q->where('name', 'like', '%'.$search.'%'));
                 });
             })
             ->latest()
@@ -77,31 +79,34 @@ class UserController extends Controller
         $data = $request->validated();
 
         $schoolId = $authUser->hasRole('super_admin')
-            ? ($data['school_id'] ?: null)
+            ? ($data['school_id'] ?? null)
             : $authUser->school_id;
 
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'document_type' => $data['document_type'],
-            'document_number' => trim($data['document_number']),
-            'password' => Hash::make($data['password']),
-            'school_id' => $schoolId,
-            'grade_id' => $data['grade_id'] ?: null,
-            'course_id' => $data['course_id'] ?: null,
-            'is_active' => (bool) $data['is_active'],
-        ]);
+        $user = DB::transaction(function () use ($data, $schoolId): User {
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'document_type' => $data['document_type'],
+                'document_number' => trim($data['document_number']),
+                'password' => Hash::make(Str::random(64)),
+                'school_id' => $schoolId,
+                'grade_id' => $data['grade_id'] ?? null,
+                'course_id' => $data['course_id'] ?? null,
+                'is_active' => (bool) $data['is_active'],
+            ]);
 
-        $user->syncRoles([$data['role']]);
+            $user->syncRoles([$data['role']]);
 
-        $user->notify(new UserCreatedNotification(
-            temporaryPassword: $data['password'],
-            roleName: $data['role']
-        ));
+            return $user;
+        });
+
+        $invited = ! $user->is_active || $this->inviteUser($user, $data['role']);
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', 'Usuario creado correctamente.');
+            ->with($invited ? 'success' : 'warning', $invited
+                ? 'Usuario creado. Si está habilitado, recibirá una invitación para establecer su contraseña.'
+                : 'Usuario creado, pero no se pudo preparar la invitación. Puede solicitar un enlace desde Olvidé mi contraseña.');
     }
 
     public function edit(Request $request, int $user): View
@@ -141,7 +146,7 @@ class UserController extends Controller
         $data = $request->validated();
 
         $schoolId = $authUser->hasRole('super_admin')
-            ? ($data['school_id'] ?: null)
+            ? ($data['school_id'] ?? null)
             : $authUser->school_id;
 
         $payload = [
@@ -150,8 +155,8 @@ class UserController extends Controller
             'document_type' => $data['document_type'],
             'document_number' => trim($data['document_number']),
             'school_id' => $schoolId,
-            'grade_id' => $data['grade_id'] ?: null,
-            'course_id' => $data['course_id'] ?: null,
+            'grade_id' => $data['grade_id'] ?? null,
+            'course_id' => $data['course_id'] ?? null,
             'is_active' => (bool) $data['is_active'],
         ];
 
@@ -159,12 +164,37 @@ class UserController extends Controller
             $payload['password'] = Hash::make($data['password']);
         }
 
-        $user->update($payload);
-        $user->syncRoles([$data['role']]);
+        $requiresInvitation = (bool) $payload['is_active']
+            && (! $user->is_active || $user->email !== $payload['email']);
+
+        DB::transaction(function () use ($user, $payload, $data): void {
+            $user->fill($payload);
+            if ($user->isDirty('email')) {
+                $user->email_verified_at = null;
+                $user->remember_token = Str::random(60);
+            }
+            $user->save();
+            $user->syncRoles([$data['role']]);
+        });
+
+        if ($requiresInvitation && ! $this->inviteUser($user, $data['role'])) {
+            return redirect()->route('admin.users.index')->with('warning', 'Usuario actualizado, pero no se pudo preparar la invitación. Puede solicitar un enlace desde Olvidé mi contraseña.');
+        }
 
         return redirect()
             ->route('admin.users.index')
             ->with('success', 'Usuario actualizado correctamente.');
+    }
+
+    private function inviteUser(User $user, string $roleName): bool
+    {
+        try {
+            return in_array($user->sendAccountInvitation($roleName), [Password::RESET_LINK_SENT, Password::RESET_THROTTLED], true);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return false;
+        }
     }
 
     public function destroy(Request $request, int $user): RedirectResponse
@@ -267,6 +297,7 @@ class UserController extends Controller
 
         if (! $authUser->hasRole('super_admin')) {
             abort_if(! $authUser->school_id, 403, 'Tu usuario no tiene un colegio asignado.');
+
             return $authUser->school_id;
         }
 

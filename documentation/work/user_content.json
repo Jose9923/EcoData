@@ -1,0 +1,1640 @@
+{
+  "sections": [
+    {
+      "title": "Propósito y alcance del manual",
+      "intro": "EcoData organiza la información ambiental y el trabajo pedagógico de una institución educativa. Permite registrar mediciones, administrar variables e infraestructura, distribuir guías de laboratorio, desarrollar actividades de Diario de Campo y consultar eventos ambientales.",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Este manual está dirigido a estudiantes, docentes, administradores de colegio y superadministradores. Describe los controles y reglas presentes en la versión del código revisada el 15 de octubre de 2026. La dirección de acceso, los nombres de colegios, los usuarios, las mediciones y las actividades dependen de la instalación de cada institución."
+        },
+        {
+          "type": "p",
+          "text": "Las imágenes son reconstrucciones ilustrativas basadas en las plantillas Blade del proyecto. Sirven para ubicar campos, botones y grupos de navegación; los datos de ejemplo no corresponden a personas ni resultados reales. El contenido describe el comportamiento identificado mediante la revisión estática del código."
+        },
+        {
+          "type": "h2",
+          "text": "Cómo seguir los procedimientos"
+        },
+        {
+          "type": "p",
+          "text": "Antes de comenzar una tarea, identifique el rol indicado y los datos que debe tener disponibles. Las rutas de navegación se escriben como Menú > Módulo. Los nombres entre comillas corresponden a textos de la interfaz. Cuando una función exige una relación previa, cree primero el colegio, grado, curso, variable o estación correspondiente."
+        },
+        {
+          "type": "p",
+          "text": "Los pasos de creación terminan al guardar y revisar el mensaje de confirmación y el registro resultante. Si aparecen errores, corrija los campos señalados y vuelva a guardar. No interprete una pantalla abierta, un archivo seleccionado o un botón pulsado como evidencia suficiente de que la información quedó almacenada."
+        },
+        {
+          "type": "h2",
+          "text": "Alcance de esta versión"
+        },
+        {
+          "type": "p",
+          "text": "El cargue masivo de usuarios en Excel y las exportaciones Excel tienen implementación en el código. El Cargue CSV meteorológico muestra una interfaz de preparación, pero no dispone del procesamiento necesario para importar archivos. Las rutas de reportes por correo referencian un controlador que no está incluido en la versión revisada; por ello no se ofrece un procedimiento de uso de esos reportes."
+        }
+      ]
+    },
+    {
+      "title": "Roles y permisos de trabajo",
+      "intro": "El menú cambia según el rol de la cuenta. Además de mostrar u ocultar opciones, el sistema comprueba el colegio asociado y las reglas de cada operación.",
+      "blocks": [
+        {
+          "type": "table",
+          "headers": [
+            "Función",
+            "Superadmin",
+            "Admin de colegio",
+            "Docente",
+            "Estudiante"
+          ],
+          "rows": [
+            [
+              "Mi perfil, Dashboard y eventos",
+              "Sí",
+              "Sí",
+              "Sí",
+              "Sí"
+            ],
+            [
+              "Colegios y categorías globales",
+              "Gestiona",
+              "No",
+              "No",
+              "No"
+            ],
+            [
+              "Usuarios, cargue Excel, grados y cursos",
+              "Todos los colegios",
+              "Su colegio",
+              "No",
+              "No"
+            ],
+            [
+              "Variables físicas",
+              "Todos los colegios",
+              "Su colegio",
+              "No",
+              "No"
+            ],
+            [
+              "Estaciones y sensores",
+              "Todos los colegios",
+              "Su colegio",
+              "No",
+              "No"
+            ],
+            [
+              "Consultar, crear y exportar registros físicos",
+              "Todos los colegios",
+              "Su colegio",
+              "Su colegio",
+              "Su colegio"
+            ],
+            [
+              "Editar registros físicos",
+              "Todos los colegios",
+              "Su colegio",
+              "Su colegio",
+              "Solo registros propios"
+            ],
+            [
+              "Guías, actividades y revisión del Diario",
+              "Gestiona",
+              "Gestiona en su colegio",
+              "Gestiona en su colegio",
+              "Consulta sus guías y entrega actividades"
+            ],
+            [
+              "Calendario ambiental administrativo",
+              "Gestiona",
+              "Su colegio",
+              "Su colegio",
+              "No"
+            ],
+            [
+              "Pantalla Cargue CSV",
+              "Visible, sin importación implementada",
+              "Visible, sin importación implementada",
+              "Visible, sin importación implementada",
+              "No"
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "El superadministrador puede seleccionar un colegio cuando el formulario lo requiere. El administrador de colegio, el docente y el estudiante trabajan con el colegio asignado a su cuenta. Tener una dirección de otra pantalla no concede permisos para usarla."
+        },
+        {
+          "type": "p",
+          "text": "Las guías y las actividades estudiantiles pueden dirigirse a todo el colegio, a un grado o a un curso. En esos módulos, la asignación académica del estudiante determina lo que puede consultar. En Registros físicos, la consulta y la exportación abarcan el colegio; no se restringen automáticamente a los registros propios del estudiante."
+        },
+        {
+          "type": "p",
+          "text": "La revisión docente se controla por colegio: el código no limita al docente a las actividades creadas por él ni a una lista personal de cursos. La institución debe definir la distribución del trabajo entre sus docentes. El manual describe esta autorización efectiva y no presupone restricciones adicionales."
+        },
+        {
+          "type": "p",
+          "text": "Una cuenta con rol administrador de colegio, docente o estudiante y sin colegio asignado se dirige a la pantalla de colegio requerido. Puede consultar su perfil, pero necesita que administración complete la asignación para utilizar los módulos internos."
+        }
+      ]
+    },
+    {
+      "title": "Acceso y recuperación de la cuenta",
+      "intro": "Necesita la dirección de EcoData proporcionada por la institución y una cuenta existente con correo electrónico y contraseña.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "login",
+          "caption": "Formulario de inicio de sesión.",
+          "max_height": 325
+        },
+        {
+          "type": "h2",
+          "text": "Iniciar sesión"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra la dirección institucional de EcoData. La página inicial dirige a Iniciar sesión.",
+            "Escriba el correo de la cuenta en Correo electrónico y la clave en Contraseña.",
+            "Si corresponde, active Recordar sesión en un equipo de uso personal.",
+            "Pulse Entrar a EcoData. El sistema abre el Dashboard o la página protegida que había solicitado.",
+            "Compruebe el nombre, correo, rol y colegio mostrados en el menú antes de registrar información."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Si aparece “Las credenciales proporcionadas no son correctas”, revise el correo y la contraseña. La contraseña distingue mayúsculas, minúsculas y símbolos. Si no recuerda la clave, utilice la recuperación; si no tiene una cuenta o su asignación es incorrecta, solicite revisión al administrador de la institución."
+        },
+        {
+          "type": "h2",
+          "text": "Recuperar la contraseña"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "En Iniciar sesión, pulse ¿Olvidaste tu contraseña?.",
+            "En Recuperar contraseña, escriba el correo asociado a la cuenta y pulse Enviar enlace.",
+            "Abra el mensaje de recuperación recibido en ese correo y siga su enlace.",
+            "Complete la nueva contraseña y su confirmación en la pantalla de restablecimiento. Regrese al ingreso con la nueva clave."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "La recepción del enlace depende de la configuración de correo del servidor y de la dirección registrada. Si no llega, revise la carpeta de correo no deseado y comunique al responsable el correo utilizado y la hora aproximada de la solicitud. No comparta la contraseña ni el enlace de recuperación."
+        },
+        {
+          "type": "h2",
+          "text": "Finalizar el trabajo"
+        },
+        {
+          "type": "p",
+          "text": "Utilice Cerrar sesión al final del menú lateral. El sistema termina la sesión y regresa a la página inicial. Cerrar una pestaña no equivale a cerrar la sesión, especialmente si se seleccionó Recordar sesión. Los cambios de un formulario que aún no se haya guardado no se conservan por cerrar sesión."
+        },
+        {
+          "type": "p",
+          "text": "Aunque existe una ruta de registro en el código, el inicio de sesión no ofrece un enlace de creación de cuenta y el registro básico no asigna colegio ni rol. El procedimiento operativo de este manual utiliza cuentas creadas o importadas por administración."
+        }
+      ]
+    },
+    {
+      "title": "Navegación y Dashboard",
+      "intro": "El Dashboard ofrece un resumen inicial de la información a la que accede su cuenta. El menú lateral permite pasar de ese resumen a cada módulo.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "dashboard",
+          "caption": "Vista del Dashboard y navegación para una cuenta de administración."
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Zona del menú",
+            "Contenido principal"
+          ],
+          "rows": [
+            [
+              "Dashboard",
+              "Indicadores, registros recientes, guías, entregas y eventos según el rol."
+            ],
+            [
+              "Mi perfil",
+              "Datos personales, asignación visible y cambio de contraseña."
+            ],
+            [
+              "Administración",
+              "Colegios, Usuarios, Cargue masivo de usuarios, Grados y Cursos."
+            ],
+            [
+              "EcoData",
+              "Categorías, Variables físicas, Registros físicos, Cargue CSV, Estaciones meteorológicas y Sensores."
+            ],
+            [
+              "Pedagogía",
+              "Guías de laboratorio, Calendario ambiental, Diario de Campo y Revisión Diario."
+            ],
+            [
+              "Estudiante",
+              "Mis guías de laboratorio y Mi Diario de Campo."
+            ],
+            [
+              "Eventos ambientales",
+              "Consulta interna de eventos activos del colegio."
+            ],
+            [
+              "Cerrar sesión",
+              "Finalización de la sesión."
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Pulse el nombre de un grupo para desplegar sus opciones. En pantallas pequeñas, abra primero Menú de navegación. Las tablas pueden requerir desplazamiento horizontal para ver todas sus columnas y acciones. La apariencia utiliza los colores y el escudo configurados para el colegio."
+        },
+        {
+          "type": "p",
+          "text": "Los indicadores del Dashboard resumen cantidades, no acciones pendientes que deban resolverse automáticamente. Un docente puede consultar los datos del colegio y los pendientes de revisión. El estudiante recibe un resumen de sus guías y actividades; los registros físicos recientes de su Dashboard se filtran por asignación académica."
+        },
+        {
+          "type": "p",
+          "text": "El listado completo de Registros físicos permite consultar el colegio y puede mostrar más información que el resumen del Dashboard estudiantil. Por ello, una diferencia entre el contador del inicio y el número de filas del listado no implica necesariamente pérdida de registros."
+        },
+        {
+          "type": "p",
+          "text": "Si aparece Mensaje ambiental del día, lea el aviso y pulse Aceptar, Aceptar todos o Ver calendario. Estas acciones registran que la cuenta vio los eventos mostrados. El aviso no se cierra mediante clic fuera de la ventana ni con Escape en la implementación revisada."
+        }
+      ]
+    },
+    {
+      "title": "Mi perfil y contraseña",
+      "intro": "Todos los roles pueden consultar su perfil. El usuario modifica sus datos personales; la asignación de colegio, grado, curso y rol se gestiona desde administración.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "profile",
+          "caption": "Mi perfil y formularios para actualizar datos y contraseña.",
+          "max_height": 475
+        },
+        {
+          "type": "h2",
+          "text": "Actualizar información personal"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra Mi perfil.",
+            "Revise en Resumen el nombre, correo, identificación, rol, colegio, grado y curso.",
+            "En Actualizar perfil, corrija Nombre, Tipo de identificación, Número de identificación y Correo electrónico.",
+            "Pulse Guardar perfil y compruebe el mensaje “Perfil actualizado correctamente”."
+          ]
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Campo",
+            "Regla relevante"
+          ],
+          "rows": [
+            [
+              "Nombre",
+              "Obligatorio; hasta 255 caracteres."
+            ],
+            [
+              "Correo electrónico",
+              "Obligatorio, formato válido y sin duplicar el de otra cuenta; hasta 255 caracteres."
+            ],
+            [
+              "Tipo de identificación",
+              "Obligatorio. El selector ofrece CC, TI, CE, PPT, NIT y PAS."
+            ],
+            [
+              "Número de identificación",
+              "Obligatorio, sin duplicar el de otra cuenta; hasta 50 caracteres."
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Los datos de asignación aparecen en el resumen para comprobarlos. Si su curso o colegio es incorrecto, comuníquelo al administrador; cambiar nombre o correo no corrige esa asignación. Una asignación equivocada puede impedir que aparezcan las guías y actividades esperadas."
+        },
+        {
+          "type": "h2",
+          "text": "Cambiar la contraseña"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "En la sección Cambiar contraseña, introduzca Contraseña actual.",
+            "Escriba Nueva contraseña con al menos ocho caracteres y repítala en Confirmar nueva contraseña.",
+            "Pulse Actualizar contraseña.",
+            "Compruebe “Contraseña actualizada correctamente” y use la nueva contraseña en el siguiente ingreso."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Si el sistema indica que la contraseña actual no es correcta, revise ese campo o utilice la recuperación desde el inicio de sesión. Si la confirmación no coincide, escriba de nuevo ambos campos de la clave nueva. El cambio de perfil y el cambio de contraseña se guardan con botones separados."
+        }
+      ]
+    },
+    {
+      "title": "Registrar una medición ambiental",
+      "intro": "Superadministrador, administrador de colegio, docente y estudiante pueden crear registros físicos. Deben existir variables activas para el colegio seleccionado.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "record_create",
+          "caption": "Contexto y fecha de una nueva medición ambiental."
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra EcoData > Registros físicos y pulse + Nuevo registro.",
+            "Si es superadministrador, seleccione Colegio. En los demás roles el colegio se asigna automáticamente.",
+            "Seleccione Grado y luego Curso cuando la medición corresponda a un grupo; deje Todos / Sin asignar cuando proceda.",
+            "Elija Categoría para reducir las variables mostradas, o mantenga Todas las categorías.",
+            "Seleccione la Estación meteorológica, si aplica, y el Origen del dato. Para una captura escrita por el usuario utilice Manual.",
+            "Indique Fecha y hora de la medición y añada Observaciones que ayuden a interpretar el dato.",
+            "En Variables disponibles, complete al menos una medición y revise la unidad, el mínimo, el máximo y los decimales admitidos.",
+            "Pulse Guardar registro y compruebe “Registro físico guardado correctamente” en el listado."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "La fecha y hora identifican la medición, no necesariamente el momento de diligenciar el formulario. Las observaciones son opcionales. La categoría sirve para acotar el formulario; el registro conserva las variables que se hayan enviado y tengan valor."
+        },
+        {
+          "type": "image",
+          "key": "record_variables",
+          "caption": "Campos de las variables y límites indicados durante la captura."
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Tipo de variable",
+            "Cómo responder"
+          ],
+          "rows": [
+            [
+              "Entero",
+              "Escriba un número sin fracción y dentro de los límites configurados."
+            ],
+            [
+              "Decimal",
+              "Escriba un número dentro del rango y con la cantidad de decimales permitida."
+            ],
+            [
+              "Texto",
+              "Introduzca una descripción en el área de texto."
+            ],
+            [
+              "Sí / No",
+              "Seleccione expresamente Sí o No; dejar vacío significa no registrar esa variable."
+            ],
+            [
+              "Fecha",
+              "Seleccione la fecha correspondiente a esa variable."
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Dejar una variable vacía es distinto de introducir cero o seleccionar No. Complete únicamente las variables medidas. Un registro sin ninguna variable se rechaza con “Debes registrar al menos una variable física”."
+        },
+        {
+          "type": "p",
+          "text": "El origen ofrece Manual, Estación meteorológica y Cargue CSV. Es una clasificación del registro. Seleccionar Estación meteorológica no inicia comunicación con un dispositivo; seleccionar Cargue CSV en este formulario tampoco importa un archivo."
+        },
+        {
+          "type": "p",
+          "text": "Si no aparecen variables, compruebe el colegio y la categoría. Si persiste el problema, administración debe revisar que haya variables activas. Si aparece un error cargando grados o cursos, vuelva a seleccionar el colegio o recargue la página antes de diligenciarla."
+        }
+      ]
+    },
+    {
+      "title": "Consultar editar y exportar registros físicos",
+      "intro": "El listado reúne mediciones y permite localizar registros por contexto, fecha, variable y origen.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "records",
+          "caption": "Listado de registros físicos y controles de filtrado."
+        },
+        {
+          "type": "h2",
+          "text": "Buscar información"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra EcoData > Registros físicos.",
+            "Escriba en Filtrar un nombre, identificación, correo, variable, colegio u observación que ayude a encontrar la medición.",
+            "Combine las fechas Desde y Hasta con los selectores disponibles: colegio, grado, curso, categoría, estación, origen y variable.",
+            "Pulse Filtrar. Ajuste Registros para mostrar 10, 15, 25 o 50 filas por página.",
+            "Abra Ver detalle en la fila deseada para revisar todas sus variables; el resumen de la tabla puede mostrar solo parte de ellas.",
+            "Use Limpiar filtros para recuperar el listado sin las condiciones seleccionadas."
+          ]
+        },
+        {
+          "type": "h2",
+          "text": "Editar un registro"
+        },
+        {
+          "type": "p",
+          "text": "Los administradores y docentes pueden editar los registros del ámbito de su colegio; el estudiante solo ve Editar en sus propios registros. Antes de modificar, confirme la fecha, el autor y las variables de la fila. Abrir un registro ajeno desde una dirección no autoriza su edición."
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Pulse Editar en la fila correcta.",
+            "Corrija fecha, observaciones y valores necesarios. Compruebe que continúan diligenciadas las variables que desea conservar.",
+            "Guarde los cambios y revise el detalle actualizado."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "En esta versión, el guardado de una edición reemplaza el conjunto de valores del registro por los valores enviados. Si filtra el formulario de edición y deja variables fuera de lo enviado, puede perder sus valores anteriores. Revise cuidadosamente el registro completo antes de guardar."
+        },
+        {
+          "type": "p",
+          "text": "La edición muestra estación y origen, pero el código de actualización no persiste cambios de esos dos campos. La asignación de colegio, grado y curso de un registro tampoco se modifica al guardar como estudiante. Solicite soporte si necesita corregir esos datos."
+        },
+        {
+          "type": "h2",
+          "text": "Exportar"
+        },
+        {
+          "type": "p",
+          "text": "Primero aplique los filtros con Filtrar. Después pulse Exportar Excel. Se solicita el archivo registros_variables_fisicas.xlsx con los registros que cumplen los filtros, dentro del alcance autorizado de la cuenta. La exportación no se limita a la página actualmente visible. Guarde el archivo descargado en la ubicación institucional destinada a estos datos."
+        }
+      ]
+    },
+    {
+      "title": "Consultar guías de laboratorio como estudiante",
+      "intro": "Las guías son archivos PDF publicados para su colegio y, cuando se especifica, para su grado o curso.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "guides",
+          "caption": "Guías disponibles para un estudiante."
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra Estudiante > Mis guías de laboratorio.",
+            "Busque la tarjeta de la guía indicada por el docente y lea título, descripción, grado, curso y fecha de publicación.",
+            "Pulse Ver PDF para abrir el documento dentro de una ventana de EcoData.",
+            "Si necesita mayor espacio o el visor integrado no muestra el archivo, pulse Abrir en otra pestaña.",
+            "Pulse Descargar PDF para guardar una copia y trabajar con ella según las indicaciones docentes.",
+            "Cierre el visor para regresar a las tarjetas; use la paginación si hay más guías."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Una guía se muestra cuando está activa, corresponde al colegio y grupo de su cuenta y su publicación ya está disponible. Una guía sin grado o curso específico puede dirigirse a todo el colegio. La publicación futura impide la consulta antes de la fecha y hora configuradas."
+        },
+        {
+          "type": "p",
+          "text": "Si aparece “No hay guías de laboratorio disponibles para tu grupo”, revise primero su asignación en Mi perfil. El docente o administrador debe confirmar el destino de la guía, su estado y su fecha de publicación. Descargar un PDF no envía una respuesta al docente ni registra una entrega de Diario de Campo."
+        },
+        {
+          "type": "p",
+          "text": "Si el visor presenta “El archivo PDF no existe” o la guía no tiene un archivo asociado, informe el título de la guía al responsable. Si el archivo abre en otra pestaña pero no dentro de la ventana, puede trabajar con la descarga. No cambie manualmente la dirección para intentar abrir guías de otro grupo."
+        },
+        {
+          "type": "p",
+          "text": "Una copia descargada conserva el contenido del momento de la descarga. Si el docente reemplaza el PDF, consulte nuevamente EcoData para obtener la versión disponible. El módulo no muestra un historial de versiones para el estudiante."
+        }
+      ]
+    },
+    {
+      "title": "Completar y enviar Mi Diario de Campo",
+      "intro": "El Diario de Campo permite responder actividades de observación, reto o portafolio. Las respuestas se pueden guardar como borrador antes de enviarlas. La disponibilidad se compara con la fecha del servidor, configurado en UTC; confirme con el docente el plazo efectivo si tiene dudas sobre su equivalencia local.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "diary_student",
+          "caption": "Instrucciones y disponibilidad de una actividad para el estudiante."
+        },
+        {
+          "type": "h2",
+          "text": "Comenzar una actividad"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra Estudiante > Mi Diario de Campo.",
+            "En Actividades disponibles, localice la actividad indicada. Revise su tipo, fechas, estación asociada y estado de su entrega.",
+            "Abra la actividad y lea todas las instrucciones antes de responder.",
+            "Complete cada pregunta con el tipo de respuesta solicitado: texto, número, fecha, lista, selección o archivo.",
+            "Si necesita continuar después, pulse Guardar borrador. Compruebe “Borrador guardado correctamente”.",
+            "Cuando termine, revise las respuestas obligatorias y pulse Enviar respuestas.",
+            "Compruebe “Actividad enviada correctamente” y el estado Enviado. Desde ese momento espere la revisión docente."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Guardar borrador permite omitir respuestas obligatorias todavía pendientes, pero las respuestas que sí introduzca deben tener el tipo válido. No hay un guardado automático descrito en el formulario: utilice el botón antes de salir o cambiar de página."
+        },
+        {
+          "type": "image",
+          "key": "diary_answers",
+          "caption": "Preguntas y acciones para guardar o enviar respuestas."
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Estado",
+            "Significado y acción disponible"
+          ],
+          "rows": [
+            [
+              "Pendiente",
+              "Todavía no hay una entrega guardada para esa actividad."
+            ],
+            [
+              "Borrador",
+              "Puede continuar, modificar respuestas y enviar."
+            ],
+            [
+              "Enviado",
+              "El envío quedó registrado y las respuestas se bloquean para el estudiante."
+            ],
+            [
+              "Revisado",
+              "La entrega tiene revisión y permanece bloqueada."
+            ],
+            [
+              "Devuelto",
+              "Puede leer las observaciones, corregir y reenviar mientras la actividad esté disponible."
+            ]
+          ]
+        },
+        {
+          "type": "h2",
+          "text": "Archivos de evidencia"
+        },
+        {
+          "type": "p",
+          "text": "Cada pregunta de archivo permite adjuntar un archivo de hasta 5 MB. Se admiten JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX y CSV. Al editar un borrador, un nuevo archivo sustituye al anterior de esa pregunta; si no selecciona otro, se conserva el existente."
+        },
+        {
+          "type": "p",
+          "text": "La actividad debe estar activa, dentro de sus fechas y dirigida a su colegio, grado y curso. Una fecha de cierre vencida impide abrir, guardar o reenviar, incluso si la entrega aparece en Mis entregas. Informe al docente cuando una corrección pendiente encuentre el mensaje “Esta actividad ya cerró”."
+        },
+        {
+          "type": "p",
+          "text": "Revise la retroalimentación cuando el estado sea Revisado o Devuelto. La pantalla muestra estado, nota, fecha de revisión y comentarios. Guardar o reenviar una devolución cambia el estado de la entrega; conserve el sentido de las correcciones solicitadas antes de enviarla nuevamente."
+        }
+      ]
+    },
+    {
+      "title": "Publicar y administrar guías de laboratorio",
+      "intro": "Disponible para superadministrador, administrador de colegio y docente. Prepare un PDF legible de hasta 10 MB y defina a qué estudiantes se dirige.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "guide_form",
+          "caption": "Publicación de una guía PDF para un colegio o grupo."
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra Pedagogía > Guías de laboratorio y seleccione la opción de nueva guía.",
+            "Seleccione el Colegio si su rol lo permite. Complete Grado y Curso, o deje Todos los grados / Todos los cursos para una publicación general.",
+            "Escriba el Título y una Descripción que explique qué debe hacer el estudiante.",
+            "Seleccione la Fecha de publicación cuando desee programar disponibilidad y adjunte el archivo PDF.",
+            "Revise el interruptor Guía activa. Una guía inactiva no se ofrece al estudiante.",
+            "Pulse Guardar guía y compruebe “Guía de laboratorio cargada correctamente”.",
+            "Compruebe en el listado el destino, la fecha y el estado. Descargue el PDF desde la fila para verificar que corresponde al material esperado."
+          ]
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Dato",
+            "Condición"
+          ],
+          "rows": [
+            [
+              "Título",
+              "Obligatorio; máximo 255 caracteres."
+            ],
+            [
+              "Colegio",
+              "Debe ser válido y permitido para la cuenta."
+            ],
+            [
+              "Grado y curso",
+              "Opcionales; deben pertenecer al colegio y ser compatibles entre sí."
+            ],
+            [
+              "PDF",
+              "Obligatorio al crear; formato PDF y máximo 10 MB."
+            ],
+            [
+              "Fecha de publicación",
+              "Opcional; al crear sin fecha, se utiliza el momento actual."
+            ],
+            [
+              "Guía activa",
+              "Determina si los estudiantes pueden encontrarla, junto con fecha y asignación."
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "La creación de una guía activa intenta notificar a los estudiantes activos de su destino. La recepción depende del correo configurado. El mensaje no sustituye la verificación del módulo: una fecha de publicación futura puede hacer que el aviso llegue antes de que la guía pueda consultarse."
+        },
+        {
+          "type": "h2",
+          "text": "Modificar o retirar una guía"
+        },
+        {
+          "type": "p",
+          "text": "Use Editar para cambiar sus datos. El PDF es opcional al editar: dejar el campo vacío conserva el actual; cargar otro reemplaza el archivo anterior. Guarde y revise la fila. Desactivar la guía la retira de la consulta estudiantil sin utilizar la acción Eliminar."
+        },
+        {
+          "type": "p",
+          "text": "Eliminar borra la guía y su archivo almacenado. Antes de confirmar, compruebe el título y conserve una copia institucional si necesita el material. El listado permite filtrar para localizar guías; no dispone de un editor de PDF ni de un historial visible de versiones."
+        }
+      ]
+    },
+    {
+      "title": "Crear una actividad de Diario de Campo",
+      "intro": "Disponible para superadministrador, administrador de colegio y docente. Defina el propósito, los destinatarios, el plazo y las preguntas antes de publicarla.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "diary_activity",
+          "caption": "Formulario para crear una actividad de Diario de Campo.",
+          "max_height": 475
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra Pedagogía > Diario de Campo y seleccione la opción de nueva actividad.",
+            "Seleccione colegio cuando corresponda y el Tipo de actividad: Observación, Reto o Portafolio.",
+            "Escriba Título y Descripción e instrucciones. Indique qué observar, qué evidencia preparar y cómo responder.",
+            "Seleccione Grado, Curso y, si aplica, Estación meteorológica asociada. Los destinos vacíos abarcan todos los grados o cursos del colegio.",
+            "Defina Estado, Fecha de inicio y Fecha de cierre. El cierre no puede ser anterior al inicio.",
+            "En Preguntas de la actividad, escriba el texto de la primera pregunta y elija su tipo, orden y obligatoriedad.",
+            "Use + Agregar pregunta para añadir las restantes. Revise las opciones de selección y el orden completo.",
+            "Pulse Guardar actividad. Compruebe el mensaje de creación y abra el detalle para revisar las preguntas antes de comenzar a recibir entregas."
+          ]
+        },
+        {
+          "type": "image",
+          "key": "diary_questions",
+          "caption": "Configuración del texto tipo orden y obligatoriedad de las preguntas."
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Tipo de pregunta",
+            "Configuración y uso"
+          ],
+          "rows": [
+            [
+              "Respuesta corta",
+              "Texto de extensión breve."
+            ],
+            [
+              "Respuesta larga",
+              "Área de texto para observaciones o explicación."
+            ],
+            [
+              "Número",
+              "Respuesta numérica."
+            ],
+            [
+              "Fecha",
+              "Selector de fecha."
+            ],
+            [
+              "Lista desplegable",
+              "Una opción; escriba las opciones una por línea."
+            ],
+            [
+              "Selección única",
+              "Una opción mediante controles de selección."
+            ],
+            [
+              "Selección múltiple",
+              "Permite varias opciones; cada una debe ocupar una línea."
+            ],
+            [
+              "Archivo / evidencia",
+              "Archivo del estudiante dentro de los formatos y límite indicados en este manual."
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Debe existir al menos una pregunta. Todas necesitan texto y tipo. Las de lista desplegable, selección única o múltiple requieren opciones. El orden, si se indica, debe ser un entero desde 1. La marca Obligatoria se exige al enviar, no al guardar borrador."
+        },
+        {
+          "type": "p",
+          "text": "Al crear una actividad activa, el sistema intenta avisar a sus estudiantes activos por correo. La disponibilidad real sigue dependiendo de sus fechas y destino. Una actividad inactiva o fuera de plazo no se puede responder."
+        },
+        {
+          "type": "h2",
+          "text": "Precaución necesaria al editar"
+        },
+        {
+          "type": "p",
+          "text": "En la versión revisada, guardar cualquier edición de una actividad elimina y vuelve a crear todas sus preguntas; las respuestas asociadas se eliminan por la relación de datos. Esto ocurre aunque solo cambie el título, la fecha o el estado. No edite actividades que ya tengan entregas. Cree una actividad nueva para una versión distinta y solicite soporte si necesita corregir fechas o recuperar disponibilidad sin perder respuestas."
+        },
+        {
+          "type": "p",
+          "text": "La acción Eliminar también retira la actividad y sus datos relacionados. Compruebe si existen entregas antes de confirmar. Para preservar trabajos ya recibidos, no utilice edición o eliminación como una operación rutinaria de cierre."
+        }
+      ]
+    },
+    {
+      "title": "Revisión y devolución de entregas",
+      "intro": "Disponible para superadministrador, administrador de colegio y docente. El acceso Revisión Diario reúne las entregas dentro del alcance del colegio.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "diary_review",
+          "caption": "Resultado de revisión y retroalimentación docente."
+        },
+        {
+          "type": "h2",
+          "text": "Localizar una entrega"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra Pedagogía > Revisión Diario.",
+            "Seleccione Estado: Enviado para comenzar por trabajos pendientes de revisión.",
+            "Combine Actividad, Grado, Curso y Estudiante. El superadministrador puede seleccionar Colegio.",
+            "Use Filtrar para buscar por actividad, estudiante, documento o correo y pulse Filtrar.",
+            "Abra la acción de revisión de la fila. Compruebe estudiante, asignación, actividad y fecha de envío."
+          ]
+        },
+        {
+          "type": "h2",
+          "text": "Guardar la revisión"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Lea las respuestas y abra los archivos de evidencia disponibles.",
+            "Seleccione Resultado de revisión: Revisado si el trabajo queda concluido, o Devuelto para corrección si el estudiante debe ajustarlo.",
+            "Introduzca una Nota si corresponde. El sistema acepta un número entre 0 y 100, con decimales.",
+            "Escriba Retroalimentación concreta: qué está logrado, qué debe corregirse y qué se espera en el reenvío.",
+            "Pulse Guardar revisión y compruebe “Entrega revisada correctamente” o “Entrega devuelta para corrección”."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "La nota y la retroalimentación son opcionales en la validación, pero una devolución resulta más clara si explica las correcciones. El sistema registra quién revisó y cuándo. También intenta notificar la revisión al estudiante activo; este puede consultar el resultado en su Diario de Campo."
+        },
+        {
+          "type": "p",
+          "text": "El listado incluye Borrador, Enviado, Revisado y Devuelto. Trabaje preferentemente sobre Enviado para no cerrar un borrador que el estudiante aún prepara. La interfaz no obliga a que la entrega se encuentre en Enviado antes de guardar una revisión."
+        },
+        {
+          "type": "p",
+          "text": "Antes de devolver, compruebe que la actividad continúa disponible. Si ya cerró, el estudiante no podrá entrar para corregir. No amplíe fechas mediante una edición ordinaria de la actividad con entregas: la limitación descrita en el capítulo anterior puede borrar respuestas. Escale ese caso al responsable técnico."
+        },
+        {
+          "type": "h2",
+          "text": "Exportar resultados"
+        },
+        {
+          "type": "p",
+          "text": "Aplique los filtros y luego pulse Exportar Excel. Se descarga un archivo cuyo nombre comienza por diario_de_campo_ecodata_ y añade fecha y hora. La exportación respeta los filtros y el colegio autorizado, e incluye las entregas y respuestas correspondientes. Cambiar Registros solo ajusta la paginación; no limita el conjunto exportado."
+        }
+      ]
+    },
+    {
+      "title": "Consultar y gestionar eventos ambientales",
+      "intro": "Eventos ambientales es la consulta interna para todos los roles. Pedagogía > Calendario ambiental permite administrar eventos a docentes y administradores.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "events",
+          "caption": "Formulario de publicación de un evento ambiental."
+        },
+        {
+          "type": "image",
+          "key": "event_calendar",
+          "caption": "Consulta de eventos ambientales para usuarios autenticados."
+        },
+        {
+          "type": "h2",
+          "text": "Consulta y avisos"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra Eventos ambientales.",
+            "Revise Eventos de hoy, Próximos eventos y Eventos anteriores.",
+            "Abra el detalle del evento para leer la descripción completa y consultar sus fechas e imagen.",
+            "Cuando aparezca Mensaje ambiental del día, lea los avisos y pulse Aceptar, Aceptar todos o Ver calendario."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Solo se ofrecen eventos activos. Los usuarios del colegio ven los de su institución; el superadministrador puede consultar todos. Eventos anteriores muestra hasta ocho eventos pasados en esta vista. Una confirmación de lectura queda asociada a su cuenta y al evento; no es una inscripción ni una certificación de asistencia."
+        },
+        {
+          "type": "h2",
+          "text": "Crear un evento"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra Pedagogía > Calendario ambiental y seleccione la opción de nuevo evento.",
+            "Seleccione Colegio cuando corresponda, escriba Título y añada Descripción.",
+            "Seleccione Fecha de inicio y Fecha de finalización. Para un evento de un día, use la misma fecha.",
+            "Adjunte una imagen opcional y defina el Estado activo.",
+            "Pulse Guardar evento y compruebe el mensaje de creación. Abra su detalle para verificar fechas e información."
+          ]
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Campo",
+            "Validación"
+          ],
+          "rows": [
+            [
+              "Título",
+              "Obligatorio; hasta 255 caracteres."
+            ],
+            [
+              "Fechas de inicio y finalización",
+              "Ambas obligatorias. La finalización debe ser igual o posterior al inicio."
+            ],
+            [
+              "Imagen",
+              "Opcional, JPG, JPEG, PNG o WEBP; hasta 4 MB."
+            ],
+            [
+              "Descripción",
+              "Opcional."
+            ],
+            [
+              "Estado",
+              "Debe seleccionarse; los inactivos no aparecen en la consulta interna."
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "La pantalla administrativa permite buscar, ver, editar y eliminar. Una actualización debe comprobarse en el detalle. Eliminar retira el evento y su imagen asociada; confirme que seleccionó el evento correcto. La consulta del calendario requiere iniciar sesión aunque su controlador utilice la palabra público internamente."
+        },
+        {
+          "type": "p",
+          "text": "Aceptar un aviso no elimina el evento del calendario. Si un usuario ya lo confirmó, el sistema deja de incluirlo entre sus avisos pendientes de ese evento; no se registra una confirmación nueva por cada día de duración."
+        }
+      ]
+    },
+    {
+      "title": "Configuración de colegios y grupos",
+      "intro": "El superadministrador crea colegios. El superadministrador y el administrador de colegio preparan grados y cursos. Realice esta configuración antes de asignar usuarios y publicar actividades por grupo.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "schools",
+          "caption": "Formulario de colegio e identidad visual."
+        },
+        {
+          "type": "h2",
+          "text": "Crear un colegio"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra Administración > Colegios y seleccione Nuevo colegio.",
+            "Escriba el nombre. El slug es un identificador opcional; si lo define, no debe repetir el de otro colegio.",
+            "Seleccione color primario, secundario y de acento, y el estado.",
+            "Adjunte el escudo si dispone de él: debe ser una imagen de hasta 2 MB.",
+            "Pulse Crear colegio. Revise el nombre, los colores y el estado en el listado."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Los colores deben tener formato hexadecimal válido, como #059669. El nombre admite hasta 255 caracteres. La configuración visual se utiliza en la navegación y las pantallas del colegio; no modifica por sí sola la asignación de usuarios."
+        },
+        {
+          "type": "image",
+          "key": "grades",
+          "caption": "Listado de grados y etiquetas del colegio."
+        },
+        {
+          "type": "h2",
+          "text": "Crear los grados"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra Administración > Grados y seleccione Nuevo grado.",
+            "Seleccione Colegio si su rol lo permite.",
+            "Complete Nombre, por ejemplo 9, y una Etiqueta opcional, por ejemplo Noveno.",
+            "Defina el estado y pulse Crear grado."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "El nombre del grado debe ser único dentro del colegio. Una etiqueta permite mostrar una denominación más descriptiva. Los formularios dependientes normalmente ofrecen los grados activos."
+        },
+        {
+          "type": "image",
+          "key": "courses",
+          "caption": "Curso asociado a colegio y grado."
+        },
+        {
+          "type": "h2",
+          "text": "Crear los cursos"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra Administración > Cursos y seleccione Nuevo curso.",
+            "Seleccione primero Colegio y después un Grado activo perteneciente a él.",
+            "Escriba Nombre y, si lo desea, Etiqueta. Defina el estado.",
+            "Pulse Crear curso y compruebe su relación con el grado."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "El nombre del curso debe ser único dentro del mismo colegio y grado. No se permite asignar un grado de otra institución. Si un curso no aparece al configurar un usuario o actividad, compruebe primero el grado seleccionado y el estado del catálogo."
+        },
+        {
+          "type": "p",
+          "text": "Para correcciones ordinarias utilice Editar y revise las relaciones antes de guardar. Eliminar un colegio, grado o curso puede afectar información relacionada; varias relaciones del proyecto se eliminan en cascada. No use la eliminación como sustituto automático de un cambio de estado. Prepare previamente una revisión con el responsable técnico cuando existan datos académicos o históricos."
+        }
+      ]
+    },
+    {
+      "title": "Crear y mantener usuarios",
+      "intro": "Disponible para superadministrador y administrador de colegio. Prepare nombre, correo, identificación, rol y asignación académica de cada persona.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "users",
+          "caption": "Listado de usuarios y asignación académica."
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra Administración > Usuarios y seleccione Nuevo usuario.",
+            "Complete Nombre, Correo electrónico, Tipo de identificación y Número de identificación.",
+            "Defina Contraseña con al menos ocho caracteres y repítala en Confirmar contraseña.",
+            "Seleccione Colegio cuando corresponda y el Rol adecuado.",
+            "Para un estudiante, complete Grado y Curso según su matrícula para que reciba el material de su grupo.",
+            "Revise Usuario activo y pulse Crear usuario.",
+            "Compruebe el registro creado y su asignación. El código envía una notificación de creación; la recepción depende del servicio de correo."
+          ]
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Dato",
+            "Regla o efecto"
+          ],
+          "rows": [
+            [
+              "Correo y documento",
+              "Obligatorios y únicos en el conjunto de usuarios."
+            ],
+            [
+              "Nombre",
+              "Obligatorio; hasta 255 caracteres."
+            ],
+            [
+              "Identificación",
+              "El formulario ofrece CC, TI, CE, PPT, NIT y PAS."
+            ],
+            [
+              "Contraseña",
+              "Obligatoria al crear, mínimo ocho caracteres y confirmación coincidente."
+            ],
+            [
+              "Colegio",
+              "El administrador de colegio solo asigna usuarios a su propia institución."
+            ],
+            [
+              "Rol",
+              "El administrador de colegio no puede asignar ni gestionar superadministradores."
+            ],
+            [
+              "Grado y curso",
+              "Opcionales en la validación, pero necesarios para contenidos dirigidos a grupos específicos."
+            ]
+          ]
+        },
+        {
+          "type": "h2",
+          "text": "Actualizar una cuenta"
+        },
+        {
+          "type": "p",
+          "text": "Localice la cuenta con los filtros y abra Editar. Corrija datos, rol, colegio o asignación dentro de sus permisos y pulse Guardar cambios. En edición, dejar Nueva contraseña vacía conserva la existente; si introduce una, debe cumplir la longitud y coincidir con la confirmación."
+        },
+        {
+          "type": "p",
+          "text": "Una cuenta con colegio vacío y rol docente, estudiante o administrador de colegio no puede utilizar los módulos internos. Revise la asignación cuando una persona informe “colegio requerido”. Para superadministrador, no tener colegio puede ser válido."
+        },
+        {
+          "type": "p",
+          "text": "No puede eliminar su propia cuenta desde este módulo. La eliminación de otras cuentas puede afectar guías o entregas vinculadas; verifique los registros y las necesidades de conservación antes de confirmar. El estado Usuario activo se guarda y se usa en algunas selecciones y notificaciones, pero esta versión no comprueba ese estado en el controlador de inicio de sesión. No lo trate como garantía de bloqueo de acceso."
+        }
+      ]
+    },
+    {
+      "title": "Importar usuarios desde Excel",
+      "intro": "Disponible para superadministrador y administrador de colegio. Utilice la plantilla descargada desde la aplicación y un archivo XLSX o XLS de hasta 10 MB.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "user_import",
+          "caption": "Archivo Excel y modo de importación de usuarios."
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra Administración > Cargue masivo de usuarios.",
+            "Pulse Descargar plantilla Excel y guarde una copia de trabajo.",
+            "Complete la primera hoja de usuarios. Consulte las hojas auxiliares de instrucciones, tipos de documento, roles, colegios, grados y cursos.",
+            "Conserve los encabezados de la plantilla y elimine o reemplace cualquier fila de ejemplo antes de cargar sus datos.",
+            "Seleccione el Archivo Excel y el Modo de importación.",
+            "Pulse Procesar archivo. Revise Resultado del cargue: Creados, Actualizados, Omitidos y Errores.",
+            "Corrija las filas reportadas y prepare un nuevo cargue. Verifique una muestra de las cuentas en Usuarios."
+          ]
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Columna",
+            "Contenido esperado"
+          ],
+          "rows": [
+            [
+              "name",
+              "Nombre de la persona."
+            ],
+            [
+              "email",
+              "Correo válido; se normaliza a minúsculas."
+            ],
+            [
+              "document_type",
+              "CC, TI, CE, PPT, NIT o PAS."
+            ],
+            [
+              "document_number",
+              "Número de identificación; conserve ceros iniciales usando formato de texto."
+            ],
+            [
+              "role",
+              "Nombre del rol de la plantilla: super_admin, admin_colegio, docente o estudiante según permiso."
+            ],
+            [
+              "school",
+              "Nombre o slug de un colegio existente; administración de colegio queda limitada al propio."
+            ],
+            [
+              "grade",
+              "Nombre o etiqueta de un grado activo de ese colegio."
+            ],
+            [
+              "course",
+              "Nombre o etiqueta de un curso activo del grado indicado."
+            ],
+            [
+              "password",
+              "Contraseña inicial para cuentas nuevas."
+            ],
+            [
+              "is_active",
+              "Use 1 para activo y 0 para inactivo, de forma consistente."
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Solo crear nuevos omite una fila si ya existe una cuenta con el documento o correo. Crear o actualizar modifica los datos y el rol de la cuenta coincidente, o crea una cuenta nueva. Si el documento y el correo pertenecen a dos usuarios distintos, la fila genera error; corrija la identidad antes de reintentar."
+        },
+        {
+          "type": "p",
+          "text": "Para asignar un curso debe indicar primero un grado válido. El administrador de colegio no puede importar usuarios de otra institución ni superadministradores. Las filas con error no impiden necesariamente que otras filas del archivo se creen o actualicen: revise el resumen completo antes de repetir un archivo."
+        },
+        {
+          "type": "p",
+          "text": "En esta versión, password solo se utiliza para usuarios nuevos; no cambia la clave de una cuenta que se actualiza. Si se deja vacío al crear, el código utiliza una contraseña predeterminada compartida. Complete una contraseña inicial individual y gestione su cambio con la persona. La aplicación no fuerza ese cambio automáticamente."
+        },
+        {
+          "type": "p",
+          "text": "El importador procesa únicamente la primera hoja. Los mensajes “Fila de datos” cuentan las filas de usuarios procesadas después de detectar encabezados, no necesariamente el número visual de fila en Excel. No modifique los encabezados por traducciones libres; mantenga los de la plantilla para que el sistema los identifique."
+        }
+      ]
+    },
+    {
+      "title": "Categorías y variables físicas",
+      "intro": "Las categorías son globales y las gestiona únicamente el superadministrador. Las variables pertenecen a un colegio y las gestionan el superadministrador o su administrador.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "categories",
+          "caption": "Configuración de una categoría global de variables."
+        },
+        {
+          "type": "h2",
+          "text": "Crear una categoría"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra EcoData > Categorías de variables.",
+            "Seleccione Nueva categoría y complete Nombre, Slug opcional, Descripción y Estado.",
+            "Pulse Crear categoría. Revise el listado y utilice un nombre que facilite encontrar variables relacionadas."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "El nombre admite hasta 255 caracteres y el slug debe ser único. Si intenta eliminar una categoría que ya tiene variables, la aplicación la desactiva y muestra una advertencia en lugar de eliminarla. Una categoría inactiva deja de ofrecerse en los formularios que seleccionan categorías activas."
+        },
+        {
+          "type": "image",
+          "key": "variables",
+          "caption": "Tipo unidad y límites de una variable física."
+        },
+        {
+          "type": "h2",
+          "text": "Configurar una variable"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra EcoData > Variables físicas y seleccione Nueva variable física.",
+            "Seleccione Colegio cuando corresponda y una Categoría activa.",
+            "Escriba Nombre, Unidad y Descripción. Defina Slug si necesita un identificador específico.",
+            "Seleccione Tipo de dato: decimal, entero, texto, booleano o fecha.",
+            "Para datos numéricos, defina Valor mínimo y Valor máximo. Para decimales, indique la cantidad admitida.",
+            "Revise el estado y pulse Crear variable.",
+            "Compruebe su aparición en un nuevo registro físico del colegio antes de comenzar la captura habitual."
+          ]
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Configuración",
+            "Regla"
+          ],
+          "rows": [
+            [
+              "Rango numérico",
+              "Mínimo y máximo obligatorios para enteros y decimales; el mínimo no puede superar el máximo."
+            ],
+            [
+              "Entero",
+              "Los límites deben ser enteros y la cantidad de decimales debe ser cero."
+            ],
+            [
+              "Decimal",
+              "Debe especificar de 0 a 10 decimales."
+            ],
+            [
+              "Texto, booleano y fecha",
+              "No requieren los límites numéricos."
+            ],
+            [
+              "Slug",
+              "Opcional; único dentro del colegio."
+            ],
+            [
+              "Estado activo",
+              "Determina si la variable se ofrece para nuevos registros."
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Aunque el formulario permite configurar de 0 a 10 decimales, la base de datos de esta versión conserva cuatro cifras decimales en los límites y valores numéricos. Configure como máximo cuatro decimales si necesita preservar la precisión; solicite una ampliación técnica antes de trabajar con mayor detalle."
+        },
+        {
+          "type": "p",
+          "text": "La unidad orienta la captura: por ejemplo, temperatura en °C o precipitación en mm. Evite cambiar el significado, la unidad o el tipo de una variable con datos históricos sin una revisión previa, porque los registros y reportes siguen vinculados a esa variable."
+        },
+        {
+          "type": "p",
+          "text": "Editar permite corregir la configuración. Eliminar no es una operación necesaria para registrar mediciones; compruebe dependencias y conservación de datos con el responsable técnico. Una variable inactiva no se carga en el formulario ordinario de edición de registros, por lo que editar registros antiguos puede requerir una revisión especial."
+        }
+      ]
+    },
+    {
+      "title": "Estaciones meteorológicas",
+      "intro": "Disponible para superadministrador y administrador de colegio. Una estación agrupa información de ubicación, responsable, sensores y registros asociados.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "stations",
+          "caption": "Listado de estaciones del colegio."
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra EcoData > Estaciones meteorológicas y seleccione Nueva estación meteorológica.",
+            "Seleccione el Colegio cuando corresponda.",
+            "Escriba Nombre y Código. Utilice un código que distinga la estación dentro del colegio.",
+            "Seleccione un Responsable activo del colegio, si se ha definido.",
+            "Complete Ubicación, Latitud, Longitud, Altitud y Fecha de instalación cuando disponga de esos datos.",
+            "Añada Descripción, seleccione Estado y pulse Guardar estación.",
+            "Abra el detalle y revise los datos antes de asociar sensores o mediciones."
+          ]
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Campo",
+            "Condición"
+          ],
+          "rows": [
+            [
+              "Nombre",
+              "Obligatorio; hasta 255 caracteres."
+            ],
+            [
+              "Código",
+              "Obligatorio; hasta 100 caracteres y único dentro del colegio."
+            ],
+            [
+              "Responsable",
+              "Opcional; debe pertenecer al colegio y estar activo."
+            ],
+            [
+              "Latitud",
+              "Opcional; número entre -90 y 90."
+            ],
+            [
+              "Longitud",
+              "Opcional; número entre -180 y 180."
+            ],
+            [
+              "Altitud",
+              "Opcional; número entre -500 y 9000."
+            ],
+            [
+              "Instalación, ubicación y descripción",
+              "Información complementaria; la fecha debe ser válida."
+            ],
+            [
+              "Estado",
+              "Obligatorio; las selecciones de estaciones ofrecen las activas."
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Las coordenadas describen el lugar de instalación. No se ha documentado una verificación automática en un mapa. Si no dispone de una coordenada fiable, deje el campo opcional sin dato en lugar de inventarla."
+        },
+        {
+          "type": "p",
+          "text": "El responsable ayuda a identificar a la persona encargada; asignarlo no crea una integración con el equipo. Una estación registrada en EcoData es un elemento de inventario y contexto para mediciones. El código revisado no aporta una conexión automática de lectura de sensores."
+        },
+        {
+          "type": "p",
+          "text": "Use Editar para mantener ubicación, responsable y estado. Antes de Eliminar, revise los sensores y registros relacionados: eliminar una estación puede eliminar sus sensores por la relación de datos. Si la estación ya tiene historial, coordine la operación con el responsable técnico."
+        },
+        {
+          "type": "p",
+          "text": "Aunque algunos componentes internos mencionan al docente, el menú y las rutas actuales de estaciones y sensores permiten la administración solo a superadministradores y administradores de colegio."
+        }
+      ]
+    },
+    {
+      "title": "Sensores y mantenimiento",
+      "intro": "Disponible para superadministrador y administrador de colegio. Cree primero una estación activa y, si relacionará la medición, una variable física activa del mismo colegio.",
+      "blocks": [
+        {
+          "type": "image",
+          "key": "sensors",
+          "caption": "Identificación y características de un sensor."
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Abra EcoData > Sensores y seleccione Nuevo sensor.",
+            "Seleccione Estación meteorológica y, si aplica, Variable física.",
+            "Escriba Nombre y Código del sensor.",
+            "Complete Marca, Modelo y Número de serie cuando estén disponibles.",
+            "Indique Unidad de medida, Rango de medición y Precisión a partir de la documentación del equipo.",
+            "Registre Fecha de instalación, Último mantenimiento y Próximo mantenimiento, si corresponde.",
+            "Seleccione Estado del sensor, revise Estado activo, añada Observaciones y pulse Guardar sensor.",
+            "Abra el detalle para comprobar estación, variable, identificación y calendario registrado."
+          ]
+        },
+        {
+          "type": "image",
+          "key": "sensor_maintenance",
+          "caption": "Fechas de mantenimiento estado y observaciones del sensor."
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Dato",
+            "Regla o interpretación"
+          ],
+          "rows": [
+            [
+              "Estación",
+              "Obligatoria, activa y dentro del colegio autorizado."
+            ],
+            [
+              "Variable física",
+              "Opcional; activa y del colegio de la estación."
+            ],
+            [
+              "Nombre y código",
+              "Obligatorios. El código debe ser único en esa estación."
+            ],
+            [
+              "Estado operativo",
+              "Operativo, En mantenimiento, Fallando, Inactivo o Retirado."
+            ],
+            [
+              "Estado activo",
+              "Bandera adicional de disponibilidad del registro."
+            ],
+            [
+              "Próximo mantenimiento",
+              "No puede ser anterior al último mantenimiento si ambos se registran."
+            ],
+            [
+              "Unidad, rango y precisión",
+              "Campos descriptivos; no calibran el equipo ni modifican los límites de la variable física."
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Estado del sensor y Estado activo representan datos distintos. Por ejemplo, un sensor puede conservar su ficha activa mientras su estado sea En mantenimiento. Revise ambos cuando interprete los indicadores del Dashboard: los sensores activos y operativos se contabilizan de forma diferente a los que tienen incidencias."
+        },
+        {
+          "type": "p",
+          "text": "Después de realizar un mantenimiento real, use Editar para registrar la fecha, el estado y las observaciones correspondientes. El formulario conserva información administrativa; el código revisado no demuestra que programe automáticamente una orden o una notificación de mantenimiento."
+        },
+        {
+          "type": "p",
+          "text": "Eliminar retira la ficha del sensor. Antes de confirmar, verifique el nombre, código y estación para evitar retirar el elemento incorrecto. Si solo necesita describir una incidencia o retirar el equipo de servicio, actualice su estado de acuerdo con la política de conservación de la institución."
+        }
+      ]
+    },
+    {
+      "title": "Alcance del cargue CSV meteorológico",
+      "intro": "La opción EcoData > Cargue CSV es visible para superadministrador, administrador de colegio y docente, pero su procesamiento no está implementado en la versión revisada.",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "La pantalla presenta Estación meteorológica, Origen del dato, Separador del archivo, Archivo CSV y Observaciones del cargue. También muestra los controles Descargar plantilla CSV y Cargar CSV. Estas referencias visuales no significan que el archivo se procese."
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Elemento",
+            "Estado en esta versión"
+          ],
+          "rows": [
+            [
+              "Selección de estación",
+              "Se cargan estaciones activas dentro del alcance del usuario."
+            ],
+            [
+              "Separador",
+              "La pantalla ofrece coma o punto y coma."
+            ],
+            [
+              "Archivo CSV",
+              "Existe el control para seleccionar un archivo."
+            ],
+            [
+              "Descargar plantilla CSV",
+              "El botón no tiene implementación de descarga."
+            ],
+            [
+              "Cargar CSV",
+              "El formulario no tiene una ruta de procesamiento implementada."
+            ],
+            [
+              "Resultado de importación",
+              "No puede confirmarse ni documentarse como disponible."
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "No utilice este módulo para un cargue real ni considere seleccionado un archivo como información incorporada al sistema. Para registros necesarios en esta versión, utilice EcoData > Registros físicos > + Nuevo registro y verifique después cada medición."
+        },
+        {
+          "type": "p",
+          "text": "Como referencia de diseño, la pantalla muestra las columnas recorded_at, temperature, humidity, pressure, rainfall, wind_speed y wind_direction. recorded_at contiene fecha y hora, y las demás representan variables meteorológicas. Esta estructura es una propuesta visible en la interfaz, no un contrato de importación validado por un procesador."
+        },
+        {
+          "type": "p",
+          "text": "El desarrollo y la habilitación de un importador deben ser confirmados por el responsable técnico antes de preparar cargas de producción. El cargue masivo de usuarios descrito en el capítulo 16 es un módulo distinto y utiliza archivos Excel; no recibe estos CSV meteorológicos."
+        }
+      ]
+    },
+    {
+      "title": "Problemas habituales y respuesta recomendada",
+      "intro": "Identifique el módulo y el mensaje exacto antes de repetir una operación. Algunas situaciones dependen de la asignación de la cuenta o de la configuración de la aplicación.",
+      "blocks": [
+        {
+          "type": "table",
+          "headers": [
+            "Situación",
+            "Qué comprobar o hacer"
+          ],
+          "rows": [
+            [
+              "No puedo iniciar sesión",
+              "Revise correo y contraseña. Use ¿Olvidaste tu contraseña? si necesita restablecerla."
+            ],
+            [
+              "Mi usuario no tiene colegio asignado",
+              "Solicite al administrador la asignación. Verifique los datos visibles en Mi perfil."
+            ],
+            [
+              "No aparece una opción del menú",
+              "Compare su rol con la matriz de permisos. No todos los perfiles administran todos los módulos."
+            ],
+            [
+              "No hay guías o actividades para mi grupo",
+              "Revise colegio, grado y curso; el responsable debe confirmar estado, destino y fechas de publicación o vigencia."
+            ],
+            [
+              "Esta actividad ya cerró",
+              "Informe al docente. Una devolución no extiende automáticamente el plazo; las ediciones de actividades con entregas requieren soporte por el riesgo de pérdida de respuestas."
+            ],
+            [
+              "Una entrega enviada no permite escribir",
+              "Es el bloqueo previsto para Enviado y Revisado. Una corrección requiere que el docente la devuelva y que la actividad siga disponible."
+            ],
+            [
+              "El registro no permite guardar",
+              "Complete al menos una variable y revise fecha, tipo de dato, mínimo, máximo y decimales."
+            ],
+            [
+              "Correo o documento ya existe",
+              "Busque la cuenta existente y corrija o actualice esa identidad; no cree una segunda cuenta de la misma persona."
+            ],
+            [
+              "El archivo supera el límite",
+              "Use PDF de guía hasta 10 MB, evidencia de Diario hasta 5 MB, imagen de evento hasta 4 MB o escudo hasta 2 MB."
+            ],
+            [
+              "Error cargando grados, cursos o variables",
+              "Recargue y seleccione el colegio y grado otra vez. Si persiste, informe al responsable técnico."
+            ],
+            [
+              "No llegó una notificación",
+              "Revise el correo de la cuenta y correo no deseado. La configuración de envío debe comprobarla soporte."
+            ],
+            [
+              "Cargue CSV no produce registros",
+              "Es una función visual sin importación implementada en esta versión."
+            ],
+            [
+              "Error 403 o no autorizado",
+              "La cuenta no tiene permiso o el recurso pertenece a otro ámbito; también puede ocurrir por fechas de actividad."
+            ],
+            [
+              "Error 404 o archivo inexistente",
+              "El recurso puede haberse retirado o faltar en almacenamiento. Informe título e identificador visible al responsable."
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Al solicitar ayuda, incluya el nombre del módulo, la operación realizada, el texto completo del mensaje, la fecha y hora aproximadas, y el título o identificador del registro. Explique si el error apareció al abrir, guardar, descargar o exportar. No envíe contraseñas, claves de recuperación ni información de otras personas que no sea necesaria para resolver el caso."
+        },
+        {
+          "type": "p",
+          "text": "Si una operación de creación muestra un error después de guardar, consulte el listado antes de repetirla: algunas acciones intentan notificar por correo después de almacenar datos. Verifique que el registro no exista ya para evitar duplicados."
+        },
+        {
+          "type": "p",
+          "text": "Si observa respuestas que desaparecieron después de editar una actividad, deje de modificarla y escale inmediatamente el caso con su título. La recuperación dependerá de los respaldos disponibles; el módulo no ofrece deshacer ni un historial de versiones."
+        }
+      ]
+    },
+    {
+      "title": "Rutinas recomendadas y glosario",
+      "intro": "Estas rutinas reúnen los pasos anteriores para facilitar el trabajo diario sin sustituir la revisión de cada formulario.",
+      "blocks": [
+        {
+          "type": "h2",
+          "text": "Rutina del estudiante"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Ingrese y confirme su nombre y grupo.",
+            "Lea los eventos ambientales pendientes.",
+            "Consulte las guías de laboratorio indicadas por el docente.",
+            "Registre las mediciones solicitadas y revise que aparezcan en Registros físicos.",
+            "Abra Mi Diario de Campo, guarde avances como borrador y envíe antes del cierre.",
+            "Consulte la retroalimentación y corrija las entregas devueltas dentro del plazo.",
+            "Cierre sesión."
+          ]
+        },
+        {
+          "type": "h2",
+          "text": "Rutina del docente"
+        },
+        {
+          "type": "steps",
+          "items": [
+            "Revise el Dashboard y los registros del colegio necesarios para la clase.",
+            "Publique guías y actividades con destinatarios y fechas correctos; compruebe las preguntas antes de recibir trabajos.",
+            "En Revisión Diario, filtre Enviado y registre retroalimentación y resultado.",
+            "Confirme disponibilidad antes de devolver una entrega.",
+            "Exporte los registros o entregas necesarios para la actividad académica y conserve los archivos en el repositorio institucional."
+          ]
+        },
+        {
+          "type": "h2",
+          "text": "Rutina de administración"
+        },
+        {
+          "type": "p",
+          "text": "Prepare los catálogos en este orden: colegio, grados, cursos, usuarios, categorías globales, variables, estaciones y sensores. Después verifique una cuenta de cada rol con la asignación adecuada. Revise los resúmenes del cargue Excel y mantenga consistentes los nombres usados por la institución."
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Término",
+            "Significado en EcoData"
+          ],
+          "rows": [
+            [
+              "Colegio",
+              "Institución que delimita la información y la asignación de usuarios."
+            ],
+            [
+              "Grado / Curso",
+              "Organización académica utilizada para dirigir contenidos y clasificar registros."
+            ],
+            [
+              "Categoría",
+              "Agrupación global de variables físicas."
+            ],
+            [
+              "Variable física",
+              "Definición de un dato, su tipo, unidad y límites."
+            ],
+            [
+              "Registro físico",
+              "Conjunto de uno o varios valores capturados con fecha, autor y contexto."
+            ],
+            [
+              "Estación / Sensor",
+              "Fichas de la infraestructura y los dispositivos de medición."
+            ],
+            [
+              "Guía de laboratorio",
+              "PDF publicado para un colegio o grupo."
+            ],
+            [
+              "Actividad de Diario",
+              "Formulario pedagógico con preguntas y vigencia."
+            ],
+            [
+              "Entrega",
+              "Respuestas guardadas por un estudiante para una actividad."
+            ],
+            [
+              "Borrador / Enviado",
+              "Trabajo editable en preparación / trabajo remitido para revisión."
+            ],
+            [
+              "Revisado / Devuelto",
+              "Revisión concluida / trabajo que necesita correcciones."
+            ],
+            [
+              "Slug",
+              "Identificador de texto utilizado en catálogos; puede generarse a partir del nombre."
+            ],
+            [
+              "Exportación",
+              "Descarga de los datos consultados en un archivo Excel."
+            ],
+            [
+              "Importación",
+              "Lectura de un archivo para crear o actualizar datos, disponible aquí para usuarios Excel."
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Para conocer instalación, respaldos, estructura de datos, configuración de correo, dependencias y limitaciones de implementación, consulte el Manual técnico de EcoData que acompaña este documento."
+        }
+      ]
+    }
+  ]
+}

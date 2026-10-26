@@ -2,35 +2,43 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Volt\Volt;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_registration_screen_can_be_rendered(): void
+    private function payload(): array
     {
-        $response = $this->get('/register');
-
-        $response
-            ->assertOk()
-            ->assertSeeVolt('pages.auth.register');
+        return ['name' => 'Applicant', 'email' => 'applicant@example.test',
+            'password' => 'password', 'password_confirmation' => 'password',
+            'role' => 'super_admin', 'school_id' => 123, 'is_active' => true];
     }
 
-    public function test_new_users_can_register(): void
+    public function test_public_registration_is_closed_by_default(): void
     {
-        $component = Volt::test('pages.auth.register')
-            ->set('name', 'Test User')
-            ->set('email', 'test@example.com')
-            ->set('password', 'password')
-            ->set('password_confirmation', 'password');
+        config(['auth.registration_enabled' => false]);
+        $this->get('/register')->assertNotFound();
+        $this->post('/register', $this->payload())->assertNotFound();
+        $this->assertDatabaseCount('users', 0);
+    }
 
-        $component->call('register');
-
-        $component->assertRedirect(route('dashboard', absolute: false));
-
-        $this->assertAuthenticated();
+    public function test_enabled_registration_creates_pending_account_without_access_or_role(): void
+    {
+        config(['auth.registration_enabled' => true]);
+        $this->get('/register')->assertOk()->assertSee('Solicitar cuenta');
+        $this->post('/register', $this->payload())
+            ->assertRedirect(route('login'))->assertSessionHas('status');
+        $user = User::where('email', 'applicant@example.test')->firstOrFail();
+        $this->assertFalse($user->is_active);
+        $this->assertNull($user->school_id);
+        $this->assertNull($user->email_verified_at);
+        $this->assertCount(0, $user->roles);
+        $this->assertGuest();
+        $this->post('/login', ['email' => $user->email, 'password' => 'password'])
+            ->assertSessionHasErrors('email');
+        $this->assertGuest();
     }
 }

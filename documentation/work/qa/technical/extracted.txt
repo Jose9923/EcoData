@@ -1,0 +1,1787 @@
+EcoData  ·  Documentación de la aplicación
+1
+Manual técnico
+EcoData
+Arquitectura, instalación, datos, seguridad y operación de la plataforma de educación ambiental.
+Edición 1.0 · 15 de octubre de 2026
+Referencia del código e9bc600
+Plataforma web para organizar mediciones ambientales y actividades pedagógicas por institución educativa.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+2
+Contenido
+Seleccione un capítulo para ir a su página. Los marcadores del PDF permiten volver a navegar por los capítulos.
+3
+1 Propósito y alcance técnico
+4
+2 Arquitectura y organización del código
+5
+3 Plataforma y servicios
+7
+4 Configuración del entorno
+8
+5 Instalación inicial propuesta
+10
+6 Modelo de datos y reglas de integridad
+12
+7 Diccionario de identidad y estructura académica
+13
+8 Diccionario de variables y mediciones
+14
+9 Diccionario de estaciones y sensores
+15
+10 Diccionario de guías y eventos
+16
+11 Diccionario del Diario de Campo
+18
+12 Ciclo de vida de una entrega y archivos de evidencia
+19
+13 Acceso y aislamiento por colegio
+20
+14 Inventario de rutas y contratos HTTP
+22
+15 Flujos internos de captura y validación
+23
+16 Importación de usuarios
+24
+17 Exportaciones y almacenamiento
+25
+18 Correo y procesos auxiliares
+26
+19 Seguridad implementada y medidas pendientes
+27
+20 Operación y diagnóstico
+29
+21 Respaldo y restauración verificable
+30
+22 Estrategia de pruebas y criterios de aceptación
+32
+23 Limitaciones priorizadas y plan de corrección
+33
+24 Referencias al código y mantenimiento del manual
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+3
+1 Propósito y alcance técnico
+Este manual describe la arquitectura y la operación técnica de EcoData. Está dirigido a desarrolladores,
+administradores de infraestructura y responsables de mantenimiento.
+La aplicación integra gestión académica por colegio, registros de variables físicas, inventario de estaciones y
+sensores, guías PDF, actividades de Diario de Campo y calendario ambiental. El servidor entrega HTML
+mediante Blade; las interacciones auxiliares consultan rutas JSON para listas dependientes. No se identificó una
+API de ingestión automática de estaciones ni una aplicación móvil independiente.
+La revisión abarca código, migraciones, dependencias bloqueadas, rutas y configuración. La aplicación y su
+suite de pruebas no se ejecutaron durante esta revisión. Los procedimientos de instalación y operación deben
+validarse en el entorno independiente descrito antes de aplicarlos a una instalación con datos.
+Concepto
+Criterio aplicado
+Fuente principal
+Directorio src; las carpetas resources externas a src no forman parte de la raíz
+configurada del proyecto Laravel.
+Fecha de elaboración
+15 de octubre de 2026. Revisión del código e9bc600.
+Cobertura
+17 modelos de dominio, 23 migraciones, controladores, Form Requests, middleware,
+servicios, exportadores, notificaciones y pruebas disponibles.
+Datos de ejemplo
+Ilustraciones con datos ficticios y ejemplos de configuración sin credenciales del
+entorno.
+Resultado de pruebas
+Revisión estática del código. Los casos de aceptación del capítulo de pruebas se
+proponen para ejecución posterior.
+Las restricciones o defectos encontrados se detallan al final. Son relevantes para explicar el estado actual y para
+evitar que el manual prometa prestaciones incompletas, por ejemplo la importación CSV de mediciones o el
+envío de reportes por correo.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+4
+2 Arquitectura y organización del código
+EcoData es un monolito Laravel con separación MVC y persistencia relacional mediante Eloquent. La
+lógica de autorización y de negocio reside principalmente en controladores y Form Requests.
+Navegador
+Blade y Bootstrap
+JavaScript y recursos CDN
+Nginx
+Puerto local 8081
+Raíz public
+PHP FPM
+Laravel 13
+Rutas y controladores
+HTTP
+9000
+Aplicación
+Sesión y roles
+Validación y Eloquent
+MySQL 8.4
+Datos por colegio
+Volumen persistente
+Almacenamiento
+Archivos privados
+Imágenes institucionales
+Correo y soporte
+Transporte configurado
+Redis según configuración
+Figura 1. Arquitectura lógica deducida de bootstrap/app.php, compose.yaml y las capas de la aplicación.
+Capa / ubicación
+Responsabilidad
+public/index.php y
+bootstrap/app.php
+Entrada HTTP, inicialización del framework, rutas web, comandos y comprobación /up.
+routes/web.php y routes/auth.php
+Rutas funcionales, sesión, autenticación y agrupación por rol.
+app/Http/Controllers
+Consultas, operaciones CRUD, alcance por colegio, archivos, exportaciones y flujos
+pedagógicos.
+app/Http/Requests
+Autorización previa, validación y mensajes de formularios. Registros físicos y entregas
+contienen además validación dinámica en el controlador.
+app/Models
+Entidades Eloquent, relaciones, atributos derivados y conversiones de tipos.
+app/Services y app/Repositories
+SchoolService maneja escudos y delega persistencia a SchoolRepositoryInterface;
+UserImportService procesa importaciones. Esta organización no está aplicada a todos
+los módulos.
+resources/views, resources/js,
+resources/css
+Presentación Blade, scripts y estilos; Vite genera public/build.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+5
+Capa / ubicación
+Responsabilidad
+app/Exports y app/Notifications
+Archivos Excel y correo transaccional.
+database/migrations y
+database/seeders
+Esquema versionado y carga de datos. El seeder predeterminado es destructivo y está
+destinado a demostración.
+storage y bootstrap/cache
+Archivos de ejecución, sesiones/caché según configuración, logs, vistas compiladas y
+documentos cargados.
+AppServiceProvider registra SchoolRepositoryInterface → SchoolRepository, habilita paginación Bootstrap 5 y
+añade al layout el primer evento ambiental vigente que el usuario aún no ha reconocido. LoadSchoolBranding
+comparte el colegio actual con las vistas. EnsureSchoolAssigned bloquea roles escolares sin colegio.
+El flujo habitual es navegador → Nginx → PHP-FPM → router y middleware → controlador/Form Request →
+Eloquent/MySQL → Blade o descarga. Los archivos se almacenan en discos locales; los correos dependen del
+transporte de Laravel. Las consultas JSON auxiliares permanecen bajo las protecciones de las rutas web.
+3 Plataforma y servicios
+Las versiones siguientes proceden de los manifiestos y archivos de bloqueo revisados; no se presentan
+como una selección de versiones más recientes.
+Componente
+Versión o restricción observada
+Función
+PHP
+composer.json: ^8.3; Dockerfile:
+php:8.4-fpm
+Ejecución del backend
+Laravel
+composer.lock: v13.5.0; requisito
+^13.0
+Framework web
+Laravel Excel
+maatwebsite/excel 3.1.68
+Importación y exportación XLS/XLSX
+PhpSpreadsheet
+1.30.4
+Motor de hojas de cálculo
+Spatie Permission
+7.3.0
+Roles y permisos
+Breeze
+2.4.1, dependencia de desarrollo
+Base inicial de autenticación
+PHPUnit
+12.5.23
+Pruebas automatizadas
+Composer
+Imagen composer:2
+Instalación de dependencias PHP
+Node.js
+Imagen node:22
+Compilación de recursos
+Vite / Tailwind
+Requisitos ^8.0.0 / ^3.4.17
+Construcción de recursos y utilidades CSS
+Bootstrap / Axios
+Requisitos ^5.3.8 / ^1.15.2
+Interfaz y solicitudes HTTP
+MySQL
+Imagen mysql:8.4
+Base de datos de Compose
+Nginx / Redis / Adminer
+nginx:alpine / redis:alpine /
+adminer:latest
+Servidor web, servicio Redis disponible y administración
+de BD
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+6
+El Dockerfile instala pdo_mysql, bcmath, intl, zip, gd y pcntl, además de utilidades de sistema y cliente MySQL.
+Las etiquetas alpine, latest y node:22 son móviles; para un despliegue controlado conviene fijar versiones o
+digests y validar actualizaciones. La imagen no instala explícitamente la extensión phpredis ni pdo_sqlite. Redis
+existe en Compose, pero config/database.php define phpredis como cliente predeterminado: antes de elegir
+Redis para caché, sesiones o colas debe comprobarse y completar esa dependencia.
+Servicio Compose
+Exposición y persistencia
+app
+PHP-FPM interno, raíz /var/www/html; montaje del código desde src.
+nginx
+Host 8081 → contenedor 80; document root public; reenvío FastCGI a app:9000.
+mysql
+Host 3308 → 3306; volumen ecodata_mysql_data.
+redis
+Host 6380 → 6379; el archivo no declara volumen propio.
+adminer
+Host 8082 → 8080; herramienta auxiliar de desarrollo.
+node
+Contenedor de utilidades; permanece en espera.
+queue
+php artisan queue:work --tries=3 --timeout=120.
+scheduler
+php artisan schedule:work; no se identificaron tareas funcionales programadas en
+routes/console.php.
+El Compose entregado facilita desarrollo; no configura TLS, gestión de secretos, healthchecks ni una política
+completa de exposición pública. depends_on ordena la creación de servicios, pero el archivo no expresa una
+condición de disponibilidad de MySQL. No debe confundirse su existencia con un despliegue de producción ya
+preparado.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+7
+4 Configuración del entorno
+La configuración se obtiene de config/*.php y variables de entorno. No existe src/.env.example en la
+copia revisada, aunque composer setup intenta copiarlo.
+Para una instalación nueva, crear src/.env a partir de un inventario revisado, sin copiar credenciales de otro
+ambiente. Definir credenciales nuevas y hacer coincidir la configuración de MySQL en Compose con
+DB_DATABASE, DB_USERNAME y DB_PASSWORD. Los valores de demostración incluidos en compose.yaml
+deben sustituirse en una configuración local o de despliegue controlada; modificar .env por sí solo no
+reemplaza los valores literales de ese archivo. Si ya existe .env, conservarlo y revisar sus claves de forma
+controlada; no sobrescribirlo con esta plantilla.
+APP_NAME=EcoData
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost:8081
+APP_LOCALE=es
+APP_FALLBACK_LOCALE=en
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=EcoData_db
+DB_USERNAME=<usuario_definido_para_este_entorno>
+DB_PASSWORD="<secreto_nuevo>"
+SESSION_DRIVER=database
+CACHE_STORE=database
+QUEUE_CONNECTION=database
+FILESYSTEM_DISK=local
+MAIL_MAILER=log
+MAIL_FROM_ADDRESS=notificaciones@example.invalid
+MAIL_FROM_NAME=EcoData
+Este bloque es una plantilla conceptual: los marcadores <...> se reemplazan antes de ejecutar. APP_KEY se
+genera con Artisan una sola vez para el ambiente. MAIL_MAILER=log evita envíos reales durante preparación,
+pero los logs pueden contener datos personales o contraseñas temporales; limitar su acceso y retención. El
+nombre de la base debe concordar con el servicio MySQL.
+Grupo
+Variables y observaciones
+Aplicación
+APP_ENV, APP_DEBUG, APP_URL, APP_KEY, APP_LOCALE y APP_FALLBACK_LOCALE. En
+producción: APP_ENV=production, APP_DEBUG=false y URL HTTPS correcta.
+Base de datos
+DB_CONNECTION, DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME,
+DB_PASSWORD. Desde contenedores se usa mysql:3306; 3308 es el puerto publicado
+en el host.
+Sesiones
+SESSION_DRIVER=database por defecto; SESSION_LIFETIME=120;
+SESSION_ENCRYPT=false; SESSION_SECURE_COOKIE según HTTPS;
+SESSION_SAME_SITE=lax.
+Correo SMTP
+MAIL_MAILER=smtp, MAIL_HOST, MAIL_PORT, MAIL_SCHEME, MAIL_USERNAME,
+MAIL_PASSWORD, MAIL_FROM_ADDRESS y MAIL_FROM_NAME. Usar el esquema
+indicado por el proveedor y validar la conexión.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+8
+Grupo
+Variables y observaciones
+Almacenamiento
+FILESYSTEM_DISK y APP_URL; los controladores seleccionan explícitamente local o
+public para varios archivos, por lo que cambiar el disco predeterminado no migra esos
+documentos a S3.
+Redis
+REDIS_CLIENT, REDIS_HOST, REDIS_PORT y REDIS_PASSWORD solo si se habilita y
+valida el cliente correspondiente.
+Zona horaria
+config/app.php fija UTC. No hay una variable APP_TIMEZONE consumida en ese
+archivo; adoptar otra zona requiere un cambio explícito y pruebas de ventanas de
+publicación.
+Conservar .env fuera del control de versiones. Mantener APP_KEY junto a las copias protegidas del sistema;
+regenerarla al restaurar un entorno existente puede invalidar datos cifrados y sesiones. Después de cambiar
+configuración, limpiar la caché y reconstruirla cuando el ambiente se haya verificado.
+5 Instalación inicial propuesta
+El procedimiento está destinado exclusivamente a una copia aislada del código y a un proyecto Docker
+nuevo con volumen nuevo. La configuración fija name: ecodata; por ello ejecutar Compose sin -p
+puede reutilizar los datos de una instalación existente.
+1. Preparar una copia independiente del código en otra carpeta. No reutilizar ni sobrescribir el .env de la
+ instalación existente. Abrir terminal en el src de la copia; confirmar Docker/Compose, espacio y puertos
+libres.
+2. Elegir un nombre de proyecto nuevo. En este ejemplo se usa ecodata-validacion: comprobar docker
+ compose -p ecodata-validacion ps -a y docker volume ls --filter
+label=com.docker.compose.project=ecodata-validacion. Si aparece cualquier recurso previo, elegir otro
+nombre y usarlo en todos los comandos. Crear .env propio y configurar credenciales nuevas de MySQL.
+3. Construir la imagen PHP e iniciar MySQL. Esperar a que el servidor acepte conexiones; revisar logs si la
+ inicialización del volumen sigue en curso.
+4. Instalar dependencias con composer.lock y compilar los recursos con package-lock.json. Configurar
+ permisos de escritura en storage y bootstrap/cache para el usuario que ejecuta PHP-FPM.
+5. Generar APP_KEY si la instalación es nueva; ejecutar migraciones sin --seed. Cargar únicamente los roles y
+ permisos con la clase explícita RolesAndPermissionsSeeder.
+6. Crear una cuenta inicial controlada con super_admin y contraseña propia. Iniciar sesión para registrar
+ colegio, grados, cursos y usuarios; validar la asignación antes de cargar contenido.
+7. Crear el enlace público de almacenamiento, iniciar app y nginx y revisar /up, /login y los recorridos críticos
+ por rol. Mantener los servicios auxiliares solo cuando se necesiten.
+# Ejecutar desde src de la copia aislada (Bash)
+docker compose -p ecodata-validacion build app
+docker compose -p ecodata-validacion up -d mysql
+docker compose -p ecodata-validacion logs --tail=80 mysql
+docker compose -p ecodata-validacion run --rm app \
+  composer install --no-interaction --prefer-dist
+docker compose -p ecodata-validacion run --rm app php artisan key:generate
+docker compose -p ecodata-validacion run --rm app php artisan migrate --force
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+9
+docker compose -p ecodata-validacion run --rm app \
+  php artisan db:seed --class=RolesAndPermissionsSeeder --force
+docker compose -p ecodata-validacion run --rm app php artisan storage:link
+docker compose -p ecodata-validacion run --rm node npm ci --ignore-scripts
+docker compose -p ecodata-validacion run --rm node npm run build
+docker compose -p ecodata-validacion run --rm app \
+  chown -R www-data:www-data storage bootstrap/cache
+docker compose -p ecodata-validacion up -d app nginx
+En todos los comandos, usar el mismo -p del proyecto nuevo ya verificado. Compose asignará un volumen del
+proyecto, separado de los existentes. Si otra instancia usa los puertos 8081, 3308, 6380 o 8082, modificar las
+asignaciones de la copia aislada a puertos libres antes de iniciar servicios y ajustar APP_URL. No cambiar ni
+bajar la instancia original. El chown corresponde al contenedor Linux y sus montajes; no ejecutar key:generate
+en una instalación en uso.
+No ejecutar php artisan db:seed sin --class, migrate --seed ni migrate:fresh sobre datos que se deban
+conservar. DatabaseSeeder invoca EcoDataDemoSeeder, cuyo primer paso trunca tablas de usuarios, roles y
+módulos. Los seeders iniciales/demostrativos también contienen credenciales predefinidas; no constituyen un
+proceso seguro de aprovisionamiento productivo.
+Cuenta inicial
+Abrir php artisan tinker dentro del contenedor, crear un User con nombre, correo controlado y una contraseña
+única almacenada mediante Hash::make, y asignar el rol super_admin mediante assignRole. Esta cuenta puede
+iniciar sin school_id. Introducir el secreto de forma interactiva y evitar incluirlo en archivos del repositorio,
+capturas o historial compartido. Confirmar que el correo y el rol corresponden a la persona responsable. No
+usar los ejemplos de seeders como credenciales definitivas.
+Durante el cierre de instalación registrar: revisión Git, versiones reales, fecha, responsable, estado de
+migraciones, URL, cuentas de prueba usadas, comportamiento de carga/descarga y resultados de seguridad.
+Una respuesta correcta en /up confirma la ruta de salud, pero no sustituye estas comprobaciones.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+10
+6 Modelo de datos y reglas de integridad
+El dominio está definido por 17 modelos Eloquent. Las migraciones añaden además tablas de sesión,
+restablecimiento de contraseña, caché, colas y autorización.
+schools
+Colegio y personalización
+grades / courses
+Estructura académica
+users
+Cuenta y roles Spatie
+weather_stations
+Estación del colegio
+1 a N
+1 a N
+1 a N
+physical_variables
+Categoría global
+Definición por colegio
+physical_variable_records
+Autor y contexto
+Fecha y origen
+sensors
+Estación y variable
+1 a N
+1 a N
+physical_variable_record_values
+Un valor tipado por registro y variable
+1 a N
+1 a N
+Figura 2. Relaciones seleccionadas de identidad e infraestructura. El diccionario detalla las claves y restricciones completas.
+Convenciones del diccionario: PK = clave primaria; FK = referencia; UQ = unicidad; N = permite NULL. Todas
+las tablas del dominio incluyen id como entero grande autoincremental y created_at/updated_at, salvo que se
+indique otra cosa. string sin longitud explícita corresponde al tamaño predeterminado de Laravel (255); los
+valores predeterminados mencionados proceden de migraciones.
+Relación
+Cardinalidad y comportamiento
+Colegio → grados, cursos, variables,
+registros, guías, estaciones, eventos
+y actividades
+Un colegio contiene muchos elementos. Varias FK eliminan registros dependientes en
+cascada.
+Usuario → colegio, grado y curso
+Asignaciones opcionales. Al borrar la entidad referenciada, la FK del usuario se
+establece en NULL.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+11
+Relación
+Cardinalidad y comportamiento
+Categoría → variables
+Categoría global, compartida entre colegios. La FK de variable restringe su eliminación
+si se usa.
+Registro físico → valores
+Un registro contiene múltiples valores; UQ por registro y variable; eliminar el registro
+elimina sus valores.
+Estación → sensores
+Una estación contiene múltiples sensores; eliminación en cascada. Registros y
+actividades conservan datos con weather_station_id en NULL al borrar estación.
+Actividad → preguntas y entregas
+Una actividad contiene preguntas ordenadas y una entrega por usuario; eliminación
+en cascada.
+Entrega → respuestas
+Una respuesta por pregunta y entrega; las respuestas se eliminan con cualquiera de
+sus padres.
+Evento → reconocimientos
+UQ por evento y usuario; representa haber leído/reconocido el evento.
+El alcance por colegio se implementa principalmente mediante filtros y comprobaciones en PHP. Las FK
+simples comprueban que los identificadores existan, pero no garantizan por sí solas que todos los
+identificadores de una fila pertenezcan al mismo colegio. Las restricciones de aplicación y las pruebas de
+aislamiento son necesarias.
+No se identificó uso general de SoftDeletes ni una bitácora de auditoría de cambios. Borrar entidades puede
+eliminar contenido dependiente de forma definitiva. Desactivar una entidad mediante is_active es distinto de
+eliminarla; su efecto concreto depende de cada consulta y no equivale a revocar universalmente una sesión.
+Tablas de infraestructura
+Campos principales y función
+password_reset_tokens
+email PK; token; created_at N. Persistencia del password broker.
+sessions
+id PK; user_id N/index; ip_address(45) N; user_agent text N; payload longText;
+last_activity integer/index.
+cache / cache_locks
+cache: key PK, value mediumText, expiration integer/index. locks: key PK, owner,
+expiration integer/index.
+jobs
+id; queue/index; payload longText; attempts unsignedTinyInteger; reserved_at N,
+available_at y created_at como unsignedInteger.
+job_batches
+id string PK, name, total_jobs, pending_jobs, failed_jobs, failed_job_ids longText,
+options mediumText N y marcas cancelled_at/finished_at N y created_at integer.
+failed_jobs
+id; uuid UQ; connection text; queue text; payload y exception longText; failed_at
+timestamp con fecha actual.
+migrations
+Tabla de control administrada por Laravel para el nombre de migración y lote; no es
+una entidad funcional.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+12
+7 Diccionario de identidad y estructura académica
+Estas tablas sostienen la asignación de usuarios y la personalización de cada colegio.
+Tabla / campos
+Tipo y reglas
+Uso
+schools: name, slug
+string; slug UQ
+Nombre visible e identificador normalizado.
+schools: shield_path
+string N
+Ruta del escudo en disco public.
+schools: primary_color,
+secondary_color,
+accent_color
+string(20); valores iniciales definidos
+Colores de marca. La validación admite HEX de 3 o 6
+dígitos.
+schools: is_active
+boolean, true
+Disponibilidad en listas de selección.
+grades: school_id; name;
+label; is_active
+FK cascade; string; string N; boolean
+true; UQ(school_id,name)
+Grado académico dentro del colegio.
+courses: school_id;
+grade_id; name; label;
+is_active
+FK cascade; FK cascade; string; string
+N; boolean true;
+UQ(school_id,grade_id,name)
+Curso/grupo asociado al grado.
+users: name; email;
+email_verified_at
+string; string UQ; timestamp N
+Identidad y correo; estado temporal de verificación.
+users: document_type;
+document_number
+string(20) N; string(50) N UQ
+Identificación. La unicidad de número aplica
+globalmente, no solo dentro de cada colegio.
+users: password;
+remember_token
+string; token N
+Hash de contraseña y persistencia de sesión recordada.
+users: school_id; grade_id;
+course_id
+FK N, nullOnDelete en las tres
+Asignación escolar.
+users: is_active
+boolean true
+Estado administrativo utilizado por filtros y
+notificaciones; el login no lo comprueba actualmente.
+User incorpora Notifiable y HasRoles. Convierte password con el cast hashed, is_active a boolean y
+email_verified_at a datetime; password y remember_token se ocultan al serializar. Declara relaciones con
+colegio, grado, curso, estaciones responsables, eventos creados, reconocimientos, actividades, entregas y
+revisiones.
+Los roles no son una columna de users. Spatie utiliza roles, permissions, model_has_roles,
+model_has_permissions y role_has_permissions. Las dos primeras tienen id, name, guard_name y timestamps,
+con unicidad name+guard_name. Las pivotes relacionan identificadores de rol/permiso con model_id y
+model_type o entre roles y permisos. config/permission.php define sus nombres y estrategia de caché.
+La eliminación de un usuario conserva registros físicos con user_id NULL, pero las entregas y reconocimientos
+se borran en cascada. Las guías creadas por ese usuario también tienen FK cascade. Por ello el procedimiento
+de retiro debe evaluar dependencias y respaldo antes de usar la acción Eliminar.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+13
+8 Diccionario de variables y mediciones
+El registro se divide en una cabecera contextual y una colección de valores tipados, lo que permite
+capturar varias variables en una sola operación.
+Tabla / campos
+Tipo y reglas
+physical_variable_categories: name,
+slug, description, is_active
+string; string UQ; text N; boolean true. Catálogo global, sin school_id.
+physical_variables: school_id,
+category_id
+FK colegio cascade; FK categoría restrict.
+physical_variables: name, slug, unit,
+data_type
+string; string; string(50) N; string(30), default decimal. UQ(school_id,slug).
+physical_variables: min_value,
+max_value, decimals
+decimal(15,4) N; decimal(15,4) N; unsigned tiny integer default 2.
+physical_variables: description,
+is_active
+text N; boolean true. Índices por colegio/categoría y colegio/estado.
+physical_variable_records: school_id,
+grade_id, course_id, user_id
+Colegio FK cascade; grado/curso/autor FK N nullOnDelete.
+physical_variable_records:
+weather_station_id, source_type
+Estación FK N nullOnDelete; string(30) default manual.
+physical_variable_records:
+recorded_at, observations
+datetime requerido; text N. Índices por colegio/fecha, grado/curso, autor,
+estación/fecha y fuente/fecha.
+physical_variable_record_values:
+physical_variable_record_id,
+physical_variable_id
+FK registro cascade; FK variable restrict; UQ de ambos campos.
+physical_variable_record_values:
+value_numeric, value_text,
+value_boolean, value_date
+decimal(15,4) N; text N; boolean N; date N. Índices de variable/valor numérico y
+variable/fecha.
+Tipos configurables: integer, decimal, text, boolean y date. El controlador aplica reglas dinámicas según las
+variables activas seleccionadas. Exige al menos una respuesta; valida rangos mínimo/máximo y cantidad de
+decimales antes de guardar. El tipo determina cuál de las cuatro columnas del valor se llena y las demás
+quedan en NULL. Los formularios permiten configurar decimals entre 0 y 10, pero min_value, max_value y
+value_numeric usan DECIMAL(15,4). La precisión efectiva de almacenamiento es cuatro decimales; configurar
+como máximo 4 hasta armonizar validación y esquema, para evitar pérdida o redondeo de precisión.
+La creación y actualización de cabecera/valores utilizan DB::transaction. En una actualización se eliminan y
+recrean los valores recibidos. Los metadatos de estación y origen se validan en update, pero no aparecen en su
+payload de actualización: no debe asegurarse que cambiar esos dos campos se persiste en esta versión.
+Los orígenes admitidos son manual, station y csv. Son etiquetas guardadas en la base; no prueban que exista
+conexión automática a una estación o procesamiento CSV. La pantalla de importación de registros solo tiene
+un controlador create y una ruta GET.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+14
+La vista de listado y la exportación de registros limitan por colegio, pero no por propiedad del estudiante ni
+por grado/curso del estudiante de forma automática. La edición del estudiante sí exige que user_id sea el suyo.
+Esta diferencia es relevante para la matriz de acceso y para los datos personales incluidos en la descarga.
+9 Diccionario de estaciones y sensores
+El módulo representa inventario y metadatos de equipos; no se identificó un canal automático de
+adquisición de mediciones.
+Tabla / campos
+Tipo y reglas
+Uso
+weather_stations:
+school_id,
+responsible_user_id
+FK colegio cascade; FK usuario N
+nullOnDelete
+Colegio y responsable.
+weather_stations: name,
+code, location_name
+string; string; string N;
+UQ(school_id,code)
+Identificación y ubicación.
+weather_stations: latitude,
+longitude, altitude
+decimal(10,7) N; decimal(10,7) N;
+decimal(8,2) N
+Coordenadas y altitud.
+weather_stations:
+installation_date,
+description, is_active
+date N; text N; boolean true
+Instalación, notas y disponibilidad.
+sensors:
+weather_station_id,
+physical_variable_id
+FK estación cascade; FK variable N
+nullOnDelete
+Equipo asociado y variable relacionada opcional.
+sensors: name, code
+string; string;
+UQ(weather_station_id,code)
+Identificación interna del sensor.
+sensors: brand, model,
+serial_number
+string N en los tres
+Información del fabricante.
+sensors:
+measurement_unit,
+measurement_range,
+accuracy
+string N en los tres
+Características declaradas; no constituyen una
+calibración calculada.
+sensors: installation_date,
+last_maintenance_date,
+next_maintenance_date
+date N en los tres
+Fechas de instalación y mantenimiento.
+sensors: status,
+observations, is_active
+string default operativo; text N;
+boolean true
+Estado y observaciones. Índices por estación/activo,
+variable y estado.
+Los estados ofrecidos son operativo, mantenimiento, fallando, inactivo y retirado. Los listados se filtran por el
+colegio de la estación para administradores escolares; super_admin puede consultar el conjunto. Para
+relacionar un sensor con una variable debe conservarse la coherencia de colegio y validarse el recurso elegido.
+El panel calcula sensores activos con is_active=true y status=operativo. También agrupa incidencias por
+inactividad o estados de mantenimiento/falla. next_maintenance_date es un dato de inventario: no se encontró
+una tarea programada que envíe recordatorios automáticamente.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+15
+Al eliminar una estación, sus sensores desaparecen por cascada y las FK opcionales de registros/actividades
+pasan a NULL. No existe un historial técnico de calibraciones separado en el esquema. Para conservar
+trazabilidad conviene utilizar estado e inactividad cuando sea apropiado y definir un procedimiento de
+conservación antes de borrar.
+10 Diccionario de guías y eventos
+Las guías y los eventos pueden dirigirse al colegio, y las guías además a un grado o curso opcional.
+Tabla / campos
+Tipo y reglas
+laboratory_guides: school_id,
+grade_id, course_id, created_by
+Colegio FK cascade; grado/curso FK N nullOnDelete; creador FK users cascade.
+laboratory_guides: title, description,
+pdf_path
+string; text N; string requerida.
+laboratory_guides: published_at,
+is_active
+timestamp N; boolean true. NULL en publicación significa sin restricción temporal
+adicional.
+environmental_events: school_id,
+created_by
+FK colegio cascade; FK creador N nullOnDelete.
+environmental_events: title,
+description, image_path
+string; text N; string N.
+environmental_events: starts_at,
+ends_at, is_active
+date requerida; date requerida; boolean true. Índices colegio/fechas y colegio/estado.
+environmental_event_acknowledge
+ments: environmental_event_id,
+user_id
+FK evento y usuario cascade; UQ(evento,usuario).
+environmental_event_acknowledge
+ments: acknowledged_at
+timestamp N; índice por usuario/fecha.
+Una guía visible para estudiante debe estar activa, pertenecer a su colegio, cumplir grado/curso cuando estén
+asignados y tener published_at vacío o no futuro. Tanto la visualización del PDF como su descarga vuelven a
+comprobar estas condiciones y la existencia del archivo. La vista administrativa se rige por rol y colegio.
+El calendario denominado público es público interno: sus rutas están bajo auth y EnsureSchoolAssigned. No
+está disponible a visitantes anónimos. Los eventos vigentes se identifican mediante starts_at ≤ hoy ≤ ends_at,
+ambos inclusive. Las fechas se comparan con la zona configurada en Laravel, que actualmente es UTC.
+Los reconocimientos usan updateOrCreate para no duplicar el par evento/usuario. El reconocimiento masivo
+restringe la selección a eventos activos, vigentes y del colegio autorizado. El evento reconocido deja de
+aparecer como pendiente para ese usuario; no elimina el evento ni confirma asistencia física.
+Los PDF e imágenes se guardan actualmente en local privado. Los controladores admiten además una
+búsqueda en public como compatibilidad con archivos antiguos. Ese fallback no elimina la exposición directa
+de un archivo antiguo que siga dentro del disco público.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+16
+11 Diccionario del Diario de Campo
+El Diario de Campo comprende definición de actividades, preguntas configurables, entregas de
+estudiantes y revisión pedagógica.
+field_diary_activities
+Colegio y destinatarios
+Vigencia y tipo
+field_diary_questions
+Tipo y opciones
+Orden y obligatoriedad
+users
+Estudiante / docente
+1 a N
+field_diary_submissions
+Actividad y estudiante
+Estado y revisión
+field_diary_answers
+Respuesta y archivo
+Entrega y pregunta
+1 a N
+1 a N
+1 a N
+laboratory_guides
+PDF por audiencia
+Publicación y autor
+environmental_events
+Colegio y periodo
+environmental_event_acknowledgements
+Evento y usuario únicos
+1 a N
+Figura 3. Modelo de contenido pedagógico: guías, calendario y Diario de Campo.
+Tabla / campos
+Tipo y reglas
+field_diary_activities: school_id,
+grade_id, course_id,
+weather_station_id, created_by
+Colegio FK cascade; demás FK N nullOnDelete.
+field_diary_activities: title,
+description, entry_type
+string; text N; string(30) default observacion.
+field_diary_activities: starts_at,
+ends_at, is_active
+date N; date N; boolean true. Ventana opcional de disponibilidad.
+field_diary_questions:
+field_diary_activity_id, question_text,
+question_type
+FK actividad cascade; text; string(30) default textarea.
+field_diary_questions: options,
+order, is_required
+JSON N; unsigned integer default 1; boolean true. Índice por actividad/orden.
+field_diary_submissions:
+field_diary_activity_id, user_id,
+school_id
+FK actividad, usuario y colegio cascade; UQ(actividad,usuario).
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+17
+Tabla / campos
+Tipo y reglas
+field_diary_submissions: grade_id,
+course_id, reviewed_by
+FK N nullOnDelete; revisor apunta a users.
+field_diary_submissions: status,
+submitted_at
+string(30) default borrador; timestamp N.
+field_diary_submissions:
+teacher_feedback, score,
+reviewed_at
+text N; decimal(5,2) N; timestamp N. Validación de nota entre 0 y 100.
+field_diary_answers:
+field_diary_submission_id,
+field_diary_question_id
+FK a entrega y pregunta cascade; UQ(entrega,pregunta).
+field_diary_answers: answer_text,
+answer_file_path
+longText N; string N. Selección múltiple serializada en JSON dentro de answer_text.
+Tipos de actividad: observacion, reto y portafolio. Tipos de pregunta: text, textarea, number, date, select, radio,
+checkbox y file. Las opciones de selección se ingresan una por línea, se normalizan a un arreglo y se guardan
+en options. is_required determina obligatoriedad al enviar; no impide guardar un borrador parcial.
+La entrega almacena la asignación escolar del estudiante al guardarla. Las consultas administrativas y los
+archivos verifican coherencia tanto de la entrega como de la actividad. Las respuestas se filtran para evitar
+mostrar preguntas que no pertenezcan a la actividad de esa entrega.
+Precaución de integridad: la edición actual de una actividad elimina todas las preguntas y las vuelve a crear.
+Como answers referencia questions con cascadeOnDelete, editar una actividad que ya tiene respuestas puede
+borrarlas. Hasta corregirlo, conservar actividades con entregas y crear una nueva versión como actividad
+independiente.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+18
+12 Ciclo de vida de una entrega y archivos de
+evidencia
+Las transiciones implementadas permiten preparar, enviar, revisar y devolver una entrega dentro de la
+ventana de la actividad.
+Borrador
+Editable por estudiante
+Enviado
+Bloqueado para edición
+Revisado
+Revisión y nota opcional
+Devuelto
+Puede corregirse
+si sigue disponible
+Enviar
+Revisar
+Devolver
+Reenviar
+Guardar
+La vigencia y la asignación de la actividad controlan el acceso.
+Figura 4. Flujo de trabajo habitual del Diario de Campo. La actividad debe seguir disponible para corregir una devolución.
+1. El docente o administrador crea una actividad con al menos una pregunta, selecciona colegio y destinatarios
+ opcionales, define vigencia y la deja activa.
+2. El estudiante accede únicamente si el colegio, grado/curso y fechas coinciden. Guardar crea o actualiza la
+ entrega en estado borrador; las respuestas obligatorias pueden quedar pendientes.
+3. Enviar valida todas las preguntas requeridas y registra submitted_at; el estado pasa a enviado. El código
+ bloquea cambios del estudiante mientras el estado sea enviado o revisado.
+4. El personal autorizado revisa la entrega del colegio: elige revisado o devuelto, puede guardar nota de 0 a
+ 100 y retroalimentación; se registra revisor y reviewed_at y se intenta notificar al estudiante.
+5. Si fue devuelto, el estudiante puede modificar y volver a guardar/enviar, siempre que la actividad siga activa
+ y dentro de sus fechas. Una actividad cerrada bloquea también este reenvío.
+Control
+Implementación
+Identidad de la entrega
+Unicidad actividad+usuario. El usuario autenticado determina el dueño; no se recibe
+como asignación libre desde el formulario.
+Validación por tipo
+number exige numeric, date exige date, checkbox exige array; los restantes exigen
+string. No se observó validación contra el conjunto permitido de opciones para
+select/radio/checkbox.
+Archivos
+Máximo 5 MB por evidencia; JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX y
+CSV.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+19
+Control
+Implementación
+Persistencia
+DB::transaction para registros y respuestas; los archivos físicos se almacenan o
+eliminan aparte del motor SQL. La transacción de BD no revierte automáticamente una
+operación de filesystem.
+Descarga
+Ruta protegida field-diaries/answers/{id}/file. Super_admin, administración/docentes
+del colegio y estudiante dueño, con comprobaciones adicionales de coherencia de
+actividad/pregunta.
+Limitación de historial
+No se conserva un historial separado de todas las revisiones. El nuevo guardado del
+estudiante no borra explícitamente score/feedback/reviewed_at anteriores; interpretar
+estos campos junto al estado actual.
+Al reemplazar evidencia, el controlador elimina el archivo anterior de los discos local/public y guarda el nuevo
+bajo field-diaries/user-{id}/activity-{id}. El nombre incluye fecha/hora y nombre original. La administración
+debe respaldar este árbol junto a la BD y considerar limpieza de huérfanos tras fallos o borrados; no se
+identificó una tarea automática de conciliación.
+13 Acceso y aislamiento por colegio
+La autorización efectiva combina middleware role, Form Requests y comprobaciones del controlador.
+Los permisos sembrados no son por sí solos la matriz real de acceso.
+Función
+Superadmin
+Admin. colegio
+Docente
+Estudiante
+Colegios y categorías globales
+Gestiona
+Sin acceso
+Sin acceso
+Sin acceso
+Usuarios, importación, grados y
+cursos
+Todos los
+colegios
+Su colegio
+Sin acceso
+Sin acceso
+Variables, estaciones y sensores
+Gestiona
+Su colegio
+Sin acceso de
+gestión
+Sin acceso de
+gestión
+Registros: consultar, crear y exportar
+Todos
+Su colegio
+Su colegio
+Su colegio
+Registros: editar
+Todos
+Su colegio
+Su colegio
+Solo propios
+Guías y actividades: gestionar
+Todos
+Su colegio
+Su colegio
+Consulta guías y
+responde
+actividades; no
+gestiona
+Entregas: consultar/revisar/exportar
+Todas
+Su colegio
+Su colegio
+Consulta, edita y
+envía propias
+según estado; sin
+revisión ni
+exportación
+Calendario interno
+Todos
+Su colegio
+Su colegio
+Su colegio
+Perfil propio y contraseña
+Sí
+Sí
+Sí
+Sí
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+20
+El prefijo /admin no implica que todo su contenido sea exclusivo de administradores: los registros físicos usan
+ese prefijo también para docentes y estudiantes. Para categorías, el grupo de rutas permite entrar a
+admin_colegio, pero el controlador y sus Form Requests exigen super_admin; esta regla más restrictiva
+determina el acceso.
+Las listas y recursos suelen sustituir school_id solicitado por el school_id autenticado cuando el actor no es
+super_admin. La edición/descarga revalida la pertenencia para evitar confiar solo en filtros visuales. El docente
+se limita por colegio, no por una lista propia de cursos asignados: el esquema no incluye una relación
+docente-curso.
+EnsureSchoolAssigned reconoce admin_colegio, docente y estudiante. A esos roles sin colegio los redirige a
+/cuenta/colegio-requerido o devuelve 403 si esperan JSON. El perfil permanece fuera de ese bloqueo.
+DashboardController tiene además su propia comprobación para cualquier usuario no superadmin sin colegio.
+Spatie tiene teams=false; el aislamiento multiinstitucional se aplica en consultas y validaciones propias. No se
+identificaron Policies centralizadas ni un global scope de colegio. Cada nuevo endpoint debe repetir o abstraer
+estas comprobaciones y probarse con recursos de dos colegios.
+Registros y sus exportaciones contienen autor, documento y correo. El estudiante puede consultar/exportar
+registros del colegio conforme al controlador actual, incluso si el panel inicial muestra un subconjunto por
+grado/curso. Revisar esta política antes de usar información real y no documentar una restricción más estrecha
+de la que implementa el servidor.
+14 Inventario de rutas y contratos HTTP
+La aplicación registra rutas web con sesión y protección CSRF. No se identificó routes/api.php dentro
+de la configuración activa.
+Ruta o familia
+Métodos y finalidad
+Acceso
+/; /up
+GET: redirección a login; salud del
+framework
+Público
+/login; /register
+GET y POST: formularios y
+autenticación/alta
+Invitado
+/forgot-password; /reset-password/{token}
+GET/POST según ruta; solicitud y
+restablecimiento
+Invitado
+/verify-email; /verify-email/{id}/{hash}
+GET; enlace firmado y throttle en
+verificación
+Autenticado
+/email/verification-notification
+POST; throttle:6,1
+Autenticado
+/profile; /profile/password
+GET/PUT perfil; PUT contraseña
+Autenticado
+/dashboard; /logout
+GET panel; POST cierre de sesión
+Autenticado
+/admin/schools
+Resource sin show:
+GET/POST/PUT/PATCH/DELETE
+Superadmin
+/admin/users; /admin/grades; /admin/courses
+Resource sin show; listas, alta, edición,
+borrado
+Superadmin / admin
+colegio
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+21
+Ruta o familia
+Métodos y finalidad
+Acceso
+/admin/physical-variable-categories
+Resource sin show; catálogo global
+Superadmin efectivo
+/admin/physical-variables
+Resource sin show; catálogo por colegio
+Superadmin / admin
+colegio
+/admin/weather-stations; /admin/sensors
+Resource completo
+Superadmin / admin
+colegio
+/admin/users/import;
+/admin/users/import/template
+GET/POST importación; GET plantilla
+Superadmin / admin
+colegio
+/admin/physical-variable-records
+GET lista/create/show/edit; POST store;
+PUT/PATCH update
+Los cuatro roles
+/admin/physical-variable-records-export
+GET descarga XLSX filtrada
+Los cuatro roles
+/admin/physical-variable-record-imports/create
+GET interfaz de importación; sin POST de
+procesamiento
+Superadmin / admin /
+docente
+/admin/laboratory-guides
+Resource sin show; GET /{id}/download
+Superadmin / admin /
+docente
+/admin/environmental-events;
+/admin/field-diary-activities
+Resource completo
+Superadmin / admin /
+docente
+/admin/field-diary-submissions
+GET lista y /{id}; POST /{id}/review
+Superadmin / admin /
+docente
+/admin/field-diary-submissions-export
+GET XLSX de respuestas
+Superadmin / admin /
+docente
+/estudiante/laboratory-guides
+GET listado, /{id}/view y /{id}/download
+Estudiante
+/estudiante/field-diaries
+GET listado y /{actividad}; POST
+/{actividad}/save y /submit
+Estudiante
+/calendario-ambiental
+GET listado y /{evento}
+Autenticado / colegio
+/environmental-events/{evento}/acknowledge;
+/environmental-events/acknowledge-all
+POST reconocimiento individual/masivo
+Autenticado / colegio
+/environmental-events/{evento}/image;
+/field-diaries/answers/{respuesta}/file
+GET imagen/evidencia con control de
+alcance
+Autenticado autorizado
+/mail/{módulo}/redirect
+GET destino seguro para guías, diario,
+eventos o reportes
+Autenticado autorizado
+/reports/mail; /reports/mail/send
+GET/POST declarados; controlador ausente
+Funcionalidad incompleta
+Las familias users, courses, laboratory-guides, physical-variable-records, field-diary-activities y
+field-diary-submissions incluyen GET /ajax/... para grados, cursos y otros selectores. Weather stations añade
+/ajax/responsibles. Son endpoints auxiliares para formularios y conservan el middleware de su grupo.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+22
+resource genera por convención GET index/create/show/edit, POST store, PUT/PATCH update y DELETE
+destroy. Las excepciones se indican en la tabla. No existe una ruta DELETE de registros físicos en esta versión.
+La declaración resource de weather-stations está duplicada en routes/web.php y debe consolidarse.
+No asumir que php artisan route:list terminará correctamente hasta resolver ReportMailController: la ruta
+referencia una clase inexistente, lo que puede impedir inspección/caché de rutas además de fallar cuando se
+solicita esa función. Mantener un inventario validado por ejecución tras corregir los pendientes.
+15 Flujos internos de captura y validación
+Los formularios Blade se corresponden con controladores y validadores explícitos; el servidor debe
+considerarse la fuente de verdad de permisos y reglas.
+Figura 5. Los campos del formulario alimentan la validación dinámica del controlador de registros. Vista ilustrativa con datos de
+ejemplo.
+1. Recibir el POST con token CSRF, sesión y rol autorizado. Resolver el colegio efectivo a partir del actor para
+ evitar asignaciones arbitrarias.
+2. Consultar variables activas del colegio y categoría, y construir reglas por tipo. Verificar referencias a grado,
+ curso y estación activos dentro de ese colegio.
+3. Validar fecha/hora, origen y valores; rechazar captura vacía, números fuera de rango o exceso de decimales.
+ 
+4. Abrir una transacción, crear la cabecera con user_id autenticado y crear un valor por variable respondida;
+ confirmar o revertir los cambios SQL.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+23
+5. Redirigir al listado con mensaje de éxito. Los errores de validación regresan al formulario con datos
+ anteriores y mensajes por campo.
+El listado admite búsqueda textual y filtros por colegio, grado, curso, categoría, variable, fechas, estación y
+origen. per_page se restringe a 10, 15, 25 o 50. La exportación reutiliza buildQuery para reproducir el alcance y
+filtros del conjunto solicitado, sin limitarse a la página visible.
+Al editar, el estudiante debe ser propietario del registro y conserva colegio/grado/curso originales. Los demás
+roles autorizados editan dentro de su colegio, o en todos los colegios si son super_admin. La actualización
+reemplaza el conjunto de valores, de modo que debe revisarse que el formulario contenga todas las
+mediciones que se desea conservar.
+La transacción SQL cubre consistencia entre cabecera y valores. No hay un mecanismo general de versiones u
+optimistic locking; dos ediciones concurrentes podrían sobrescribirse. Cuando se añada ingestión masiva o
+automática, conviene definir identificador de lectura, idempotencia, unidades y política de duplicados antes de
+crear endpoints.
+16 Importación de usuarios
+La importación real implementada es la de usuarios mediante Excel. La plantilla se descarga desde la
+misma aplicación y aplica el alcance del actor.
+Elemento
+Comportamiento implementado
+Archivo admitido
+XLSX o XLS, máximo 10 MB. Se procesa la primera hoja.
+Plantilla
+Siete hojas: usuarios, instrucciones, tipos de documento, roles, colegios, grados y
+cursos.
+Detección de encabezados
+Busca una fila con name, email, document_type, document_number y role; normaliza
+minúsculas, acentos, espacios, guiones y puntos.
+Columnas de trabajo
+name, email, document_type, document_number, role, school, grade, course,
+password, is_active.
+Modos
+create_only omite coincidencias existentes; update_or_create crea o actualiza.
+Coincidencia
+Consulta por documento y por correo. Si corresponden a dos usuarios distintos, la fila
+produce error.
+Asignación
+Escuela por nombre/slug; grado y curso por nombre/label. Curso exige un grado
+válido y debe pertenecer a ese colegio/grado.
+Roles
+Superadmin puede asignar roles existentes; admin_colegio no puede asignar ni
+actualizar super_admin ni gestionar otro colegio.
+Tipos de documento
+CC, TI, CE, PPT, NIT y PAS.
+Estado
+Valores verdaderos reconocidos: 1, true, si, sí, activo, yes. Otros valores se convierten a
+false.
+Resultado
+Resumen de creados, actualizados, omitidos y errores por fila de datos.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+24
+La importación es parcial por filas: un error no revierte las filas ya guardadas. El procesamiento no está
+envuelto en una transacción global y no se identificó un modo de simulación. Probar primero un archivo
+pequeño, comparar el resumen con la hoja original y conservar una copia de la importación y del respaldo
+previo.
+La contraseña de una fila se utiliza solo para nuevos usuarios. En actualizaciones el servicio no actualiza
+password. Si la contraseña viene vacía al crear, el código utiliza un valor fijo de demostración; por eso debe
+exigirse una contraseña individual en la preparación operativa y revisar la implementación antes de una carga
+real. La creación intenta notificar a usuarios activos.
+El servicio admite algunos alias en español al normalizar filas, pero la detección de encabezados exige los cinco
+nombres canónicos en inglés. Para evitar ambigüedad, emplear la plantilla generada sin renombrar
+encabezados. Los errores numéricos se cuentan desde la primera fila de datos normalizada, no necesariamente
+desde la fila física original de Excel.
+UserImportService incluye email_verified_at en el payload de creación, pero ese atributo no está en fillable de
+User. No debe darse por hecho que queda persistido por asignación masiva; revisar y probar esta
+inconsistencia si se activa verificación de correo. El campo is_active tampoco equivale actualmente a un
+bloqueo de login.
+17 Exportaciones y almacenamiento
+Las descargas Excel se construyen con Laravel Excel y PhpSpreadsheet. Los archivos cargados se
+separan entre contenido privado y marca institucional pública.
+Salida
+Contenido y alcance
+registros_variables_fisicas.xlsx
+Una fila por registro; fecha, colegio, grado, curso, estación, origen, autor,
+identificación, correo, observaciones y variables concatenadas con unidades.
+Exportación de Diario de Campo
+Una fila por respuesta; actividad, estudiante, estado, nota, revisor, retroalimentación,
+pregunta, respuesta y enlace protegido a evidencia.
+Plantilla de usuarios
+Hojas de referencia filtradas por los colegios y roles que puede administrar el actor.
+Presentación Excel
+Encabezado con marca del colegio cuando aplica, escudo, título y metadatos; inicio de
+datos en B8.
+Los exportadores usan FromCollection y obtienen el conjunto completo mediante get(). Un resultado grande
+puede consumir memoria significativamente; no se identificó exportación en cola ni paginación por chunks.
+Aplicar filtros antes de descargar y medir volumen, memoria y duración con datos representativos.
+Objeto
+Ubicación / control
+Límite de aplicación
+Escudo del colegio
+Disco public, schools/shields;
+requiere enlace public/storage
+Imagen hasta 2 MB
+Guía de laboratorio
+Disco local privado; controlador
+autorizado para ver/descargar;
+compatibilidad public
+PDF hasta 10 MB
+Imagen de evento
+Disco local privado; ruta
+/environmental-events/{id}/image
+JPG/JPEG/PNG/WEBP hasta 4 MB
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+25
+Objeto
+Ubicación / control
+Límite de aplicación
+Evidencia de diario
+Disco local privado,
+field-diaries/user-{id}/activity-{id};
+descarga autorizada
+Hasta 5 MB y extensiones permitidas
+Archivos del disco local
+storage/app/private
+No publicar este directorio en el servidor web
+Marca pública
+storage/app/public →
+public/storage
+Accesible por URL pública; no guardar aquí evidencias
+nuevas
+El límite de Nginx es client_max_body_size 50M. PHP configura upload_max_filesize=50M, post_max_size=60M,
+memory_limit=256M y tiempos de 300 segundos. Los límites de formulario, más bajos, siguen aplicando.
+Varias evidencias en una sola petición pueden superar el límite total aunque cada archivo cumpla 5 MB.
+Los enlaces de evidencia exportados no contienen los archivos y exigen autenticación. Su funcionamiento
+depende de APP_URL y de que la persona que los abra conserve permiso. Entregar una hoja de cálculo fuera
+de la plataforma no debe interpretarse como transferencia de autorización al archivo.
+Los controladores eliminan algunos archivos cuando se reemplazan o borran objetos, pero las cascadas de BD
+no ejecutan necesariamente la limpieza de todas las carpetas dependientes. Mantener respaldos y un
+procedimiento de conciliación de referencias antes de limpiar archivos sin uso. No borrar automáticamente por
+antigüedad sin comprobar referencias.
+18 Correo y procesos auxiliares
+El correo transaccional está implementado mediante clases Notification con plantillas Blade/Markdown
+propias.
+Notificación
+Disparador / destinatarios
+Observación
+UserCreatedNotification
+Alta administrativa o creación por
+importación
+Incluye contraseña temporal y rol; no se identificó
+obligación de cambio al primer acceso.
+NewLaboratoryGuideNoti
+fication
+Creación de guía activa; estudiantes
+activos del colegio/grado/curso
+Adjunta PDF si existe y no supera 10 MB; usa redirección
+segura.
+NewFieldDiaryActivityNot
+ification
+Creación de actividad activa;
+estudiantes activos destinatarios
+Enlace a la actividad mediante redirección por rol.
+FieldDiarySubmissionRevi
+ewedNotification
+Revisión o devolución de entrega
+Informa al estudiante; incluye enlace a su Diario de
+Campo.
+ResetPasswordNotificatio
+n
+Solicitud de restablecimiento
+URL con token y correo mediante flujo de password
+broker.
+Las clases usan Queueable, pero no implementan ShouldQueue. Por tanto las llamadas notify y
+Notification::send son síncronas en el código revisado: disponer del servicio queue no las convierte
+automáticamente en trabajos diferidos. Un problema SMTP puede ralentizar o fallar la respuesta tras haberse
+guardado el registro. La importación captura y reporta errores de notificación; otras altas no aplican la misma
+protección.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+26
+Los enlaces /mail/.../redirect reciben identificadores de recursos y resuelven el destino según el usuario
+autenticado. Comprueban colegio, rol y propiedad/vigencia cuando corresponde. Un destinatario que abra el
+enlace sin sesión es enviado a login. Estos enlaces no son un permiso independiente ni una URL pública de
+descarga.
+La notificación de guía/actividad se dispara al crear un objeto activo incluso si su fecha de publicación/inicio es
+futura. La ruta de destino puede bloquear la consulta hasta que llegue la fecha. Las actualizaciones de estos
+objetos no equivalen a reenvíos automáticos en el código inspeccionado.
+Reportes por correo: /reports/mail y /reports/mail/send se declaran con ReportMailController, pero esa clase
+no está en app/Http/Controllers/Admin. Mantener esta función como pendiente; la exportación XLSX sí tiene
+controladores completos.
+routes/console.php solo define el comando de ejemplo inspire. No se encontraron recordatorios de
+mantenimiento, publicación diferida por job ni ingestión automática programada. Si se habilitan colas reales,
+coordinar timeout y retry_after: Compose usa timeout 120, mientras queue.php define retry_after 90 por
+defecto para database/redis; revisar antes de admitir trabajos largos.
+19 Seguridad implementada y medidas
+pendientes
+Esta sección diferencia controles observados de acciones recomendadas. Describe comportamiento
+del código; no sustituye pruebas de penetración ni acredita una revisión exhaustiva de seguridad.
+Área
+Control observado
+Pendiente de verificar o mejorar
+Sesión
+Autenticación Laravel; regeneración
+al login; invalidación y regeneración
+CSRF al logout
+El login solo usa correo y contraseña; no comprueba
+is_active y no define rate limiting propio visible.
+Contraseñas
+Hash y confirmación; cambio de
+perfil exige contraseña actual y
+mínimo 8 caracteres
+Eliminar contraseña predeterminada de importación;
+añadir caducidad/cambio obligatorio o enlace seguro
+de activación.
+Verificación de correo
+Rutas signed/throttle y middleware
+verified declarados
+User no implementa MustVerifyEmail; no afirmar
+bloqueo efectivo de usuarios sin verificar.
+Aislamiento
+Comprobaciones por rol/colegio y
+propiedad en descargas/entregas
+Probar todos los recursos con IDs de otro colegio;
+centralizar reglas para reducir omisiones.
+Archivos
+Nuevo contenido pedagógico en
+local privado,
+MIME/extensión/tamaño y descarga
+autorizada
+Revisar contenido legado en public y limpieza
+consistente de huérfanos.
+Validación
+Form Requests, Rule::exists/unique,
+validación dinámica
+Validar opciones de respuesta contra choices
+permitidos y revisar relaciones cruzadas de colegio.
+Interfaz
+Blade y rutas web con CSRF
+Comprobar cualquier HTML sin escapar, cabeceras del
+servidor y política de recursos externos.
+Infraestructura
+Nginx sirve public; secretos se
+obtienen desde configuración
+TLS, puertos internos, credenciales dedicadas, permisos
+mínimos, backups y actualización de imágenes.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+27
+Área
+Control observado
+Pendiente de verificar o mejorar
+Trazabilidad
+Timestamps, autor y revisor en
+módulos
+No hay auditoría general de cambios ni historial de
+respuestas/revisiones versionado.
+El registro público está habilitado, pero crea el usuario sin rol, colegio ni identificación. El acceso al dashboard
+falla por falta de colegio y no existe un flujo de asignación automático. Antes de publicar la app debe decidirse
+si se mantiene el registro abierto y cómo se aprueba/asigna la cuenta.
+Categorías son globales, mientras variables son del colegio. Los roles docentes comparten acceso al contenido
+y entregas de todo su colegio. Los estudiantes comparten consulta/exportación de registros escolares. Estas
+son decisiones de acceso a validar con la institución, especialmente por las columnas de documento y correo
+presentes en exportaciones.
+No publicar MySQL, Redis o Adminer directamente a Internet. Preparar una configuración de despliegue con
+redes y puertos limitados, credenciales nuevas, HTTPS, APP_DEBUG=false y controles de backup. Esta
+recomendación responde al Compose observado, que publica esos servicios en puertos del host.
+Un cambio en is_active del usuario no revoca actualmente el acceso autenticado ni evita por sí solo un login.
+Para un retiro urgente se requiere un procedimiento administrativo controlado que impida autenticación y
+gestione sesiones; corregir primero esa lógica y validarla. No eliminar al usuario apresuradamente porque las
+cascadas pueden borrar evidencia histórica.
+20 Operación y diagnóstico
+La operación debe conservar código, configuración, base de datos y archivos como una unidad
+recuperable. Los comandos siguientes son puntos de inspección propuestos para una instalación
+validada.
+Revisión
+Acción / evidencia esperada
+Servicios
+docker compose ps y logs de app/nginx/mysql; comprobar reinicios, errores PHP y
+conexiones.
+Salud
+GET /up y /login; además ejecutar un recorrido real autenticado y descarga de prueba.
+Esquema
+php artisan migrate:status; conservar lista antes y después de cada despliegue.
+Disco
+Espacio de volumen MySQL, storage/app/private, storage/app/public y logs. No
+confundir archivos grandes con archivos prescindibles.
+Permisos
+Usuario PHP puede escribir storage y bootstrap/cache; private no está bajo el
+document root.
+Correo
+Transporte configurado, prueba a buzón controlado y revisión de errores sin difundir
+contenidos sensibles.
+Colas
+Si se incorporan jobs: queue:failed, logs y reinicio de workers tras cambio de código.
+Respaldos
+Fecha, checksum, copia externa y prueba de restauración con resultados registrados.
+1. Planificar una ventana y respaldar BD/archivos/configuración antes de cambiar dependencias o esquema.
+ 
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+28
+2. Preparar y probar la nueva revisión en ambiente separado con archivos lock; revisar cambios de migraciones
+ y compatibilidad con los datos existentes.
+3. Entrar en mantenimiento con artisan down y detener procesos que escriban. Desplegar el código y ejecutar
+ composer install y la compilación de recursos reproducible.
+4. Ejecutar migraciones pendientes, limpiar cachés y reconstruir las necesarias. No ejecutar seeders globales.
+ Reiniciar workers si existieran trabajos persistentes.
+5. Validar login, permisos entre colegios, archivos, capturas, diario y exportaciones. Salir de mantenimiento
+ solo si se cumplen los criterios.
+6. Conservar el paquete anterior y un plan de reversión. Volver código sin revisar compatibilidad de
+ migraciones puede fallar; recuperar BD y archivos coherentes cuando sea necesario.
+docker compose ps
+docker compose logs --tail=100 app nginx mysql
+docker compose exec app php artisan migrate:status
+docker compose exec app php artisan optimize:clear
+# Tras validar configuración y resolver rutas incompletas:
+docker compose exec app php artisan config:cache
+docker compose exec app php artisan view:cache
+No habilitar route:cache de forma automática mientras haya un controlador ausente. Tras corregirlo, probar
+route:list y route:cache en staging. El entorno debe seguir sirviendo la nueva carpeta public/build y no
+depender de un servidor Vite de desarrollo para operación normal.
+Síntoma
+Comprobación inicial
+Error 500 al crear
+usuario/guía/actividad
+Revisar transporte SMTP; el objeto puede haberse creado antes del fallo. Confirmar en
+BD antes de repetir para evitar duplicados.
+403 por colegio
+Revisar rol y school_id; para estudiantes revisar también grado/curso y fechas.
+PDF/evidencia 404
+Comprobar ruta persistida y disco local/public; confirmar archivo
+respaldado/restaurado.
+Carga rechazada
+Verificar formato y límite de formulario; después límite total Nginx/PHP y permisos.
+CSS/JS ausentes
+Verificar build, manifest y APP_URL; reconstruir recursos si procede.
+Formulario de categorías falla al
+buscar
+El controlador consulta icon, columna ausente en la migración; registrar y corregir.
+Importación de mediciones no
+continúa
+La pantalla no tiene procesamiento implementado; no es un problema de archivo del
+usuario.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+29
+21 Respaldo y restauración verificable
+No se identificó automatización de backup en el repositorio. Debe incorporarse un procedimiento
+institucional con retención, cifrado, responsables y pruebas de recuperación.
+El conjunto mínimo incluye una exportación consistente de MySQL, storage/app/private, storage/app/public, la
+revisión del código y archivos lock, configuración de despliegue y una copia protegida de .env/APP_KEY. No
+basta con copiar el volumen de MySQL mientras está escribiendo. No compartir dumps ni logs porque
+contienen datos personales.
+1. Definir una carpeta de backup con acceso restringido y fecha/revisión. Verificar espacio libre y confirmar
+ que se apunta al ambiente correcto.
+2. Poner la aplicación en mantenimiento y pausar escritores externos/colas si existen. Tomar una exportación
+ lógica de MySQL y copiar los dos árboles de archivos durante la misma ventana.
+3. Guardar manifiesto de revisión, estado de migraciones, tamaños y checksums. Proteger
+ configuración/secretos mediante el almacenamiento seguro de la organización, separado de la entrega
+pública.
+4. Reactivar la aplicación y comprobar el servicio. Replicar la copia a un destino independiente según la
+ política aprobada.
+5. Restaurar periódicamente en una instancia aislada, con correo real deshabilitado. Comparar conteos,
+ integridad referencial, archivos y recorridos funcionales.
+6. Documentar duración de recuperación, punto de recuperación alcanzado, errores y responsable. Solo una
+ restauración satisfactoria demuestra utilidad del backup.
+Ejemplo de exportación lógica en Docker
+Estos comandos son una plantilla para Bash/WSL y MySQL; ejecutarlos dentro de un procedimiento validado.
+La opción -p solicita la contraseña interactivamente. Sustituir la base si el ambiente usa otro nombre. Guardar
+primero en el contenedor evita que la redirección de una consola de Windows altere la codificación del SQL.
+docker compose exec app php artisan down
+docker compose exec mysql mysqldump -u root -p \
+  --single-transaction --routines --triggers --events \
+  --databases EcoData_db --result-file=/tmp/ecodata.sql
+docker compose cp mysql:/tmp/ecodata.sql ./backup/ecodata.sql
+docker compose exec -T app tar -czf /tmp/ecodata-files.tgz storage/app/private storage/app/public
+docker compose cp app:/tmp/ecodata-files.tgz ./backup/ecodata-files.tgz
+docker compose exec app php artisan up
+Crear ./backup antes de estos comandos. No almacenar el backup dentro de public ni incorporarlo al
+repositorio. La cuenta de backup debe disponer de los privilegios requeridos; en operación regular es
+preferible una cuenta dedicada a utilizar root. Verificar el código de salida, tamaño y capacidad de lectura del
+dump antes de dar por terminada la copia.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+30
+Restauración en ambiente aislado
+Para restaurar, preparar otra copia de código y un .env propio, conservar APP_KEY desde el respaldo protegido
+y elegir un proyecto nuevo, por ejemplo ecodata-restauracion. Verificar primero docker compose -p
+ecodata-restauracion ps -a y docker volume ls --filter
+label=com.docker.compose.project=ecodata-restauracion: si existen recursos, elegir otro nombre. Usar -p en
+todos los comandos de destino y puertos libres distintos de producción. No iniciar con el nombre fijo ecodata
+ni con su volumen. Levantar una instancia vacía con versión compatible, comprobar host/nombre de base
+destino y detener la app receptora. Copiar el dump al contenedor del proyecto aislado y abrir mysql -u root -p;
+ejecutar SOURCE /tmp/ecodata-restore.sql desde el cliente. Un dump con --databases contiene el nombre de
+base: revisarlo antes. Restaurar los documentos en su raíz relativa. No importar sobre datos activos.
+Reponer permisos de storage/bootstrap/cache y public/storage; limpiar cachés. Mantener MAIL_MAILER=log o
+un transporte de pruebas para evitar comunicaciones durante validación. Comparar conteos de colegios,
+usuarios, registros, valores, actividades, entregas y respuestas; verificar una muestra de PDFs, escudos,
+imágenes y evidencias. Finalmente probar accesos negativos entre colegios. El retorno a producción necesita
+un punto de corte y un procedimiento de cambio gestionado, no una importación sobre datos activos.
+22 Estrategia de pruebas y criterios de aceptación
+Las pruebas disponibles no cubren por completo el dominio y parte de la suite conserva referencias a
+una arquitectura anterior. El plan siguiente especifica lo que debería validarse, sin afirmar ejecución de
+cada caso.
+phpunit.xml configura testing, SQLite en memoria, caché/sesión array, correo array y cola sync.
+MailRedirectControllerTest incorpora cuatro pruebas de redirecciones, roles y pertenencia entre colegios.
+Existen además pruebas de ejemplo, autenticación y perfil; varias importan Livewire\Volt\Volt, paquete que no
+aparece en composer.json. User no incorpora HasFactory aunque varias pruebas llaman User::factory().
+ExampleTest espera HTTP 200 en /, pero la ruta actual responde una redirección a login.
+Estas incompatibilidades deben resolverse antes de considerar la suite una garantía. La imagen Docker
+tampoco instala explícitamente pdo_sqlite, requisito del entorno de pruebas definido. Mantener una base de
+pruebas separada; jamás ejecutar RefreshDatabase ni seeders de demostración contra una conexión
+productiva.
+# Dentro de un entorno de pruebas con sus extensiones y dependencias:
+php artisan config:clear
+php artisan test --filter=MailRedirectControllerTest
+php artisan test
+# La salida, fecha y revisión deben adjuntarse al registro de validación.
+Caso
+Resultado esperado
+Login y retiro
+Acceso con credenciales válidas; error con contraseña errónea; verificar y corregir
+bloqueo real por is_active.
+Roles
+Cada perfil ve solo funciones autorizadas; probar URL directa además del menú.
+Dos colegios
+Intentar ver, editar, exportar y descargar IDs del colegio ajeno; exigir denegación
+donde corresponde.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+31
+Caso
+Resultado esperado
+Registros tipados
+Aceptar valores válidos; rechazar vacío, tipo inválido, rango y decimales excesivos.
+Confirmar propiedad al editar como estudiante.
+Transacción
+Una falla al guardar valores no deja cabecera parcial. Medir comportamiento de
+edición concurrente.
+Importación usuarios
+Probar ambos modos, repetidos, documento/correo cruzados, colegio ajeno, rol
+prohibido y fila inválida; verificar el resumen parcial.
+Archivos
+MIME/tamaño límite, acceso anónimo, propietario y otro colegio; coherencia de
+archivo/BD tras reemplazo.
+Guías
+Activa/inactiva, fecha futura, grado/curso y PDF inexistente; correo a buzón
+controlado.
+Diario
+Borrador incompleto; envío requerido; bloqueo enviado/revisado; devolución y
+corrección antes del cierre.
+Edición de actividad
+Preservación de respuestas al modificar; el código actual presenta riesgo de borrado y
+debe corregirse antes de superar el caso.
+Exportaciones
+Coincidencia con filtros y permisos, formato, enlaces a evidencia y consumo de
+memoria con volumen esperado.
+Recuperación
+Restaurar backup aislado y comparar conteos, archivos y recorridos por rol.
+Un registro de aceptación debe contener ID de caso, revisión del código, ambiente, datos ficticios usados,
+pasos, resultado esperado/real, evidencia, responsable y estado. Separar incidencias del producto de
+incompatibilidades del propio arnés de pruebas. Repetir pruebas cuando cambien permisos, migraciones,
+almacenamiento o notificaciones.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+32
+23 Limitaciones priorizadas y plan de corrección
+Estos puntos se derivan de lectura estática del código. Su prioridad se basa en impacto potencial sobre
+datos, acceso y operación; el documento no introduce cambios en la aplicación.
+Prioridad
+Hallazgo y evidencia
+Acción propuesta
+Alta — integridad
+DatabaseSeeder →
+EcoDataDemoSeeder;
+cleanDemoTables trunca dominio,
+usuarios y roles.
+Separar demo de instalación y bloquear ejecución
+accidental con datos reales. Usar seed de roles explícito.
+Alta — integridad
+FieldDiaryActivityController:209
+elimina preguntas; FK de answers
+hace cascade.
+Versionar preguntas o actualizar preservando IDs;
+impedir cambios destructivos cuando existan entregas.
+Alta — acceso
+AuthenticatedSessionController:stor
+e ignora is_active; User no
+implementa MustVerifyEmail.
+Aplicar estados/ratelimit y decidir política de
+verificación; agregar pruebas de bloqueo.
+Alta — alcance
+PhysicalVariableRecordController:bu
+ildQuery permite
+consulta/exportación escolar a
+estudiantes; exportador incluye
+documento/correo.
+Confirmar política institucional y restringir/redactar
+datos si el alcance no es deseado.
+Alta — despliegue
+Compose publica MySQL, Redis y
+Adminer con credenciales de
+desarrollo literales.
+Crear configuración de despliegue, secretos propios y
+exposición mínima antes de publicar.
+Media — función
+incompleta
+ReportMailController referenciado
+en rutas, archivo ausente.
+Implementar y probar o retirar temporalmente
+rutas/enlaces para evitar errores.
+Media — función
+incompleta
+Importación de registros: solo GET
+create, sin procesamiento.
+Etiquetar como no disponible e implementar contrato,
+validación e idempotencia antes de habilitar.
+Media — consistencia
+Registro físico update no persiste
+weather_station_id/source_type
+validados.
+Corregir payload y probar la edición de esos campos.
+Media — autenticación
+Registro abierto crea usuario sin
+rol/colegio; importación puede usar
+clave fija.
+Definir flujo de aprobación/alta, eliminar fallback y usar
+activación segura.
+Media — consultas
+Categorías index busca icon; el
+esquema no define icon.
+Eliminar ese criterio o añadir campo con migración y
+formularios coherentes.
+Media — correo
+Notificaciones síncronas; algunas
+altas pueden fallar después de
+guardar.
+Registrar estado de envío, aislar fallas y usar colas solo
+con contrato de reintento consistente.
+Media —
+entorno/pruebas
+Falta .env.example; cliente
+Redis/extensiones de tests y suite
+Volt no alineados.
+Añadir plantilla sin secretos, validar imagen y actualizar
+suite a controladores Blade.
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+33
+Prioridad
+Hallazgo y evidencia
+Acción propuesta
+Baja — mantenimiento
+Resource de estaciones duplicado;
+zona UTC fija; exportaciones
+completas en memoria.
+Consolidar rutas, decidir zona horaria y medir límites de
+exportación.
+Media — precisión
+Formularios permiten 0-10
+decimales, esquema numérico
+DECIMAL(15,4).
+Limitar operativamente a 4; armonizar
+esquema/validación y probar redondeos.
+La ausencia de ingestión automática, recordatorios programados y auditoría general debe registrarse como
+alcance actual, no como una falla de un componente que el usuario ya pueda operar. El inventario de sensores,
+por sí solo, no controla equipos ni obtiene lecturas.
+Antes de puesta en servicio con datos reales: priorizar preservación de respuestas, bloqueo de cuentas,
+exposición de infraestructura y política de exportación. Después, cerrar las funciones incompletas, normalizar
+correos y compatibilizar pruebas. Cada corrección requiere cambio rastreable, pruebas de regresión y
+actualización de ambos manuales.
+24 Referencias al código y mantenimiento del
+manual
+El repositorio es la evidencia primaria. Las referencias siguientes permiten revisar las afirmaciones sin
+depender de documentación genérica de Laravel.
+Tema
+Archivo de referencia
+Arranque y middleware
+src/bootstrap/app.php:11; src/app/Http/Middleware/EnsureSchoolAssigned.php:11;
+LoadSchoolBranding.php:12
+Rutas y roles
+src/routes/web.php:37; src/routes/auth.php:12;
+src/database/seeders/RolesAndPermissionsSeeder.php:12
+Plataforma
+src/composer.json:9; src/composer.lock; src/package.json; src/compose.yaml:1
+Contenedores
+src/docker/php/Dockerfile:1; src/docker/php/uploads.ini:1;
+src/docker/nginx/default.conf:1
+Configuración
+src/config/app.php; database.php; filesystems.php; session.php; cache.php;
+queue.php; mail.php; permission.php
+Identidad y autenticación
+src/app/Models/User.php:10;
+src/app/Http/Controllers/Auth/AuthenticatedSessionController.php:19;
+RegisteredUserController.php:22
+Diario: edición y respuestas
+src/app/Http/Controllers/Admin/FieldDiaryActivityController.php:183;
+src/app/Http/Controllers/FieldDiarySubmissionController.php:110
+Diario: revisión y exportación
+src/app/Http/Controllers/Admin/FieldDiarySubmissionController.php:113;
+src/app/Exports/FieldDiarySubmissionsExport.php:72
+
+EcoData  |  Manual técnico
+Edición 1.0  ·  Octubre de 2026
+EcoData  ·  Documentación de la aplicación
+34
+Tema
+Archivo de referencia
+Registros y exportación
+src/app/Http/Controllers/Admin/PhysicalVariableRecordController.php:89;
+src/app/Exports/PhysicalVariableRecordsExport.php:72
+Carga Excel
+src/app/Http/Controllers/Admin/UserImportController.php:29;
+src/app/Services/UserImportService.php:16;
+src/app/Http/Requests/Admin/ImportUsersRequest.php:14
+Archivos y guías
+src/app/Http/Controllers/LaboratoryGuideStudentController.php:43;
+FieldDiaryAnswerFileController.php:13; EnvironmentalEventImageController.php:12
+Notificaciones
+src/app/Notifications; src/resources/views/emails;
+src/app/Http/Controllers/MailRedirectController.php:15
+Cascadas y diccionario
+src/database/migrations: 23 archivos versionados; revisar up() y down() antes de
+cambiar esquema.
+Datos demo
+src/database/seeders/DatabaseSeeder.php:9; EcoDataDemoSeeder.php:29 y 56;
+truncado en línea 97
+Pruebas
+src/phpunit.xml:1; src/tests/Feature/MailRedirectControllerTest.php:17;
+ProfileTest.php:7; src/tests/Feature/Auth; src/tests/Feature/ExampleTest.php:13
+Al mantener la documentación, registrar versión del manual, revisión Git, fecha, autor y cambios funcionales.
+Actualizar matriz de roles, rutas, diccionario, procedimientos y capturas cuando el código modifique la
+experiencia o los controles. Las referencias con línea corresponden a la copia revisada y pueden desplazarse
+tras cambios.
+Las imágenes del manual se reconstruyen desde plantillas Blade y datos ficticios. Ayudan a relacionar interfaz y
+código, pero no son evidencia de conectividad SMTP, hardware, producción o pruebas de carga. Conservar
+este origen en los pies de figura y no sustituirlo por afirmaciones de ejecución no verificadas.

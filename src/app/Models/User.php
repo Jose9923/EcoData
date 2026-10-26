@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetPasswordNotification;
+use App\Notifications\UserCreatedNotification;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Password;
 use Spatie\Permission\Traits\HasRoles;
-use App\Notifications\ResetPasswordNotification;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
-    use Notifiable, HasRoles;
+    use HasFactory, HasRoles, Notifiable;
 
     protected $fillable = [
         'name',
@@ -80,6 +84,16 @@ class User extends Authenticatable
     public function reviewedFieldDiarySubmissions()
     {
         return $this->hasMany(FieldDiarySubmission::class, 'reviewed_by');
+    }
+
+    public function sendAccountInvitation(?string $roleName = null): string
+    {
+        return Password::broker()->sendResetLink(
+            ['email' => $this->email, 'is_active' => true],
+            function (User $user, string $token) use ($roleName): void {
+                $user->notify(new UserCreatedNotification($token, $roleName));
+            }
+        );
     }
 
     public function sendPasswordResetNotification($token): void

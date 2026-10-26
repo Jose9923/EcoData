@@ -24,11 +24,13 @@
                 class="btn btn-outline-light rounded-4 px-4">
                     Volver
                 </a>
+                @can('update', $record)
                 <a href="{{ route('admin.physical-variable-records.edit', $record->id) }}"
                 class="btn text-white rounded-4 px-4"
                 style="background-color: var(--school-primary);">
                     Editar
                 </a>
+                @endcan
             </div>
         </div>
     </section>
@@ -42,8 +44,14 @@
                     <div><strong>Colegio:</strong> {{ $record->school?->name ?? '—' }}</div>
                     <div><strong>Grado:</strong> {{ $gradeLabel ?: '—' }}</div>
                     <div><strong>Curso:</strong> {{ $courseLabel ?: '—' }}</div>
+                    @if(! auth()->user()->hasRole('estudiante'))
                     <div><strong>Usuario:</strong> {{ $record->user?->name ?? '—' }}</div>
                     <div><strong>Correo:</strong> {{ $record->user?->email ?? '—' }}</div>
+                    @else
+                    <div><strong>Autoría:</strong> {{ (int) $record->user_id === (int) auth()->id() ? 'Mi registro' : 'Participante' }}</div>
+                    @endif
+                    <div><strong>Estación:</strong> {{ $record->weatherStation?->name ?? 'Sin estación' }}</div>
+                    <div><strong>Origen:</strong> {{ $sourceTypes[$record->source_type] ?? $record->source_type }}</div>
                     <div><strong>Fecha:</strong> {{ optional($record->recorded_at)->format('d/m/Y H:i') }}</div>
                 </div>
             </div>
@@ -81,7 +89,7 @@
                     } elseif ($variable?->data_type === 'date' && $resolved) {
                         $resolved = \Illuminate\Support\Carbon::parse($resolved)->format('Y-m-d');
                     } elseif (in_array($variable?->data_type, ['integer', 'decimal'], true) && $resolved !== null) {
-                        $resolved = number_format((float) $resolved, $variable->decimals ?? 0, '.', '');
+                        $resolved = \App\Support\MeasurementDecimal::format($resolved, $variable->decimals ?? 0);
                     }
 
                     if ($resolved !== null && $resolved !== '—' && $variable?->unit) {
@@ -117,28 +125,6 @@
                     </div>
                 </div>
 
-                <div class="col-12 col-md-6">
-                    <div class="border rounded-4 p-3 h-100">
-                        <div class="text-muted small fw-semibold mb-1">Estación meteorológica</div>
-                        <div class="fs-5 fw-semibold">
-                            {{ $record->weatherStation?->name ?? 'Sin estación asociada' }}
-                        </div>
-                        @if($record->weatherStation?->code)
-                            <div class="text-muted small mt-1">
-                                Código: {{ $record->weatherStation->code }}
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="col-12 col-md-6">
-                    <div class="border rounded-4 p-3 h-100">
-                        <div class="text-muted small fw-semibold mb-1">Origen del dato</div>
-                        <div class="fs-5 fw-semibold">
-                            {{ $sourceTypes[$record->source_type] ?? 'Manual' }}
-                        </div>
-                    </div>
-                </div>
             @empty
                 <div class="col-12">
                     <div class="text-secondary">Este registro no tiene valores asociados.</div>
@@ -146,5 +132,8 @@
             @endforelse
         </div>
     </section>
+    @if($canViewHistory)
+        @include('admin.physical-variable-records.partials.history')
+    @endif
 </div>
 @endsection

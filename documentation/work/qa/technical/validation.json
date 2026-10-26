@@ -1,0 +1,182 @@
+{
+  "pdf": "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\output\\pdf\\EcoData_Manual_Tecnico.pdf",
+  "pages": 34,
+  "bytes": 464246,
+  "characters": 76517,
+  "suspicious_text": [],
+  "outside_page": [],
+  "page_stats": [
+    {
+      "page": 1,
+      "chars": 329,
+      "images": 1
+    },
+    {
+      "page": 2,
+      "chars": 1167,
+      "images": 0
+    },
+    {
+      "page": 3,
+      "chars": 1876,
+      "images": 0
+    },
+    {
+      "page": 4,
+      "chars": 1683,
+      "images": 0
+    },
+    {
+      "page": 5,
+      "chars": 2119,
+      "images": 0
+    },
+    {
+      "page": 6,
+      "chars": 1519,
+      "images": 0
+    },
+    {
+      "page": 7,
+      "chars": 2324,
+      "images": 0
+    },
+    {
+      "page": 8,
+      "chars": 3097,
+      "images": 0
+    },
+    {
+      "page": 9,
+      "chars": 2209,
+      "images": 0
+    },
+    {
+      "page": 10,
+      "chars": 1520,
+      "images": 0
+    },
+    {
+      "page": 11,
+      "chars": 2456,
+      "images": 0
+    },
+    {
+      "page": 12,
+      "chars": 2506,
+      "images": 0
+    },
+    {
+      "page": 13,
+      "chars": 2777,
+      "images": 0
+    },
+    {
+      "page": 14,
+      "chars": 2411,
+      "images": 0
+    },
+    {
+      "page": 15,
+      "chars": 2651,
+      "images": 0
+    },
+    {
+      "page": 16,
+      "chars": 1531,
+      "images": 0
+    },
+    {
+      "page": 17,
+      "chars": 1632,
+      "images": 0
+    },
+    {
+      "page": 18,
+      "chars": 2013,
+      "images": 0
+    },
+    {
+      "page": 19,
+      "chars": 2047,
+      "images": 0
+    },
+    {
+      "page": 20,
+      "chars": 2620,
+      "images": 0
+    },
+    {
+      "page": 21,
+      "chars": 2206,
+      "images": 0
+    },
+    {
+      "page": 22,
+      "chars": 1608,
+      "images": 1
+    },
+    {
+      "page": 23,
+      "chars": 2540,
+      "images": 0
+    },
+    {
+      "page": 24,
+      "chars": 2937,
+      "images": 0
+    },
+    {
+      "page": 25,
+      "chars": 2732,
+      "images": 0
+    },
+    {
+      "page": 26,
+      "chars": 2978,
+      "images": 0
+    },
+    {
+      "page": 27,
+      "chars": 2756,
+      "images": 0
+    },
+    {
+      "page": 28,
+      "chars": 2320,
+      "images": 0
+    },
+    {
+      "page": 29,
+      "chars": 2795,
+      "images": 0
+    },
+    {
+      "page": 30,
+      "chars": 3191,
+      "images": 0
+    },
+    {
+      "page": 31,
+      "chars": 1537,
+      "images": 0
+    },
+    {
+      "page": 32,
+      "chars": 2561,
+      "images": 0
+    },
+    {
+      "page": 33,
+      "chars": 2317,
+      "images": 0
+    },
+    {
+      "page": 34,
+      "chars": 1736,
+      "images": 0
+    }
+  ],
+  "rendered_pages": 34,
+  "outline_entries": 24
+}

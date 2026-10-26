@@ -3,17 +3,30 @@
 namespace App\Notifications;
 
 use App\Models\FieldDiaryActivity;
-use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 
-class NewFieldDiaryActivityNotification extends Notification
+class NewFieldDiaryActivityNotification extends QueuedMailNotification
 {
-    use Queueable;
-
     public function __construct(
         protected FieldDiaryActivity $activity
     ) {
+        $this->afterCommit();
+    }
+
+    public function shouldSend(object $notifiable, string $channel): bool
+    {
+        $activity = $this->activity->fresh();
+        $notifiable->refresh()->unsetRelation('roles');
+        if (! $activity) {
+            return false;
+        }
+        $this->activity = $activity;
+
+        return $notifiable->is_active && $notifiable->hasVerifiedEmail()
+            && $notifiable->hasRole('estudiante') && $activity->is_active
+            && (int) $notifiable->school_id === (int) $activity->school_id
+            && (! $activity->grade_id || (int) $activity->grade_id === (int) $notifiable->grade_id)
+            && (! $activity->course_id || (int) $activity->course_id === (int) $notifiable->course_id);
     }
 
     public function via(object $notifiable): array

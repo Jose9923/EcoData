@@ -11,16 +11,14 @@ use App\Models\PhysicalVariableCategory;
 use App\Models\PhysicalVariableRecord;
 use App\Models\School;
 use App\Models\User;
+use App\Models\WeatherStation;
+use App\Policies\PhysicalVariableRecordPolicy;
+use App\Services\MeasurementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Models\WeatherStation;
-
 
 class PhysicalVariableRecordController extends Controller
 {
@@ -41,6 +39,7 @@ class PhysicalVariableRecordController extends Controller
                 'weatherStation',
                 'user',
                 'values.variable.category',
+                'weatherStation',
             ])
             ->withCount('values')
             ->paginate($filters['per_page'])
@@ -64,8 +63,8 @@ class PhysicalVariableRecordController extends Controller
         $authUser = $request->user();
 
         $selectedSchoolId = $this->effectiveSchoolId($request, $request->integer('school_id') ?: null);
-        $selectedGradeId = $request->integer('grade_id') ?: null;
-        $selectedCourseId = $request->integer('course_id') ?: null;
+        $selectedGradeId = $authUser->hasRole('estudiante') ? $authUser->grade_id : ($request->integer('grade_id') ?: null);
+        $selectedCourseId = $authUser->hasRole('estudiante') ? $authUser->course_id : ($request->integer('course_id') ?: null);
         $selectedCategoryId = $request->integer('category_id') ?: null;
 
         return view('admin.physical-variable-records.create', [
@@ -79,81 +78,18 @@ class PhysicalVariableRecordController extends Controller
             'selectedCourseId' => $selectedCourseId,
             'selectedCategoryId' => $selectedCategoryId,
             'recordedAt' => now()->format('Y-m-d\TH:i'),
-            'weatherStations' => $this->visibleWeatherStations($authUser, $selectedSchoolId),
+            'weatherStations' => $this->visibleWeatherStations($authUser, $authUser->hasRole('super_admin') ? null : $selectedSchoolId),
             'sourceTypes' => $this->sourceTypes(),
             'selectedWeatherStationId' => $request->integer('weather_station_id') ?: null,
             'selectedSourceType' => $request->input('source_type', 'manual'),
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, MeasurementService $measurements): RedirectResponse
     {
-        $authUser = $request->user();
+        $measurements->save($request->user(), $request->all());
 
-        $schoolId = $this->effectiveSchoolId($request, $request->integer('school_id') ?: null);
-        $categoryId = $request->integer('category_id') ?: null;
-
-        $request->merge([
-            'school_id' => $schoolId,
-        ]);
-
-        $variables = $this->visibleVariables($schoolId, $categoryId, withCategory: true);
-
-        $validator = $this->makeDynamicValidator($request, $variables, $authUser);
-        $validated = $validator->validate();
-
-        $normalizedValues = $this->normalizeValuesForSave($variables, $request->input('values', []));
-        $filledValues = array_filter($normalizedValues, fn ($item) => $item !== null);
-
-        if (count($filledValues) === 0) {
-            return back()
-                ->withErrors(['values' => 'Debes registrar al menos una variable física.'])
-                ->withInput();
-        }
-
-        $precisionError = $this->validatePrecision($variables, $normalizedValues);
-
-        if ($precisionError !== null) {
-            return back()
-                ->withErrors($precisionError)
-                ->withInput();
-        }
-
-        $rangeError = $this->validateRanges($variables, $normalizedValues);
-
-        if ($rangeError !== null) {
-            return back()
-                ->withErrors($rangeError)
-                ->withInput();
-        }
-
-        DB::transaction(function () use ($validated, $filledValues, $authUser) {
-            $record = PhysicalVariableRecord::create([
-                'school_id' => $validated['school_id'],
-                'grade_id' => $validated['grade_id'] ?: null,
-                'course_id' => $validated['course_id'] ?: null,
-                'weather_station_id' => $validated['weather_station_id'] ?: null,
-                'source_type' => $validated['source_type'] ?: 'manual',
-                'user_id' => $authUser->id,
-                'recorded_at' => $validated['recorded_at'],
-                'observations' => filled($validated['observations'] ?? null)
-                    ? trim($validated['observations'])
-                    : null,
-            ]);
-
-            foreach ($filledValues as $variableId => $payload) {
-                $record->values()->create([
-                    'physical_variable_id' => $variableId,
-                    'value_numeric' => $payload['value_numeric'],
-                    'value_text' => $payload['value_text'],
-                    'value_boolean' => $payload['value_boolean'],
-                    'value_date' => $payload['value_date'],
-                ]);
-            }
-        });
-
-        return redirect()
-            ->route('admin.physical-variable-records.index')
+        return redirect()->route('admin.physical-variable-records.index')
             ->with('success', 'Registro físico guardado correctamente.');
     }
 
@@ -168,12 +104,22 @@ class PhysicalVariableRecordController extends Controller
                 'course',
                 'user',
                 'values.variable.category',
+                'weatherStation',
             ])
             ->findOrFail($physical_variable_record);
 
         $this->authorizeRecordView($authUser, $record);
 
-        return view('admin.physical-variable-records.show', compact('record'));
+        $canViewHistory = (new PhysicalVariableRecordPolicy)->viewHistory($authUser, $record);
+        if ($canViewHistory) {
+            $record->load('audits.user');
+        }
+
+        return view('admin.physical-variable-records.show', [
+            'record' => $record,
+            'canViewHistory' => $canViewHistory,
+            'sourceTypes' => $this->sourceTypes(),
+        ]);
     }
 
     public function edit(Request $request, int $physical_variable_record): View
@@ -186,9 +132,7 @@ class PhysicalVariableRecordController extends Controller
 
         $this->authorizeRecordEdit($authUser, $record);
 
-        $selectedSchoolId = $authUser->hasRole('super_admin')
-            ? old('school_id', $request->integer('school_id') ?: $record->school_id)
-            : $authUser->school_id;
+        $selectedSchoolId = $record->school_id;
 
         $selectedGradeId = old('grade_id', $request->integer('grade_id') ?: $record->grade_id);
         $selectedCourseId = old('course_id', $request->integer('course_id') ?: $record->course_id);
@@ -201,8 +145,9 @@ class PhysicalVariableRecordController extends Controller
 
         $variables = PhysicalVariable::query()
             ->where('school_id', $selectedSchoolId)
-            ->where('is_active', true)
-            ->whereIn('id', $existingVariableIds)
+            ->where(function ($query) use ($existingVariableIds) {
+                $query->where('is_active', true)->orWhereIn('id', $existingVariableIds);
+            })
             ->with('category')
             ->orderBy('category_id')
             ->orderBy('name')
@@ -220,95 +165,19 @@ class PhysicalVariableRecordController extends Controller
             'selectedCourseId' => $selectedCourseId,
             'selectedCategoryId' => $selectedCategoryId,
             'recordedAt' => optional($record->recorded_at)->format('Y-m-d\TH:i'),
-            'weatherStations' => $this->visibleWeatherStations($authUser, $selectedSchoolId),
+            'weatherStations' => $this->visibleWeatherStations($authUser, $selectedSchoolId)->when($record->weatherStation && ! $record->weatherStation->is_active, fn ($stations) => $stations->push($record->weatherStation)),
             'sourceTypes' => $this->sourceTypes(),
-            'selectedWeatherStationId' => $request->integer('weather_station_id') ?: null,
-            'selectedSourceType' => $request->input('source_type', 'manual'),
+            'selectedWeatherStationId' => old('weather_station_id', $record->weather_station_id),
+            'selectedSourceType' => old('source_type', $record->source_type),
         ]);
     }
 
-    public function update(Request $request, int $physical_variable_record): RedirectResponse
+    public function update(Request $request, int $physical_variable_record, MeasurementService $measurements): RedirectResponse
     {
-        $authUser = $request->user();
+        $record = PhysicalVariableRecord::findOrFail($physical_variable_record);
+        $measurements->save($request->user(), $request->all(), $record);
 
-        $record = PhysicalVariableRecord::query()
-            ->with('values')
-            ->findOrFail($physical_variable_record);
-
-        $this->authorizeRecordEdit($authUser, $record);
-
-        $schoolId = $this->effectiveSchoolId($request, $request->integer('school_id') ?: null);
-        $categoryId = $request->integer('category_id') ?: null;
-
-        $request->merge([
-            'school_id' => $schoolId,
-        ]);
-
-        $variables = $this->visibleVariables($schoolId, $categoryId, withCategory: true);
-
-        $validator = $this->makeDynamicValidator($request, $variables, $authUser);
-        $validated = $validator->validate();
-
-        $normalizedValues = $this->normalizeValuesForSave($variables, $request->input('values', []));
-        $filledValues = array_filter($normalizedValues, fn ($item) => $item !== null);
-
-        if (count($filledValues) === 0) {
-            return back()
-                ->withErrors(['values' => 'Debes registrar al menos una variable física.'])
-                ->withInput();
-        }
-
-        $precisionError = $this->validatePrecision($variables, $normalizedValues);
-
-        if ($precisionError !== null) {
-            return back()
-                ->withErrors($precisionError)
-                ->withInput();
-        }
-
-        $rangeError = $this->validateRanges($variables, $normalizedValues);
-
-        if ($rangeError !== null) {
-            return back()
-                ->withErrors($rangeError)
-                ->withInput();
-        }
-
-        DB::transaction(function () use ($record, $validated, $filledValues, $authUser) {
-            $record->update([
-                'school_id' => $authUser->hasRole('estudiante')
-                    ? $record->school_id
-                    : $validated['school_id'],
-
-                'grade_id' => $authUser->hasRole('estudiante')
-                    ? $record->grade_id
-                    : ($validated['grade_id'] ?: null),
-
-                'course_id' => $authUser->hasRole('estudiante')
-                    ? $record->course_id
-                    : ($validated['course_id'] ?: null),
-
-                'recorded_at' => $validated['recorded_at'],
-                'observations' => filled($validated['observations'] ?? null)
-                    ? trim($validated['observations'])
-                    : null,
-            ]);
-
-            $record->values()->delete();
-
-            foreach ($filledValues as $variableId => $payload) {
-                $record->values()->create([
-                    'physical_variable_id' => $variableId,
-                    'value_numeric' => $payload['value_numeric'],
-                    'value_text' => $payload['value_text'],
-                    'value_boolean' => $payload['value_boolean'],
-                    'value_date' => $payload['value_date'],
-                ]);
-            }
-        });
-
-        return redirect()
-            ->route('admin.physical-variable-records.show', $record->id)
+        return redirect()->route('admin.physical-variable-records.show', $record->id)
             ->with('success', 'Registro físico actualizado correctamente.');
     }
 
@@ -332,7 +201,8 @@ class PhysicalVariableRecordController extends Controller
                 $query,
                 $school,
                 $user->name,
-                null
+                null,
+                ! $user->hasRole('estudiante')
             ),
             'registros_variables_fisicas.xlsx'
         );
@@ -412,25 +282,17 @@ class PhysicalVariableRecordController extends Controller
 
     protected function buildQuery(array $filters, User $authUser)
     {
-        return PhysicalVariableRecord::query()
-            ->when(! $authUser->hasRole('super_admin'), function ($query) use ($authUser) {
-                $query->where('school_id', $authUser->school_id);
-            })
-            ->when($filters['search'], function ($query) use ($filters) {
+        return PhysicalVariableRecord::query()->visibleTo($authUser)
+            ->when($filters['search'], function ($query) use ($filters, $authUser) {
                 $search = $filters['search'];
 
-                $query->where(function ($subQuery) use ($search) {
-                    $subQuery->where('observations', 'like', '%' . $search . '%')
-                        ->orWhereHas('school', fn ($q) => $q->where('name', 'like', '%' . $search . '%'))
-                        ->orWhereHas('grade', fn ($q) => $q->where('name', 'like', '%' . $search . '%')->orWhere('label', 'like', '%' . $search . '%'))
-                        ->orWhereHas('course', fn ($q) => $q->where('name', 'like', '%' . $search . '%')->orWhere('label', 'like', '%' . $search . '%'))
-                        ->orWhereHas('user', function ($q) use ($search) {
-                            $q->where('name', 'like', '%' . $search . '%')
-                                ->orWhere('email', 'like', '%' . $search . '%')
-                                ->orWhere('document_type', 'like', '%' . $search . '%')
-                                ->orWhere('document_number', 'like', '%' . $search . '%');
-                        })
-                        ->orWhereHas('values.variable', fn ($q) => $q->where('name', 'like', '%' . $search . '%'));
+                $query->where(function ($subQuery) use ($search, $authUser) {
+                    $subQuery->where('observations', 'like', '%'.$search.'%')
+                        ->orWhereHas('school', fn ($q) => $q->where('name', 'like', '%'.$search.'%'))
+                        ->orWhereHas('grade', fn ($q) => $q->where('name', 'like', '%'.$search.'%')->orWhere('label', 'like', '%'.$search.'%'))
+                        ->orWhereHas('course', fn ($q) => $q->where('name', 'like', '%'.$search.'%')->orWhere('label', 'like', '%'.$search.'%'))
+                        ->when(! $authUser->hasRole('estudiante'), fn ($q) => $q->orWhereHas('user', fn ($author) => $author->where('name', 'like', '%'.$search.'%')))
+                        ->orWhereHas('values.variable', fn ($q) => $q->where('name', 'like', '%'.$search.'%'));
                 });
             })
             ->when($filters['school_id'], fn ($q) => $q->where('school_id', $filters['school_id']))
@@ -447,219 +309,6 @@ class PhysicalVariableRecordController extends Controller
             ->when($filters['weather_station_id'], fn ($q) => $q->where('weather_station_id', $filters['weather_station_id']))
             ->when($filters['source_type'], fn ($q) => $q->where('source_type', $filters['source_type']))
             ->latest('recorded_at');
-    }
-
-    protected function makeDynamicValidator(Request $request, $variables, User $authUser)
-    {
-        $schoolId = $this->effectiveSchoolId($request, $request->integer('school_id') ?: null);
-
-        $rules = [
-            'school_id' => [
-                'required',
-                'integer',
-                $authUser->hasRole('super_admin')
-                    ? Rule::exists('schools', 'id')->where(fn ($query) => $query->where('is_active', true))
-                    : Rule::in([(int) $authUser->school_id]),
-            ],
-            'grade_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('grades', 'id')->where(function ($query) use ($schoolId) {
-                    $query->where('school_id', $schoolId)
-                        ->where('is_active', true);
-                }),
-            ],
-            'course_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('courses', 'id')->where(function ($query) use ($schoolId, $request) {
-                    $query->where('school_id', $schoolId)
-                        ->where('is_active', true);
-
-                    if ($request->filled('grade_id')) {
-                        $query->where('grade_id', $request->integer('grade_id'));
-                    }
-                }),
-            ],
-            'weather_station_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('weather_stations', 'id')->where(function ($query) use ($schoolId) {
-                    $query->where('school_id', $schoolId)
-                        ->where('is_active', true);
-                }),
-            ],
-            'source_type' => ['required', Rule::in(array_keys($this->sourceTypes()))],
-            'category_id' => ['nullable', 'integer', Rule::exists('physical_variable_categories', 'id')->where(fn ($query) => $query->where('is_active', true))],
-            'recorded_at' => ['required', 'date'],
-            'observations' => ['nullable', 'string'],
-        ];
-
-        $attributes = [
-            'school_id' => 'colegio',
-            'grade_id' => 'grado',
-            'course_id' => 'curso',
-            'category_id' => 'categoría',
-            'recorded_at' => 'fecha y hora',
-            'observations' => 'observaciones',
-            'weather_station_id' => 'estación meteorológica',
-            'source_type' => 'tipo de fuente',
-        ];
-
-        foreach ($variables as $variable) {
-            $key = 'values.' . $variable->id;
-
-            $rules[$key] = match ($variable->data_type) {
-                'integer' => ['nullable', 'integer'],
-                'decimal' => ['nullable', 'numeric'],
-                'text' => ['nullable', 'string'],
-                'boolean' => ['nullable', 'boolean'],
-                'date' => ['nullable', 'date'],
-                default => ['nullable'],
-            };
-
-            $attributes[$key] = $variable->name;
-        }
-
-        $messages = [
-            'school_id.required' => 'Debes seleccionar un colegio.',
-            'school_id.exists' => 'El colegio seleccionado no existe o está inactivo.',
-            'school_id.in' => 'No puedes gestionar registros físicos de un colegio diferente al tuyo.',
-            'grade_id.exists' => 'El grado seleccionado no pertenece al colegio indicado o está inactivo.',
-            'course_id.exists' => 'El curso seleccionado no pertenece al colegio o grado indicado, o está inactivo.',
-            'category_id.exists' => 'La categoría seleccionada no existe o está inactiva.',
-            'recorded_at.required' => 'Debes indicar la fecha y hora del registro.',
-            'recorded_at.date' => 'La fecha y hora del registro no es válida.',
-            'weather_station_id.exists' => 'La estación meteorológica seleccionada no existe o está inactiva.',
-            'source_type.in' => 'El tipo de fuente seleccionado no es válido.',
-            'source_type.required' => 'Debes seleccionar el origen del dato.',
-        ];
-
-        $validator = Validator::make($request->all(), $rules, $messages);
-        $validator->setAttributeNames($attributes);
-
-        return $validator;
-    }
-
-    protected function normalizeValuesForSave($variables, array $values): array
-    {
-        $normalized = [];
-
-        foreach ($variables as $variable) {
-            $raw = $values[$variable->id] ?? null;
-
-            if ($this->isEmptyRawValue($raw, $variable->data_type)) {
-                $normalized[$variable->id] = null;
-                continue;
-            }
-
-            $normalized[$variable->id] = match ($variable->data_type) {
-                'integer', 'decimal' => [
-                    'value_numeric' => (float) (is_string($raw) ? str_replace(',', '.', $raw) : $raw),
-                    'value_text' => null,
-                    'value_boolean' => null,
-                    'value_date' => null,
-                ],
-                'text' => [
-                    'value_numeric' => null,
-                    'value_text' => trim((string) $raw),
-                    'value_boolean' => null,
-                    'value_date' => null,
-                ],
-                'boolean' => [
-                    'value_numeric' => null,
-                    'value_text' => null,
-                    'value_boolean' => filter_var($raw, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
-                    'value_date' => null,
-                ],
-                'date' => [
-                    'value_numeric' => null,
-                    'value_text' => null,
-                    'value_boolean' => null,
-                    'value_date' => $raw,
-                ],
-                default => null,
-            };
-        }
-
-        return $normalized;
-    }
-
-    protected function validateRanges($variables, array $normalizedValues): ?array
-    {
-        foreach ($variables as $variable) {
-            $payload = $normalizedValues[$variable->id] ?? null;
-
-            if ($payload === null) {
-                continue;
-            }
-
-            if (! in_array($variable->data_type, ['integer', 'decimal'], true)) {
-                continue;
-            }
-
-            $numeric = $payload['value_numeric'];
-
-            if ($variable->min_value !== null && $numeric < (float) $variable->min_value) {
-                return ['values.' . $variable->id => "El valor de {$variable->name} no puede ser menor que {$variable->min_value}."];
-            }
-
-            if ($variable->max_value !== null && $numeric > (float) $variable->max_value) {
-                return ['values.' . $variable->id => "El valor de {$variable->name} no puede ser mayor que {$variable->max_value}."];
-            }
-        }
-
-        return null;
-    }
-
-    protected function validatePrecision($variables, array $normalizedValues): ?array
-    {
-        foreach ($variables as $variable) {
-            $payload = $normalizedValues[$variable->id] ?? null;
-
-            if ($payload === null) {
-                continue;
-            }
-
-            if ($variable->data_type !== 'decimal') {
-                continue;
-            }
-
-            $value = $payload['value_numeric'];
-
-            if ($value === null) {
-                continue;
-            }
-
-            $allowedDecimals = (int) ($variable->decimals ?? 0);
-
-            $stringValue = rtrim(rtrim((string) $value, '0'), '.');
-
-            if (str_contains($stringValue, '.')) {
-                $actualDecimals = strlen(substr(strrchr($stringValue, '.'), 1));
-
-                if ($actualDecimals > $allowedDecimals) {
-                    return [
-                        'values.' . $variable->id => "El valor de {$variable->name} solo permite {$allowedDecimals} decimales.",
-                    ];
-                }
-            }
-        }
-
-        return null;
-    }
-
-    protected function isEmptyRawValue(mixed $raw, string $dataType): bool
-    {
-        if ($dataType === 'boolean') {
-            return $raw === null || $raw === '';
-        }
-
-        if ($dataType === 'text') {
-            return trim((string) $raw) === '';
-        }
-
-        return $raw === null || $raw === '';
     }
 
     private function visibleSchools(User $authUser)
@@ -724,21 +373,6 @@ class PhysicalVariableRecordController extends Controller
         return $requestedSchoolId;
     }
 
-    private function authorizeSchoolScope(User $authUser, ?int $schoolId): void
-    {
-        if ($authUser->hasRole('super_admin')) {
-            return;
-        }
-
-        abort_if(! $authUser->school_id, 403, 'Tu usuario no tiene un colegio asignado.');
-
-        abort_if(
-            (int) $schoolId !== (int) $authUser->school_id,
-            403,
-            'No tienes autorización para gestionar registros físicos de otro colegio.'
-        );
-    }
-
     private function visibleWeatherStations(User $authUser, ?int $schoolId = null)
     {
         return WeatherStation::query()
@@ -760,19 +394,11 @@ class PhysicalVariableRecordController extends Controller
 
     private function authorizeRecordView(User $authUser, PhysicalVariableRecord $record): void
     {
-        $this->authorizeSchoolScope($authUser, $record->school_id);
+        abort_unless((new PhysicalVariableRecordPolicy)->view($authUser, $record), 403);
     }
 
     private function authorizeRecordEdit(User $authUser, PhysicalVariableRecord $record): void
     {
-        $this->authorizeSchoolScope($authUser, $record->school_id);
-
-        if ($authUser->hasRole('estudiante')) {
-            abort_if(
-                (int) $record->user_id !== (int) $authUser->id,
-                403,
-                'No tienes autorización para editar registros físicos de otro usuario.'
-            );
-        }
+        abort_unless((new PhysicalVariableRecordPolicy)->update($authUser, $record), 403);
     }
 }

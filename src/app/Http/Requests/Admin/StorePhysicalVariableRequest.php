@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Support\MeasurementDecimal;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -53,7 +54,7 @@ class StorePhysicalVariableRequest extends FormRequest
                     ->where(fn ($query) => $query->where('school_id', $effectiveSchoolId)),
             ],
 
-            'unit' => ['nullable', 'string', 'max:255'],
+            'unit' => ['nullable', 'string', 'max:50'],
 
             'data_type' => [
                 'required',
@@ -76,7 +77,7 @@ class StorePhysicalVariableRequest extends FormRequest
                 'nullable',
                 'integer',
                 'min:0',
-                'max:10',
+                'max:4',
             ],
 
             'description' => ['nullable', 'string'],
@@ -88,37 +89,30 @@ class StorePhysicalVariableRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-            $dataType = $this->input('data_type');
-
-            $minValue = $this->input('min_value');
-            $maxValue = $this->input('max_value');
-
-            if (in_array($dataType, ['text', 'boolean', 'date'], true)) {
+            $type = $this->input('data_type');
+            if (! in_array($type, ['decimal', 'integer'], true)) {
                 return;
             }
-
-            if ($minValue !== null && $minValue !== '' && $maxValue !== null && $maxValue !== '') {
-                if ((float) $minValue > (float) $maxValue) {
-                    $validator->errors()->add('min_value', 'El valor mínimo no puede ser mayor que el valor máximo.');
+            $precision = $type === 'integer' ? 0 : min(4, max(0, (int) $this->input('decimals')));
+            $bounds = [];
+            foreach (['min_value', 'max_value'] as $key) {
+                if ($this->input($key) === null || $this->input($key) === '') {
+                    continue;
+                }
+                try {
+                    $bounds[$key] = MeasurementDecimal::normalize($this->input($key), $precision);
+                } catch (\InvalidArgumentException $error) {
+                    $validator->errors()->add($key, $error->getMessage());
                 }
             }
-
-            if ($dataType === 'integer') {
-                if ($minValue !== null && $minValue !== '' && floor((float) $minValue) != (float) $minValue) {
-                    $validator->errors()->add('min_value', 'El valor mínimo debe ser un número entero cuando el tipo de dato es entero.');
-                }
-
-                if ($maxValue !== null && $maxValue !== '' && floor((float) $maxValue) != (float) $maxValue) {
-                    $validator->errors()->add('max_value', 'El valor máximo debe ser un número entero cuando el tipo de dato es entero.');
-                }
-
-                if ((int) $this->input('decimals', 0) !== 0) {
-                    $validator->errors()->add('decimals', 'Las variables enteras no deben tener decimales.');
-                }
+            if (count($bounds) === 2 && MeasurementDecimal::compare($bounds['min_value'], $bounds['max_value']) > 0) {
+                $validator->errors()->add('min_value', 'El mínimo no puede ser mayor que el máximo.');
             }
-
-            if ($dataType === 'decimal' && $this->input('decimals') === null) {
-                $validator->errors()->add('decimals', 'Debes indicar la cantidad de decimales para variables decimales.');
+            if ($type === 'integer' && (int) $this->input('decimals', 0) !== 0) {
+                $validator->errors()->add('decimals', 'Las variables enteras no admiten decimales.');
+            }
+            if ($type === 'decimal' && $this->input('decimals') === null) {
+                $validator->errors()->add('decimals', 'Debes indicar la cantidad de decimales.');
             }
         });
     }
@@ -144,7 +138,7 @@ class StorePhysicalVariableRequest extends FormRequest
             'slug.unique' => 'Ya existe una variable con ese slug en el colegio seleccionado.',
 
             'unit.string' => 'La unidad debe ser un texto válido.',
-            'unit.max' => 'La unidad no puede superar los 255 caracteres.',
+            'unit.max' => 'La unidad no puede superar los 50 caracteres.',
 
             'data_type.required' => 'Debes seleccionar un tipo de dato.',
             'data_type.in' => 'El tipo de dato seleccionado no es válido.',
@@ -157,7 +151,7 @@ class StorePhysicalVariableRequest extends FormRequest
 
             'decimals.integer' => 'Los decimales deben ser un número entero.',
             'decimals.min' => 'Los decimales no pueden ser menores que 0.',
-            'decimals.max' => 'Los decimales no pueden ser mayores que 10.',
+            'decimals.max' => 'Los decimales no pueden ser mayores que 4.',
 
             'description.string' => 'La descripción debe ser un texto válido.',
 

@@ -9,11 +9,12 @@
     ];
 
     $hasQuickLinks =
+        (($isSuperAdmin || $isSchoolAdmin || $isdocente || $isestudiante) && Route::has('charts.index')) ||
         (($isSuperAdmin || $isSchoolAdmin) && Route::has('admin.users.create')) ||
         (($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.physical-variable-records.create')) ||
         (($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.laboratory-guides.create')) ||
-        (($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.weather-stations.create')) ||
-        (($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.sensors.create')) ||
+        (($isSuperAdmin || $isSchoolAdmin) && Route::has('admin.weather-stations.create')) ||
+        (($isSuperAdmin || $isSchoolAdmin) && Route::has('admin.sensors.create')) ||
         (($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.environmental-events.create')) ||
         (($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.field-diary-activities.create')) ||
         (($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.field-diary-submissions.index')) ||
@@ -118,6 +119,13 @@
             </div>
 
             <div class="row g-3">
+                @if(($isSuperAdmin || $isSchoolAdmin || $isdocente || $isestudiante) && Route::has('charts.index'))
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <a href="{{ route('charts.index') }}" class="btn btn-outline-primary rounded-4 w-100 py-3">
+                            Gráficos ambientales
+                        </a>
+                    </div>
+                @endif
                 @if(($isSuperAdmin || $isSchoolAdmin) && Route::has('admin.users.create'))
                     <div class="col-12 col-md-6 col-xl-3">
                         <a href="{{ route('admin.users.create') }}" class="btn btn-outline-dark rounded-4 w-100 py-3">
@@ -142,7 +150,7 @@
                     </div>
                 @endif
 
-                @if(($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.weather-stations.create'))
+                @if(($isSuperAdmin || $isSchoolAdmin) && Route::has('admin.weather-stations.create'))
                     <div class="col-12 col-md-6 col-xl-3">
                         <a href="{{ route('admin.weather-stations.create') }}" class="btn btn-outline-dark rounded-4 w-100 py-3">
                             Nueva estación
@@ -150,7 +158,7 @@
                     </div>
                 @endif
 
-                @if(($isSuperAdmin || $isSchoolAdmin || $isdocente) && Route::has('admin.sensors.create'))
+                @if(($isSuperAdmin || $isSchoolAdmin) && Route::has('admin.sensors.create'))
                     <div class="col-12 col-md-6 col-xl-3">
                         <a href="{{ route('admin.sensors.create') }}" class="btn btn-outline-dark rounded-4 w-100 py-3">
                             Nuevo sensor

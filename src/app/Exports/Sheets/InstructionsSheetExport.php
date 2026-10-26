@@ -12,7 +12,7 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class InstructionsSheetExport implements FromArray, WithTitle, WithStyles, WithDrawings, ShouldAutoSize
+class InstructionsSheetExport implements FromArray, ShouldAutoSize, WithDrawings, WithStyles, WithTitle
 {
     use AppliesSchoolExcelBranding;
 
@@ -38,7 +38,7 @@ class InstructionsSheetExport implements FromArray, WithTitle, WithStyles, WithD
             ['school', 'Usar catálogo', $this->school?->name ?? 'Nombre exacto del colegio', 'Consulta la hoja schools. Si eres admin de colegio, usa únicamente tu colegio.'],
             ['grade', 'Opcional según contexto', '6', 'Consulta la hoja grades'],
             ['course', 'Opcional según contexto', '6-1', 'Consulta la hoja courses'],
-            ['password', 'Opcional', 'Cambio123*', 'Si no se informa, el sistema asignará una contraseña temporal'],
+            ['Acceso', 'Invitación individual', 'Enlace por correo', 'Las cuentas nuevas activas reciben un enlace que vence para establecer su propia contraseña. No incluyas contraseñas.'],
             ['is_active', '1 o 0', '1', '1 = activo, 0 = inactivo'],
         ];
     }
@@ -49,13 +49,13 @@ class InstructionsSheetExport implements FromArray, WithTitle, WithStyles, WithD
             return [];
         }
 
-        $fullPath = storage_path('app/public/' . $this->school->shield_path);
+        $fullPath = storage_path('app/public/'.$this->school->shield_path);
 
         if (! file_exists($fullPath)) {
             return [];
         }
 
-        $drawing = new Drawing();
+        $drawing = new Drawing;
         $drawing->setPath($fullPath);
         $drawing->setHeight(65);
         $drawing->setCoordinates('A2');

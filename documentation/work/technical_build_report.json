@@ -1,0 +1,103 @@
+{
+  "file": "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\output\\pdf\\EcoData_Manual_Tecnico.pdf",
+  "chapters": [
+    {
+      "title": "1 Propósito y alcance técnico",
+      "page": 3
+    },
+    {
+      "title": "2 Arquitectura y organización del código",
+      "page": 4
+    },
+    {
+      "title": "3 Plataforma y servicios",
+      "page": 5
+    },
+    {
+      "title": "4 Configuración del entorno",
+      "page": 7
+    },
+    {
+      "title": "5 Instalación inicial propuesta",
+      "page": 8
+    },
+    {
+      "title": "6 Modelo de datos y reglas de integridad",
+      "page": 10
+    },
+    {
+      "title": "7 Diccionario de identidad y estructura académica",
+      "page": 12
+    },
+    {
+      "title": "8 Diccionario de variables y mediciones",
+      "page": 13
+    },
+    {
+      "title": "9 Diccionario de estaciones y sensores",
+      "page": 14
+    },
+    {
+      "title": "10 Diccionario de guías y eventos",
+      "page": 15
+    },
+    {
+      "title": "11 Diccionario del Diario de Campo",
+      "page": 16
+    },
+    {
+      "title": "12 Ciclo de vida de una entrega y archivos de evidencia",
+      "page": 18
+    },
+    {
+      "title": "13 Acceso y aislamiento por colegio",
+      "page": 19
+    },
+    {
+      "title": "14 Inventario de rutas y contratos HTTP",
+      "page": 20
+    },
+    {
+      "title": "15 Flujos internos de captura y validación",
+      "page": 22
+    },
+    {
+      "title": "16 Importación de usuarios",
+      "page": 23
+    },
+    {
+      "title": "17 Exportaciones y almacenamiento",
+      "page": 24
+    },
+    {
+      "title": "18 Correo y procesos auxiliares",
+      "page": 25
+    },
+    {
+      "title": "19 Seguridad implementada y medidas pendientes",
+      "page": 26
+    },
+    {
+      "title": "20 Operación y diagnóstico",
+      "page": 27
+    },
+    {
+      "title": "21 Respaldo y restauración verificable",
+      "page": 29
+    },
+    {
+      "title": "22 Estrategia de pruebas y criterios de aceptación",
+      "page": 30
+    },
+    {
+      "title": "23 Limitaciones priorizadas y plan de corrección",
+      "page": 32
+    },
+    {
+      "title": "24 Referencias al código y mantenimiento del manual",
+      "page": 33
+    }
+  ],
+  "figures": 5,
+  "missing_images": []
+}

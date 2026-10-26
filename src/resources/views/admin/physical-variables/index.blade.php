@@ -90,12 +90,12 @@
                             <td class="small text-secondary">
                                 <div>
                                     <strong>Mín:</strong>
-                                    {{ $variable->min_value !== null ? number_format((float) $variable->min_value, $variable->decimals ?? 0, '.', '') : '—' }}
+                                    {{ $variable->min_value !== null ? \App\Support\MeasurementDecimal::format($variable->min_value, $variable->decimals ?? 0) : '—' }}
                                     {{ $variable->unit ? ' ' . $variable->unit : '' }}
                                 </div>
                                 <div>
                                     <strong>Máx:</strong>
-                                    {{ $variable->max_value !== null ? number_format((float) $variable->max_value, $variable->decimals ?? 0, '.', '') : '—' }}
+                                    {{ $variable->max_value !== null ? \App\Support\MeasurementDecimal::format($variable->max_value, $variable->decimals ?? 0) : '—' }}
                                     {{ $variable->unit ? ' ' . $variable->unit : '' }}
                                 </div>
                                 <div><strong>Decimales:</strong> {{ $variable->decimals }}</div>

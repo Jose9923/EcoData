@@ -11,11 +11,15 @@ use App\Models\Grade;
 use App\Models\School;
 use App\Models\User;
 use App\Notifications\FieldDiarySubmissionReviewedNotification;
+use App\Services\FieldDiaryAccess;
+use App\Services\FieldDiaryRevision;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -51,15 +55,15 @@ class FieldDiarySubmissionController extends Controller
                 $search = $filters['search'];
 
                 $query->where(function ($subQuery) use ($search) {
-                    $subQuery->whereHas('activity', fn ($q) => $q->where('title', 'like', '%' . $search . '%'))
-                        ->orWhereHas('student', fn ($q) => $q->where('name', 'like', '%' . $search . '%')
-                            ->orWhere('email', 'like', '%' . $search . '%')
-                            ->orWhere('document_number', 'like', '%' . $search . '%'))
-                        ->orWhereHas('school', fn ($q) => $q->where('name', 'like', '%' . $search . '%'))
-                        ->orWhereHas('grade', fn ($q) => $q->where('name', 'like', '%' . $search . '%')
-                            ->orWhere('label', 'like', '%' . $search . '%'))
-                        ->orWhereHas('course', fn ($q) => $q->where('name', 'like', '%' . $search . '%')
-                            ->orWhere('label', 'like', '%' . $search . '%'));
+                    $subQuery->whereHas('activity', fn ($q) => $q->where('title', 'like', '%'.$search.'%'))
+                        ->orWhereHas('student', fn ($q) => $q->where('name', 'like', '%'.$search.'%')
+                            ->orWhere('email', 'like', '%'.$search.'%')
+                            ->orWhere('document_number', 'like', '%'.$search.'%'))
+                        ->orWhereHas('school', fn ($q) => $q->where('name', 'like', '%'.$search.'%'))
+                        ->orWhereHas('grade', fn ($q) => $q->where('name', 'like', '%'.$search.'%')
+                            ->orWhere('label', 'like', '%'.$search.'%'))
+                        ->orWhereHas('course', fn ($q) => $q->where('name', 'like', '%'.$search.'%')
+                            ->orWhere('label', 'like', '%'.$search.'%'));
                 });
             })
             ->latest()
@@ -106,6 +110,7 @@ class FieldDiarySubmissionController extends Controller
             'submission' => $field_diary_submission,
             'activity' => $field_diary_submission->activity,
             'answersByQuestion' => $answersByQuestion,
+            'revision' => app(FieldDiaryRevision::class)->token($field_diary_submission->activity, $field_diary_submission),
             'statuses' => $this->statuses(),
         ]);
     }
@@ -117,6 +122,7 @@ class FieldDiarySubmissionController extends Controller
         $this->authorizeSubmissionScope($authUser, $field_diary_submission);
 
         $data = $request->validate([
+            'revision' => ['required', 'string', 'size:64'],
             'status' => ['required', Rule::in(['revisado', 'devuelto'])],
             'score' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'teacher_feedback' => ['nullable', 'string'],
@@ -132,15 +138,26 @@ class FieldDiarySubmissionController extends Controller
             'teacher_feedback' => 'retroalimentación',
         ]);
 
-        $field_diary_submission->update([
-            'status' => $data['status'],
-            'score' => $data['score'] ?? null,
-            'teacher_feedback' => filled($data['teacher_feedback'] ?? null)
-                ? trim($data['teacher_feedback'])
-                : null,
-            'reviewed_by' => $authUser->id,
-            'reviewed_at' => now(),
-        ]);
+        $field_diary_submission = DB::transaction(function () use ($field_diary_submission, $authUser, $data) {
+            $activity = FieldDiaryActivity::query()->lockForUpdate()->findOrFail($field_diary_submission->field_diary_activity_id);
+            $submission = FieldDiarySubmission::query()->lockForUpdate()->findOrFail($field_diary_submission->id);
+            app(FieldDiaryAccess::class)->authorizeReview($authUser, $submission);
+            if (! in_array($submission->status, ['enviado', 'revisado'], true)) {
+                throw ValidationException::withMessages(['status' => 'Espera a que el estudiante envíe sus respuestas antes de revisarlas.']);
+            }
+            if (! hash_equals(app(FieldDiaryRevision::class)->token($activity, $submission), $data['revision'])) {
+                throw ValidationException::withMessages(['revision' => 'La entrega cambió desde que abriste esta página. Recarga y revisa las respuestas actuales.']);
+            }
+            $submission->update([
+                'status' => $data['status'],
+                'score' => $data['score'] ?? null,
+                'teacher_feedback' => filled($data['teacher_feedback'] ?? null) ? trim($data['teacher_feedback']) : null,
+                'reviewed_by' => $authUser->id,
+                'reviewed_at' => now(),
+            ]);
+
+            return $submission;
+        });
 
         $field_diary_submission->load(['student', 'activity']);
 
@@ -153,6 +170,7 @@ class FieldDiarySubmissionController extends Controller
                 report($e);
             }
         }
+
         return redirect()
             ->route('admin.field-diary-submissions.show', $field_diary_submission)
             ->with(
@@ -196,20 +214,7 @@ class FieldDiarySubmissionController extends Controller
 
     private function authorizeSubmissionScope(User $authUser, FieldDiarySubmission $submission): void
     {
-        if ($authUser->hasRole('super_admin')) {
-            return;
-        }
-
-        abort_if(! $authUser->school_id, 403, 'Tu usuario no tiene un colegio asignado.');
-
-        $submission->loadMissing('activity');
-
-        abort_if(
-            (int) $submission->school_id !== (int) $authUser->school_id
-                || (int) $submission->activity?->school_id !== (int) $authUser->school_id,
-            403,
-            'No tienes autorizacion para revisar entregas de otro colegio.'
-        );
+        app(FieldDiaryAccess::class)->authorizeReview($authUser, $submission);
     }
 
     private function visibleSchools(User $authUser)
@@ -279,7 +284,7 @@ class FieldDiarySubmissionController extends Controller
         $students = $this->visibleStudents($authUser, $schoolId, $gradeId, $courseId)
             ->map(fn ($student) => [
                 'id' => $student->id,
-                'label' => trim($student->name . ($student->document_number ? ' - ' . $student->document_number : '')),
+                'label' => trim($student->name.($student->document_number ? ' - '.$student->document_number : '')),
             ])
             ->values();
 
@@ -407,15 +412,15 @@ class FieldDiarySubmissionController extends Controller
                 $search = $filters['search'];
 
                 $query->where(function ($subQuery) use ($search) {
-                    $subQuery->whereHas('activity', fn ($q) => $q->where('title', 'like', '%' . $search . '%'))
-                        ->orWhereHas('student', fn ($q) => $q->where('name', 'like', '%' . $search . '%')
-                            ->orWhere('email', 'like', '%' . $search . '%')
-                            ->orWhere('document_number', 'like', '%' . $search . '%'))
-                        ->orWhereHas('school', fn ($q) => $q->where('name', 'like', '%' . $search . '%'))
-                        ->orWhereHas('grade', fn ($q) => $q->where('name', 'like', '%' . $search . '%')
-                            ->orWhere('label', 'like', '%' . $search . '%'))
-                        ->orWhereHas('course', fn ($q) => $q->where('name', 'like', '%' . $search . '%')
-                            ->orWhere('label', 'like', '%' . $search . '%'));
+                    $subQuery->whereHas('activity', fn ($q) => $q->where('title', 'like', '%'.$search.'%'))
+                        ->orWhereHas('student', fn ($q) => $q->where('name', 'like', '%'.$search.'%')
+                            ->orWhere('email', 'like', '%'.$search.'%')
+                            ->orWhere('document_number', 'like', '%'.$search.'%'))
+                        ->orWhereHas('school', fn ($q) => $q->where('name', 'like', '%'.$search.'%'))
+                        ->orWhereHas('grade', fn ($q) => $q->where('name', 'like', '%'.$search.'%')
+                            ->orWhere('label', 'like', '%'.$search.'%'))
+                        ->orWhereHas('course', fn ($q) => $q->where('name', 'like', '%'.$search.'%')
+                            ->orWhere('label', 'like', '%'.$search.'%'));
                 });
             })
             ->latest();
@@ -435,7 +440,7 @@ class FieldDiarySubmissionController extends Controller
                 $authUser->name,
                 $this->filtersText($filters, $authUser)
             ),
-            'diario_de_campo_ecodata_' . now()->format('Ymd_His') . '.xlsx'
+            'diario_de_campo_ecodata_'.now()->format('Ymd_His').'.xlsx'
         );
     }
 
@@ -450,7 +455,7 @@ class FieldDiarySubmissionController extends Controller
                 ? School::find($filters['school_id'])
                 : $authUser->school;
 
-            $parts[] = 'Colegio: ' . ($school?->name ?? $filters['school_id']);
+            $parts[] = 'Colegio: '.($school?->name ?? $filters['school_id']);
         }
 
         if ($filters['grade_id']) {
@@ -458,7 +463,7 @@ class FieldDiarySubmissionController extends Controller
                 ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
                 ->find($filters['grade_id']);
 
-            $parts[] = 'Grado: ' . ($grade?->label ?: $grade?->name ?: $filters['grade_id']);
+            $parts[] = 'Grado: '.($grade?->label ?: $grade?->name ?: $filters['grade_id']);
         }
 
         if ($filters['course_id']) {
@@ -467,7 +472,7 @@ class FieldDiarySubmissionController extends Controller
                 ->when($filters['grade_id'], fn ($query) => $query->where('grade_id', $filters['grade_id']))
                 ->find($filters['course_id']);
 
-            $parts[] = 'Curso: ' . ($course?->label ?: $course?->name ?: $filters['course_id']);
+            $parts[] = 'Curso: '.($course?->label ?: $course?->name ?: $filters['course_id']);
         }
 
         if ($filters['activity_id']) {
@@ -475,7 +480,7 @@ class FieldDiarySubmissionController extends Controller
                 ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
                 ->find($filters['activity_id']);
 
-            $parts[] = 'Actividad: ' . ($activity?->title ?? $filters['activity_id']);
+            $parts[] = 'Actividad: '.($activity?->title ?? $filters['activity_id']);
         }
 
         if ($filters['student_id']) {
@@ -483,16 +488,16 @@ class FieldDiarySubmissionController extends Controller
                 ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
                 ->find($filters['student_id']);
 
-            $parts[] = 'Estudiante: ' . ($student?->name ?? $filters['student_id']);
+            $parts[] = 'Estudiante: '.($student?->name ?? $filters['student_id']);
         }
 
         if ($filters['status']) {
             $statuses = $this->statuses();
-            $parts[] = 'Estado: ' . ($statuses[$filters['status']] ?? $filters['status']);
+            $parts[] = 'Estado: '.($statuses[$filters['status']] ?? $filters['status']);
         }
 
         if ($filters['search']) {
-            $parts[] = 'Búsqueda: ' . $filters['search'];
+            $parts[] = 'Búsqueda: '.$filters['search'];
         }
 
         return $parts ? implode(' | ', $parts) : 'Sin filtros aplicados';

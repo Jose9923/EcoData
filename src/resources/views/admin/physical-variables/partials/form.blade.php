@@ -103,7 +103,7 @@
 
                 <div class="col-12 col-md-4">
                     <label class="form-label fw-semibold">Decimales</label>
-                    <input type="number" min="0" max="10" name="decimals" id="decimals"
+                    <input type="number" min="0" max="4" name="decimals" id="decimals"
                            class="form-control rounded-4"
                            value="{{ old('decimals', $variable->decimals ?? 2) }}">
                     @error('decimals')
@@ -115,7 +115,7 @@
                     <label class="form-label fw-semibold">Valor mínimo</label>
                     <input type="number" step="any" name="min_value" id="min_value"
                         class="form-control rounded-4"
-                        value="{{ old('min_value', isset($variable) && $variable->min_value !== null ? number_format((float) $variable->min_value, $variable->decimals ?? 0, '.', '') : '') }}">
+                        value="{{ old('min_value', isset($variable) && $variable->min_value !== null ? \App\Support\MeasurementDecimal::format($variable->min_value, $variable->decimals ?? 0) : '') }}">
                     @error('min_value')
                         <div class="text-danger small mt-1">{{ $message }}</div>
                     @enderror
@@ -125,7 +125,7 @@
                     <label class="form-label fw-semibold">Valor máximo</label>
                     <input type="number" step="any" name="max_value" id="max_value"
                         class="form-control rounded-4"
-                        value="{{ old('max_value', isset($variable) && $variable->max_value !== null ? number_format((float) $variable->max_value, $variable->decimals ?? 0, '.', '') : '') }}">
+                        value="{{ old('max_value', isset($variable) && $variable->max_value !== null ? \App\Support\MeasurementDecimal::format($variable->max_value, $variable->decimals ?? 0) : '') }}">
                     @error('max_value')
                         <div class="text-danger small mt-1">{{ $message }}</div>
                     @enderror

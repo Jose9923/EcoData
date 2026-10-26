@@ -1,0 +1,156 @@
+{
+  "verified_utc": "2026-10-26T14:41:01.315350+00:00",
+  "backup": "/home/josev/EcoData/backups/deployment-20261026T143021Z",
+  "data_preserved": true,
+  "app_key_preserved": true,
+  "runtime": {
+    "app_env": "local",
+    "app_url": "http://localhost:8081",
+    "app_key_present": true,
+    "app_key_fingerprint": "1cb2229de4fd4c7e55504f2839cad45e302717925b93bcaea5e4de09749be53d",
+    "timezone": "UTC",
+    "db_driver": "mysql",
+    "db_host": "mysql",
+    "db_name": "EcoData_db",
+    "queue": "database",
+    "retry_after": 180,
+    "cache": "file",
+    "mail": "smtp",
+    "migration_applied": true,
+    "audit_table": true,
+    "receipts_table": true,
+    "counts": {
+      "users": 19,
+      "schools": 15,
+      "physical_variable_records": 15,
+      "physical_variable_record_values": 15,
+      "field_diary_activities": 16,
+      "field_diary_submissions": 16,
+      "field_diary_answers": 16,
+      "jobs": 0,
+      "failed_jobs": 0
+    }
+  },
+  "http": {
+    "/up": {
+      "status": 200,
+      "location": null
+    },
+    "/login": {
+      "status": 200,
+      "location": null
+    },
+    "/dashboard": {
+      "status": 302,
+      "location": "http://localhost:8081/login"
+    },
+    "/build/assets/app-Cyfa2AON.css": {
+      "status": 200,
+      "bytes": 19816
+    },
+    "/build/assets/app-pTei6Scx.js": {
+      "status": 200,
+      "bytes": 370327
+    },
+    "/build/assets/app-ug0BhfdD.css": {
+      "status": 200,
+      "bytes": 240595
+    }
+  },
+  "containers": {
+    "mysql": {
+      "id": "c1c8bf97c28d",
+      "running": true,
+      "started_at": "2026-10-26T11:40:20.983209446Z",
+      "restart_count": 0,
+      "user": "",
+      "command": [
+        "mysqld"
+      ],
+      "restart_policy": "unless-stopped",
+      "health": null
+    },
+    "redis": {
+      "id": "d6d232a4f7e3",
+      "running": true,
+      "started_at": "2026-10-26T14:39:56.517105457Z",
+      "restart_count": 0,
+      "user": "",
+      "command": [
+        "redis-server"
+      ],
+      "restart_policy": "unless-stopped",
+      "health": "healthy"
+    },
+    "app": {
+      "id": "fd699981e562",
+      "running": true,
+      "started_at": "2026-10-26T14:40:02.329268879Z",
+      "restart_count": 0,
+      "user": "",
+      "command": [
+        "php-fpm"
+      ],
+      "restart_policy": "unless-stopped",
+      "health": null
+    },
+    "nginx": {
+      "id": "a0b376e06d0c",
+      "running": true,
+      "started_at": "2026-10-26T14:40:02.646586853Z",
+      "restart_count": 0,
+      "user": "",
+      "command": [
+        "nginx",
+        "-g",
+        "daemon off;"
+      ],
+      "restart_policy": "unless-stopped",
+      "health": null
+    },
+    "queue": {
+      "id": "d02b779e2978",
+      "running": true,
+      "started_at": "2026-10-26T14:40:02.336679265Z",
+      "restart_count": 0,
+      "user": "www-data",
+      "command": [
+        "php",
+        "artisan",
+        "queue:work",
+        "--tries=3",
+        "--timeout=60",
+        "--backoff=30",
+        "--max-time=3600"
+      ],
+      "restart_policy": "unless-stopped",
+      "health": null
+    },
+    "scheduler": {
+      "id": "a7d2d405e78f",
+      "running": true,
+      "started_at": "2026-10-26T14:40:02.340291949Z",
+      "restart_count": 0,
+      "user": "www-data",
+      "command": [
+        "php",
+        "artisan",
+        "schedule:work"
+      ],
+      "restart_policy": "unless-stopped",
+      "health": null
+    }
+  },
+  "final_verified_utc": "2026-10-26T14:43:42.019298+00:00",
+  "queue_probe": {
+    "processed": true,
+    "pending": 0,
+    "failed": 0
+  },
+  "mail_verification": {
+    "mode": "Mailtrap Sandbox",
+    "tls_connection_verified": true,
+    "authentication_tested": false,
+    "email_sent": false
+  }
+}

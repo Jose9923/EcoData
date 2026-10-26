@@ -11,7 +11,7 @@
     $existingValues = [];
     if ($record) {
         foreach ($record->values as $item) {
-            $existingValues[$item->physical_variable_id] = $item->resolved_value;
+            $existingValues[$item->physical_variable_id] = $item->variable?->data_type === 'date' ? $item->value_date?->format('Y-m-d') : $item->resolved_value;
         }
     }
 
@@ -25,7 +25,7 @@
                 <div class="col-12 col-md-6">
                     <label class="form-label fw-semibold">Colegio</label>
 
-                    @if(auth()->user()?->hasRole('super_admin'))
+                    @if(auth()->user()?->hasRole('super_admin') && ! $record)
                         <select name="school_id" id="school_id" class="form-select rounded-4">
                             <option value="">Selecciona un colegio</option>
                             @foreach($schools as $school)
@@ -55,7 +55,7 @@
 
                 <div class="col-12 col-md-6">
                     <label class="form-label fw-semibold">Grado</label>
-                    <select name="grade_id" id="grade_id" class="form-select rounded-4">
+                    <select name="grade_id" id="grade_id" class="form-select rounded-4" @disabled(auth()->user()->hasRole('estudiante'))>
                         <option value="">Todos / Sin asignar</option>
                         @foreach($grades as $grade)
                             <option value="{{ $grade->id }}"
@@ -71,7 +71,7 @@
 
                 <div class="col-12 col-md-6">
                     <label class="form-label fw-semibold">Curso</label>
-                    <select name="course_id" id="course_id" class="form-select rounded-4">
+                    <select name="course_id" id="course_id" class="form-select rounded-4" @disabled(auth()->user()->hasRole('estudiante'))>
                         <option value="">Todos / Sin asignar</option>
                         @foreach($courses as $course)
                             <option value="{{ $course->id }}"
@@ -108,7 +108,7 @@
                             class="form-select rounded-4">
                         <option value="">Sin estación / Registro manual general</option>
                         @foreach($weatherStations as $station)
-                            <option value="{{ $station->id }}"
+                            <option value="{{ $station->id }}" data-school="{{ $station->school_id }}"
                                 @selected((string) old('weather_station_id', $selectedWeatherStationId ?? $record?->weather_station_id ?? '') === (string) $station->id)>
                                 {{ $station->name }} · {{ $station->code }}
                             </option>
@@ -171,13 +171,13 @@
             <h6 class="fw-bold mb-3">Indicaciones</h6>
             <div class="small text-secondary d-flex flex-column gap-2">
                 <div>
-                    @if(auth()->user()?->hasRole('super_admin'))
+                    @if(auth()->user()?->hasRole('super_admin') && ! $record)
                         Selecciona un colegio para habilitar las variables disponibles.
                     @else
                         El colegio se asigna automáticamente según tu usuario.
                     @endif
                 </div>
-                <div>La categoría es opcional y solo sirve para acotar el formulario.</div>
+                <div>La categoría filtra el formulario. Al editar, los valores omitidos o vacíos se conservan. Usa «Retirar valores» para eliminarlos.</div>
                 <div>Debes registrar al menos una variable para guardar.</div>
                 <div>Los límites mínimo, máximo y decimales se validan automáticamente.</div>
             </div>
@@ -204,6 +204,19 @@
     </div>
 </div>
 
+@if($record)
+<div class="admin-card bg-white p-4 mt-4">
+    <h5>Retirar valores existentes</h5>
+    <p class="small text-secondary">Solo se eliminan los valores marcados aquí. Los valores de variables inactivas también se conservan salvo que los retires expresamente. Debe quedar al menos un valor.</p>
+    @foreach($record->values as $existing)
+    <label class="d-block mb-2">
+        <input type="checkbox" name="remove_values[]" value="{{ $existing->physical_variable_id }}" @checked(in_array($existing->physical_variable_id, old('remove_values', [])))>
+        Retirar {{ $existing->variable?->name }} ({{ is_bool($existing->resolved_value) ? ($existing->resolved_value ? 'Sí' : 'No') : $existing->resolved_value }} {{ $existing->variable?->unit }})
+    </label>
+    @endforeach
+    @error('remove_values')<div class="text-danger">{{ $message }}</div>@enderror
+</div>
+@endif
 <div class="d-flex justify-content-end gap-2 mt-4">
     <a href="{{ route('admin.physical-variable-records.index') }}" class="btn btn-outline-secondary rounded-4 px-4">
         Cancelar
@@ -239,6 +252,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const courseSelect = document.getElementById('course_id');
     const categorySelect = document.getElementById('category_id');
     const container = document.getElementById('variables-container');
+    const recordForm = container.closest('form');
+    const stationSelect = document.getElementById('weather_station_id');
+    const stationOptions = Array.from(stationSelect.options).map(option => option.cloneNode(true));
+    function filterStations() {
+        const selected = stationSelect.value;
+        stationSelect.replaceChildren(...stationOptions.filter(option => !option.value || option.dataset.school === String(currentSchoolId())).map(option => option.cloneNode(true)));
+        stationSelect.value = Array.from(stationSelect.options).some(option => option.value === selected) ? selected : '';
+    }
 
     const gradesUrl = @json(route('admin.physical-variable-records.ajax.grades'));
     const coursesUrl = @json(route('admin.physical-variable-records.ajax.courses'));
@@ -329,12 +350,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderVariableField(variable) {
         let oldValue = oldValues[variable.id] ?? '';
 
-        if (variable.data_type === 'integer' && oldValue !== '' && oldValue !== null) {
-            oldValue = parseInt(oldValue, 10);
-        }
-
-        if (variable.data_type === 'decimal' && oldValue !== '' && oldValue !== null) {
-            oldValue = Number(oldValue);
+        if (['integer', 'decimal'].includes(variable.data_type) && oldValue !== '' && oldValue !== null) {
+            oldValue = String(oldValue).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
         }
 
         if (variable.data_type === 'text' && oldValue !== null && oldValue !== undefined) {
@@ -422,7 +439,30 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
 
+    function captureDraftValues() {
+        container.querySelectorAll('[name^="values["]').forEach(input => {
+            const id = input.name.match(/values\[(\d+)\]/)?.[1];
+            if (id) oldValues[id] = input.value;
+        });
+    }
+
+    recordForm.addEventListener('submit', function () {
+        captureDraftValues();
+        recordForm.querySelectorAll('[data-measurement-draft]').forEach(input => input.remove());
+        Object.entries(oldValues).forEach(([id, value]) => {
+            if (!recordForm.elements.namedItem('values[' + id + ']')) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'values[' + id + ']';
+                input.value = value ?? '';
+                input.dataset.measurementDraft = 'true';
+                recordForm.appendChild(input);
+            }
+        });
+    });
+
     async function loadVariables() {
+        captureDraftValues();
         const schoolId = currentSchoolId();
 
         if (!schoolId) {
@@ -470,6 +510,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     schoolSelect?.addEventListener('change', async function () {
+        Object.keys(oldValues).forEach(id => delete oldValues[id]);
+        container.replaceChildren();
+        filterStations();
         await loadGrades();
         await loadCourses();
         await loadVariables();
@@ -487,6 +530,7 @@ document.addEventListener('DOMContentLoaded', function () {
         container.innerHTML = existingVariables.map(renderVariableField).join('');
     }
 
+    filterStations();
     if (currentSchoolId()) {
         loadGrades(selectedGradeId).then(() => loadCourses(selectedCourseId));
 
@@ -495,14 +539,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function formatNumber(value, decimals = 0) {
+    function formatNumber(value) {
         if (value === null || value === undefined || value === '') return '—';
-
-        const num = Number(value);
-
-        if (Number.isNaN(num)) return '—';
-
-        return num.toFixed(Number(decimals ?? 0));
+        return escapeHtml(String(value).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, ''));
     }
 
     function decimalStep(decimals = 0) {

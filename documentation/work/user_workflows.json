@@ -1,0 +1,267 @@
+{
+  "review_scope": "Revisión estática de rutas, controladores, FormRequests, modelos y Blade bajo src/. No ejecución funcional ni modificación de código de la aplicación. Fecha de referencia 2026-10-15.",
+  "final_content": "documentation/work/user_content.json",
+  "structure": {
+    "sections": 22,
+    "image_keys": [
+      "login",
+      "dashboard",
+      "profile",
+      "schools",
+      "users",
+      "user_import",
+      "grades",
+      "courses",
+      "categories",
+      "variables",
+      "record_create",
+      "records",
+      "stations",
+      "sensors",
+      "guides",
+      "diary_activity",
+      "diary_student",
+      "diary_review",
+      "events"
+    ]
+  },
+  "source_map": [
+    {
+      "sections": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "sources": [
+        "src/routes/web.php",
+        "src/routes/auth.php",
+        "src/resources/views/components/layout/navigation.blade.php",
+        "src/resources/views/auth/login.blade.php",
+        "src/resources/views/layouts/app.blade.php",
+        "src/app/Http/Controllers/Auth/AuthenticatedSessionController.php",
+        "src/app/Http/Controllers/DashboardController.php",
+        "src/app/Http/Middleware/EnsureSchoolAssigned.php"
+      ],
+      "facts": [
+        "Cuatro roles: super_admin, admin_colegio, docente, estudiante.",
+        "Login por email/password, Recordar sesión y recuperación.",
+        "Categorías menú solo super_admin; controller y request lo exigen.",
+        "Estaciones/sensores solo super_admin|admin_colegio por rutas; Requests mencionan docente pero no permiten el acceso efectivo.",
+        "Colegios solo super_admin.",
+        "Dashboard estudiante filtra registros por grado/curso, mientras listado de registros físicos no lo hace.",
+        "Modal eventos hoy es estático; Aceptar/Ver calendario reconocen eventos."
+      ]
+    },
+    {
+      "sections": [
+        5
+      ],
+      "sources": [
+        "src/resources/views/profile.blade.php",
+        "src/app/Http/Controllers/ProfileController.php",
+        "src/app/Http/Requests/Profile/UpdateProfileRequest.php",
+        "src/app/Http/Requests/Profile/UpdatePasswordRequest.php"
+      ],
+      "facts": [
+        "Perfil permite nombre/email/document_type/document_number; el resumen muestra colegio/grado/curso/rol sin edición de asignación.",
+        "Email/documento únicos; contraseña mínimo 8 confirmada y contraseña actual comprobada."
+      ]
+    },
+    {
+      "sections": [
+        6,
+        7
+      ],
+      "sources": [
+        "src/resources/views/admin/physical-variable-records/partials/form.blade.php",
+        "src/resources/views/admin/physical-variable-records/index.blade.php",
+        "src/app/Http/Controllers/Admin/PhysicalVariableRecordController.php:413",
+        "src/app/Http/Controllers/Admin/PhysicalVariableRecordController.php:452",
+        "src/app/Http/Controllers/Admin/PhysicalVariableRecordController.php:766"
+      ],
+      "facts": [
+        "Todos los roles pueden crear/consultar/exportar; estudiantes editan solo propios.",
+        "Consulta por colegio entero para no super_admin, no por propietario o curso.",
+        "No hay ruta ni botón eliminar registro físico.",
+        "Requiere fecha y al menos una variable; valida límites, precisión, tipo.",
+        "Origen manual|station|csv solo clasifica; no implica integración ni importación.",
+        "Exportación respeta filtros, no paginación.",
+        "Update elimina y recrea values; riesgo de perder valores que no se envían.",
+        "Update no persiste weather_station_id/source_type aunque formulario los muestra; estudiante conserva asignación original."
+      ]
+    },
+    {
+      "sections": [
+        8,
+        10
+      ],
+      "sources": [
+        "src/resources/views/estudiante/laboratory-guides/index.blade.php",
+        "src/resources/views/admin/laboratory-guides/partials/form.blade.php",
+        "src/app/Http/Controllers/LaboratoryGuideStudentController.php",
+        "src/app/Http/Controllers/Admin/LaboratoryGuideController.php",
+        "src/app/Http/Requests/Admin/StoreLaboratoryGuideRequest.php",
+        "src/app/Http/Requests/Admin/UpdateLaboratoryGuideRequest.php"
+      ],
+      "facts": [
+        "PDF máximo 10MB, obligatorio creación y opcional edición.",
+        "Estudiante ve guías activas, publicadas, de su colegio y grupo o destinos nulos generales.",
+        "Ver PDF en modal iframe; Abrir en otra pestaña; Descargar PDF.",
+        "Creación activa notifica inmediatamente a alumnos activos, incluso fecha futura; disponibilidad espera published_at.",
+        "Eliminar borra PDF; reemplazo borra previo; sin versiones."
+      ]
+    },
+    {
+      "sections": [
+        9,
+        11,
+        12
+      ],
+      "sources": [
+        "src/resources/views/estudiante/field-diaries/show.blade.php",
+        "src/resources/views/estudiante/field-diaries/partials/answer-field.blade.php",
+        "src/resources/views/admin/field-diary-activities/partials/form.blade.php",
+        "src/resources/views/admin/field-diary-submissions/show.blade.php",
+        "src/app/Http/Controllers/FieldDiarySubmissionController.php:285",
+        "src/app/Http/Controllers/Admin/FieldDiaryActivityController.php:209",
+        "src/app/Http/Controllers/Admin/FieldDiarySubmissionController.php:121",
+        "src/app/Http/Requests/Admin/StoreFieldDiaryActivityRequest.php",
+        "src/database/migrations/2026_05_14_195813_create_field_diary_answers_table.php:29",
+        "src/config/app.php:68"
+      ],
+      "facts": [
+        "Actividades observacion|reto|portafolio; 8 tipos pregunta.",
+        "Al menos una pregunta; selección requiere opciones una por línea.",
+        "Guardar borrador valida tipos pero no exige obligatorios.",
+        "Enviar exige obligatorios; enviado/revisado bloqueados, devuelto editable si activa/vigente.",
+        "Adjuntos 5MB JPG/JPEG/PNG/WEBP/PDF/DOC/DOCX/XLS/XLSX/CSV.",
+        "Ventana usa fecha servidor UTC e incluye fecha inicio/cierre; cerrar impide hasta consultar detalle anterior.",
+        "Admin review permite revisado|devuelto, nota 0-100 opcional y feedback opcional; no restringe status previo.",
+        "Docente revisa ámbito colegio, no solo actividades propias.",
+        "Editar actividad elimina todas preguntas y cascade elimina respuestas existentes, incluso cambios de título/fechas/estado. No recomendar editar ni desactivar tras recibir respuestas.",
+        "Eliminación actividad cascada a preguntas, entregas/respuestas.",
+        "Export Excel incluye filtros y respuestas."
+      ]
+    },
+    {
+      "sections": [
+        13
+      ],
+      "sources": [
+        "src/resources/views/environmental-events/index.blade.php",
+        "src/resources/views/environmental-events/partials/daily-modal.blade.php",
+        "src/app/Http/Controllers/EnvironmentalEventPublicController.php",
+        "src/app/Http/Controllers/EnvironmentalEventAcknowledgementController.php",
+        "src/app/Http/Requests/Admin/StoreEnvironmentalEventRequest.php"
+      ],
+      "facts": [
+        "Consulta interna autenticada todos roles, activa y colegio.",
+        "Hoy, próximos y anteriores; anteriores take(8).",
+        "Acuse por evento/usuario, no nuevo acuse diario.",
+        "Evento título 255, fechas ambas obligatorias ordenadas, imagen opcional 4MB JPG/JPEG/PNG/WEBP.",
+        "Docente y administradores gestionan calendario por colegio."
+      ]
+    },
+    {
+      "sections": [
+        14
+      ],
+      "sources": [
+        "src/app/Http/Requests/Admin/StoreSchoolRequest.php",
+        "src/app/Http/Requests/Admin/StoreGradeRequest.php",
+        "src/app/Http/Requests/Admin/StoreCourseRequest.php",
+        "src/resources/views/admin/schools/partials/form.blade.php",
+        "src/resources/views/admin/grades/partials/form.blade.php",
+        "src/resources/views/admin/courses/partials/form.blade.php",
+        "src/database/migrations/2026_04_20_220620_create_grades_table.php",
+        "src/database/migrations/2026_04_20_220621_create_courses_table.php"
+      ],
+      "facts": [
+        "Escudo imagen 2MB, colores hexadecimal, nombre 255, slug único.",
+        "Grado nombre único colegio; curso único colegio+grado.",
+        "Relaciones cascada hacen eliminación académica potencialmente destructiva."
+      ]
+    },
+    {
+      "sections": [
+        15,
+        16
+      ],
+      "sources": [
+        "src/resources/views/admin/users/partials/form.blade.php",
+        "src/resources/views/admin/users/import.blade.php",
+        "src/app/Http/Controllers/Admin/UserController.php",
+        "src/app/Http/Controllers/Admin/UserImportController.php",
+        "src/app/Http/Requests/Admin/StoreUserRequest.php",
+        "src/app/Http/Requests/Admin/UpdateUserRequest.php",
+        "src/app/Http/Requests/Admin/ImportUsersRequest.php",
+        "src/app/Services/UserImportService.php",
+        "src/app/Exports/UserImportTemplateExport.php"
+      ],
+      "facts": [
+        "Crear usuario requiere password>=8 confirmada; edición vacía preserva contraseña.",
+        "No autoeliminación; admin colegio no gestiona superadmin.",
+        "is_active no se valida en AuthenticatedSessionController; no prometer bloqueo.",
+        "Import XLS/XLSX 10MB primera hoja; auxiliares son catálogos.",
+        "Detecta headers name,email,document_type,document_number,role; conservar plantilla inglesa.",
+        "Modos create_only omite existentes y update_or_create resuelve documento/email; error si pertenecen a cuentas diferentes.",
+        "Actualización masiva cambia datos/rol, no contraseña.",
+        "Nuevo password vacío aplica predeterminada compartida; no reproducir valor.",
+        "Fila a fila, parcial, errores no rollback total. Conteo de fila datos no número hoja.",
+        "Curso requiere grado activo; colegio restringido."
+      ]
+    }
+  ],
+  "limitations_for_technical_manual": [
+    {
+      "severity": "alto",
+      "finding": "Edición actividad elimina respuestas",
+      "evidence": "FieldDiaryActivityController.php:209 questions()->delete; FK field_ans_question_fk cascadeOnDelete. Cambios no relacionados con preguntas también lo provocan.",
+      "user_instruction": "No editar actividad con entregas; crear nueva para versión nueva. Para extender plazo pedir soporte, no abrir Editar."
+    },
+    {
+      "severity": "medio",
+      "finding": "Edición registro ignora estación/origen y reemplaza values",
+      "evidence": "PhysicalVariableRecordController::update, payload de record->update no tiene weather_station_id ni source_type; values()->delete recrea solo enviados.",
+      "user_instruction": "Advertir límites y revisar todas variables antes de guardar."
+    },
+    {
+      "severity": "alto",
+      "finding": "Cargue CSV solo vista",
+      "evidence": "PhysicalVariableRecordImportController solo create; web.php solo GET; Blade form action=\"#\" y botón plantilla type=button sin handler.",
+      "user_instruction": "Describir función visible no disponible; usar creación manual."
+    },
+    {
+      "severity": "medio",
+      "finding": "Cuenta inactiva no bloqueada por login",
+      "evidence": "AuthenticatedSessionController::store Auth::attempt($credentials), credentials solo email,password.",
+      "user_instruction": "No prometer bloqueo mediante Usuario activo."
+    },
+    {
+      "severity": "medio",
+      "finding": "Horarios UTC",
+      "evidence": "config/app.php:68 timezone UTC; FieldDiarySubmissionController compara now()->toDateString.",
+      "user_instruction": "Confirmar disponibilidad con docente; no presumir medianoche Colombia."
+    },
+    {
+      "severity": "medio",
+      "finding": "Reportes por correo incompletos",
+      "evidence": "web.php importa Admin\\ReportMailController y declara GET/POST; archivo no presente en app/Http/Controllers/Admin.",
+      "user_instruction": "No dar procedimiento de reportes correo."
+    },
+    {
+      "severity": "medio",
+      "finding": "Notificación inmediata antes de disponibilidad futura",
+      "evidence": "LaboratoryGuideController y FieldDiaryActivityController notifican al crear si is_active sin condicionarlas a fecha futura.",
+      "user_instruction": "Aviso no significa disponibilidad y recepción depende de configuración correo."
+    },
+    {
+      "severity": "medio",
+      "finding": "Registro básico no asigna colegio/rol",
+      "evidence": "RegisteredUserController crea name,email,password sin role/school; login no enlaza registro.",
+      "user_instruction": "Usar provisión administrativa en manual."
+    }
+  ],
+  "exclusions": "No se incluyeron contraseñas de seeders/importador ni correos personales. No se crearon pruebas ni cambios en src."
+}

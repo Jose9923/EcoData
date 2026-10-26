@@ -24,6 +24,7 @@ use App\Http\Controllers\FieldDiaryAnswerFileController;
 use App\Http\Controllers\FieldDiarySubmissionController;
 use App\Http\Controllers\LaboratoryGuideStudentController;
 use App\Http\Controllers\MailRedirectController;
+use App\Http\Controllers\PhysicalRecordAnalyticsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Middleware\EnsureSchoolAssigned;
 use Illuminate\Http\Request;
@@ -118,8 +119,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::resource('physical-variable-categories', PhysicalVariableCategoryController::class)->except(['show']);
                 Route::resource('physical-variables', PhysicalVariableController::class)->except(['show']);
 
-                Route::resource('weather-stations', WeatherStationController::class);
-
                 Route::get('weather-stations/ajax/responsibles', [WeatherStationController::class, 'getResponsibles'])
                     ->name('weather-stations.ajax.responsibles');
 
@@ -164,7 +163,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                 Route::patch('physical-variable-records/{physical_variable_record}', [PhysicalVariableRecordController::class, 'update'])
                     ->name('physical-variable-records.patch');
-                
+
                 Route::get('physical-variable-records', [PhysicalVariableRecordController::class, 'index'])
                     ->name('physical-variable-records.index');
 
@@ -185,7 +184,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                 Route::get('physical-variable-records/{physical_variable_record}', [PhysicalVariableRecordController::class, 'show'])
                     ->name('physical-variable-records.show');
-                
+
                 Route::get('physical-variable-records-export', [PhysicalVariableRecordController::class, 'export'])
                     ->name('physical-variable-records.export');
 
@@ -204,6 +203,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                 Route::get('physical-variable-record-imports/create', [PhysicalVariableRecordImportController::class, 'create'])
                     ->name('physical-variable-record-imports.create');
+
+                Route::get('physical-variable-record-imports/template', [PhysicalVariableRecordImportController::class, 'template'])->name('physical-variable-record-imports.template');
+                Route::post('physical-variable-record-imports/preview', [PhysicalVariableRecordImportController::class, 'preview'])->name('physical-variable-record-imports.preview');
+                Route::post('physical-variable-record-imports/commit', [PhysicalVariableRecordImportController::class, 'commit'])->name('physical-variable-record-imports.commit');
 
                 Route::resource('environmental-events', EnvironmentalEventController::class);
 
@@ -289,11 +292,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         | Reportes por correo
         |--------------------------------------------------------------------------
         */
+        Route::get('/graficos', PhysicalRecordAnalyticsController::class)
+            ->middleware('role:super_admin|admin_colegio|docente|estudiante')->name('charts.index');
+
+        Route::get('/mediciones/evolucion', PhysicalRecordAnalyticsController::class)
+            ->middleware('role:super_admin|admin_colegio|docente|estudiante')->name('analytics.index');
+
         Route::get('/reports/mail', [ReportMailController::class, 'create'])
-            ->name('reports.mail');
+            ->middleware('role:super_admin|admin_colegio|docente|estudiante')->name('reports.mail');
 
         Route::post('/reports/mail/send', [ReportMailController::class, 'send'])
-            ->name('reports.mail.send');
+            ->middleware(['role:super_admin|admin_colegio|docente|estudiante', 'throttle:3,10'])->name('reports.mail.send');
 
         /*
         |--------------------------------------------------------------------------
@@ -323,4 +332,4 @@ Route::post('/logout', function (Request $request) {
     return redirect('/');
 })->middleware('auth')->name('logout');
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

@@ -12,6 +12,11 @@ class StoreUserRequest extends FormRequest
         return $this->user()?->hasAnyRole(['super_admin', 'admin_colegio']) ?? false;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['email' => strtolower(trim((string) $this->input('email')))]);
+    }
+
     public function rules(): array
     {
         $authUser = $this->user();
@@ -30,30 +35,30 @@ class StoreUserRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'document_type' => ['required', 'string', 'max:20'],
+            'document_type' => ['required', Rule::in(['CC', 'TI', 'CE', 'PPT', 'NIT', 'PAS'])],
             'document_number' => [
                 'required',
                 'string',
                 'max:50',
                 Rule::unique('users', 'document_number'),
             ],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['prohibited'],
+            'password_confirmation' => ['prohibited'],
 
             'school_id' => [
-                $isSuperAdmin ? 'nullable' : 'required',
+                $isSuperAdmin && $this->input('role') === 'super_admin' ? 'nullable' : 'required',
                 'integer',
                 $isSuperAdmin
-                    ? Rule::exists('schools', 'id')
+                    ? Rule::exists('schools', 'id')->where('is_active', true)
                     : Rule::in([(int) $authUser?->school_id]),
             ],
 
             'grade_id' => [
+                'required_with:course_id',
                 'nullable',
                 'integer',
                 Rule::exists('grades', 'id')->where(function ($query) use ($effectiveSchoolId) {
-                    if ($effectiveSchoolId) {
-                        $query->where('school_id', $effectiveSchoolId);
-                    }
+                    $query->where('school_id', $effectiveSchoolId)->where('is_active', true);
                 }),
             ],
 
@@ -61,9 +66,7 @@ class StoreUserRequest extends FormRequest
                 'nullable',
                 'integer',
                 Rule::exists('courses', 'id')->where(function ($query) use ($effectiveSchoolId) {
-                    if ($effectiveSchoolId) {
-                        $query->where('school_id', $effectiveSchoolId);
-                    }
+                    $query->where('school_id', $effectiveSchoolId)->where('is_active', true);
 
                     if ($this->grade_id) {
                         $query->where('grade_id', $this->grade_id);

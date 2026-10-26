@@ -3,17 +3,20 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeEncrypted;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class UserCreatedNotification extends Notification
+class UserCreatedNotification extends Notification implements ShouldBeEncrypted, ShouldQueue
 {
     use Queueable;
 
     public function __construct(
-        protected string $temporaryPassword,
+        public string $token,
         protected ?string $roleName = null
     ) {
+        $this->afterCommit();
     }
 
     public function via(object $notifiable): array
@@ -27,9 +30,9 @@ class UserCreatedNotification extends Notification
             ->subject('Bienvenido a EcoData')
             ->markdown('emails.users.created', [
                 'user' => $notifiable,
-                'temporaryPassword' => $this->temporaryPassword,
                 'roleName' => $this->roleName,
-                'loginUrl' => url('/login'),
+                'activationUrl' => route('password.reset', ['token' => $this->token, 'email' => $notifiable->email]),
+                'expiresInMinutes' => config('auth.passwords.'.config('auth.defaults.passwords').'.expire', 60),
             ]);
     }
 }

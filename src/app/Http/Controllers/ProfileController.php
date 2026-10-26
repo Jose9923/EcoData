@@ -21,7 +21,23 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        $user->update($request->validated());
+        $user->fill($request->validated());
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        if (! $user->hasVerifiedEmail()) {
+            try {
+                $user->sendEmailVerificationNotification();
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+
+            return redirect()->route('verification.notice');
+        }
 
         return back()->with('success', 'Perfil actualizado correctamente.');
     }

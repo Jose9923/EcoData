@@ -1,0 +1,151 @@
+{
+  "date": "2026-10-15",
+  "scope": "Lectura estática backend src. No modificación app ni despliegue ejecutado.",
+  "counts": {
+    "domain_models": 17,
+    "migration_files": 23
+  },
+  "locked_versions": {
+    "laravel": "13.5.0",
+    "php_requirement": "^8.3",
+    "php_docker": "8.4-fpm",
+    "excel": "3.1.68",
+    "phpspreadsheet": "1.30.4",
+    "spatie_permission": "7.3.0",
+    "phpunit": "12.5.23"
+  },
+  "findings": [
+    {
+      "id": "TECH-01",
+      "priority": "alta",
+      "finding": "Seeder predeterminado trunca tablas de dominio, usuarios y roles.",
+      "evidence": [
+        "src/database/seeders/DatabaseSeeder.php:9",
+        "src/database/seeders/EcoDataDemoSeeder.php:31",
+        "src/database/seeders/EcoDataDemoSeeder.php:97"
+      ],
+      "manual_action": "No db:seed global ni migrate --seed; roles por clase explícita."
+    },
+    {
+      "id": "TECH-02",
+      "priority": "alta",
+      "finding": "Editar actividad elimina preguntas; cascade elimina respuestas.",
+      "evidence": [
+        "src/app/Http/Controllers/Admin/FieldDiaryActivityController.php:209",
+        "src/database/migrations/2026_05_14_195813_create_field_diary_answers_table.php:29"
+      ]
+    },
+    {
+      "id": "TECH-03",
+      "priority": "alta",
+      "finding": "Login ignora is_active; no throttle propio visible.",
+      "evidence": [
+        "src/app/Http/Controllers/Auth/AuthenticatedSessionController.php:19",
+        "src/routes/auth.php:12"
+      ]
+    },
+    {
+      "id": "TECH-04",
+      "priority": "alta",
+      "finding": "User no implementa MustVerifyEmail; verified no garantiza correo verificado.",
+      "evidence": [
+        "src/app/Models/User.php:10"
+      ]
+    },
+    {
+      "id": "TECH-05",
+      "priority": "alta",
+      "finding": "Estudiantes consultan/exportan registros del colegio, incluyendo documento y correo del autor.",
+      "evidence": [
+        "src/app/Http/Controllers/Admin/PhysicalVariableRecordController.php:413",
+        "src/app/Exports/PhysicalVariableRecordsExport.php:72"
+      ]
+    },
+    {
+      "id": "TECH-06",
+      "priority": "media",
+      "finding": "ReportMailController ausente pese a rutas.",
+      "evidence": [
+        "src/routes/web.php:292"
+      ]
+    },
+    {
+      "id": "TECH-07",
+      "priority": "media",
+      "finding": "Importación de registros físicos tiene solo GET/create; CSV no procesado.",
+      "evidence": [
+        "src/app/Http/Controllers/Admin/PhysicalVariableRecordImportController.php"
+      ]
+    },
+    {
+      "id": "TECH-08",
+      "priority": "media",
+      "finding": "Update de registro valida pero no persiste estación/origen.",
+      "evidence": [
+        "src/app/Http/Controllers/Admin/PhysicalVariableRecordController.php"
+      ]
+    },
+    {
+      "id": "TECH-09",
+      "priority": "media",
+      "finding": "Buscar categorías consulta icon ausente en esquema.",
+      "evidence": [
+        "src/app/Http/Controllers/Admin/PhysicalVariableCategoryController.php:34"
+      ]
+    },
+    {
+      "id": "TECH-10",
+      "priority": "media",
+      "finding": "Notificaciones síncronas, algunas altas pueden fallar después de persistir.",
+      "evidence": [
+        "src/app/Notifications",
+        "src/app/Http/Controllers/Admin/UserController.php:97"
+      ]
+    },
+    {
+      "id": "TECH-11",
+      "priority": "media",
+      "finding": "Registro público sin rol/colegio; importación usa clave fija si vacía. No divulgar literal.",
+      "evidence": [
+        "src/app/Http/Controllers/Auth/RegisteredUserController.php:22",
+        "src/app/Services/UserImportService.php"
+      ]
+    },
+    {
+      "id": "TECH-12",
+      "priority": "media",
+      "finding": ".env.example ausente; phpredis/pdo_sqlite no instaladas explícitamente; tests Volt no declarado y User sin HasFactory.",
+      "evidence": [
+        "src/composer.json",
+        "src/docker/php/Dockerfile",
+        "src/tests/Feature/ProfileTest.php",
+        "src/app/Models/User.php"
+      ]
+    },
+    {
+      "id": "TECH-13",
+      "priority": "baja",
+      "finding": "Resource estaciones duplicado; UTC fijo; exports get completo.",
+      "evidence": [
+        "src/routes/web.php:121",
+        "src/routes/web.php:126",
+        "src/config/app.php",
+        "src/app/Exports"
+      ]
+    },
+    {
+      "id": "TECH-14",
+      "priority": "media",
+      "finding": "Configuración permite 0-10 decimales, pero DECIMAL(15,4) limita almacenamiento a cuatro.",
+      "evidence": [
+        "src/app/Http/Requests/Admin/StorePhysicalVariableRequest.php:75",
+        "src/database/migrations/2026_04_21_033954_create_physical_variable_record_values_table.php:28"
+      ]
+    }
+  ],
+  "permissions": "Categorías solo super_admin. Estudiantes crean registros, editan propios, consultan/exportan colegio. Docentes administran guías, actividades y eventos y revisan entregas del colegio.",
+  "test_status": "No ejecutados por este subagente; parent puede adjuntar verificación propia.",
+  "content": "documentation/work/technical_content.json",
+  "sensitive_data": "Entregables no incluyen claves fijas ni correos personales de seeders.",
+  "isolation_note": "Manual exige copia código/.env separada y proyectos nuevos explícitos ecodata-validacion/ecodata-restauracion con -p; comprobar contenedores/volúmenes y puertos antes de arrancar. No sobrescribir entorno en uso."
+}

@@ -7,18 +7,19 @@ use App\Http\Requests\Admin\StoreFieldDiaryActivityRequest;
 use App\Http\Requests\Admin\UpdateFieldDiaryActivityRequest;
 use App\Models\Course;
 use App\Models\FieldDiaryActivity;
-use App\Models\FieldDiaryQuestion;
 use App\Models\Grade;
 use App\Models\School;
 use App\Models\User;
 use App\Models\WeatherStation;
+use App\Notifications\NewFieldDiaryActivityNotification;
+use App\Services\FieldDiaryAccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
-use App\Notifications\NewFieldDiaryActivityNotification;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 
 class FieldDiaryActivityController extends Controller
 {
@@ -41,14 +42,14 @@ class FieldDiaryActivityController extends Controller
             })
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {
-                    $subQuery->where('title', 'like', '%' . $search . '%')
-                        ->orWhere('description', 'like', '%' . $search . '%')
-                        ->orWhere('entry_type', 'like', '%' . $search . '%')
-                        ->orWhereHas('school', fn ($q) => $q->where('name', 'like', '%' . $search . '%'))
-                        ->orWhereHas('grade', fn ($q) => $q->where('name', 'like', '%' . $search . '%')->orWhere('label', 'like', '%' . $search . '%'))
-                        ->orWhereHas('course', fn ($q) => $q->where('name', 'like', '%' . $search . '%')->orWhere('label', 'like', '%' . $search . '%'))
-                        ->orWhereHas('weatherStation', fn ($q) => $q->where('name', 'like', '%' . $search . '%')->orWhere('code', 'like', '%' . $search . '%'))
-                        ->orWhereHas('creator', fn ($q) => $q->where('name', 'like', '%' . $search . '%'));
+                    $subQuery->where('title', 'like', '%'.$search.'%')
+                        ->orWhere('description', 'like', '%'.$search.'%')
+                        ->orWhere('entry_type', 'like', '%'.$search.'%')
+                        ->orWhereHas('school', fn ($q) => $q->where('name', 'like', '%'.$search.'%'))
+                        ->orWhereHas('grade', fn ($q) => $q->where('name', 'like', '%'.$search.'%')->orWhere('label', 'like', '%'.$search.'%'))
+                        ->orWhereHas('course', fn ($q) => $q->where('name', 'like', '%'.$search.'%')->orWhere('label', 'like', '%'.$search.'%'))
+                        ->orWhereHas('weatherStation', fn ($q) => $q->where('name', 'like', '%'.$search.'%')->orWhere('code', 'like', '%'.$search.'%'))
+                        ->orWhereHas('creator', fn ($q) => $q->where('name', 'like', '%'.$search.'%'));
                 });
             })
             ->latest()
@@ -158,6 +159,7 @@ class FieldDiaryActivityController extends Controller
         $this->authorizeSchoolScope($authUser, $field_diary_activity->school_id);
 
         $field_diary_activity->load('questions');
+        $field_diary_activity->loadCount('submissions');
 
         $selectedSchoolId = $authUser->hasRole('super_admin')
             ? old('school_id', $request->integer('school_id') ?: $field_diary_activity->school_id)
@@ -193,6 +195,10 @@ class FieldDiaryActivityController extends Controller
             : (int) $authUser->school_id;
 
         DB::transaction(function () use ($field_diary_activity, $data, $schoolId) {
+            // Serialize edits with first submissions and autosaves of this activity.
+            $field_diary_activity = FieldDiaryActivity::query()->lockForUpdate()->findOrFail($field_diary_activity->id);
+            app(FieldDiaryAccess::class)->authorizeManageSchool(request()->user(), (int) $field_diary_activity->school_id);
+            $this->validateQuestionChanges($field_diary_activity, $data, $schoolId);
             $field_diary_activity->update([
                 'school_id' => $schoolId,
                 'grade_id' => $data['grade_id'] ?? null,
@@ -205,8 +211,6 @@ class FieldDiaryActivityController extends Controller
                 'ends_at' => $data['ends_at'] ?? null,
                 'is_active' => (bool) $data['is_active'],
             ]);
-
-            $field_diary_activity->questions()->delete();
 
             $this->syncQuestions($field_diary_activity, $data['questions'] ?? []);
         });
@@ -222,34 +226,85 @@ class FieldDiaryActivityController extends Controller
 
         $this->authorizeSchoolScope($authUser, $field_diary_activity->school_id);
 
-        $field_diary_activity->delete();
+        DB::transaction(function () use ($field_diary_activity, $authUser) {
+            $activity = FieldDiaryActivity::query()->lockForUpdate()->findOrFail($field_diary_activity->id);
+            app(FieldDiaryAccess::class)->authorizeManageSchool($authUser, (int) $activity->school_id);
+            if ($activity->submissions()->exists()) {
+                throw ValidationException::withMessages(['activity' => 'Esta actividad tiene entregas. Desactívala para conservar las respuestas.']);
+            }
+            $activity->delete();
+        });
 
         return redirect()
             ->route('admin.field-diary-activities.index')
             ->with('success', 'Actividad de diario de campo eliminada correctamente.');
     }
 
+    private function questionOptions(array $question): ?array
+    {
+        if (! in_array($question['question_type'], ['select', 'radio', 'checkbox'], true)) {
+            return null;
+        }
+
+        return collect(preg_split('/\R/u', (string) ($question['options_text'] ?? '')))
+            ->map(fn ($option) => trim($option))->filter(fn ($option) => $option !== '')->values()->all();
+    }
+
+    private function validateQuestionChanges(FieldDiaryActivity $activity, array $data, int $schoolId): void
+    {
+        $existing = $activity->questions()->get()->keyBy('id');
+        $questions = $data['questions'];
+        $submittedIds = collect($questions)->pluck('id')->filter()->map(fn ($id) => (int) $id);
+
+        if ($submittedIds->unique()->count() !== $submittedIds->count()
+            || $submittedIds->diff($existing->keys())->isNotEmpty()) {
+            throw ValidationException::withMessages(['questions' => 'Las preguntas no corresponden a esta actividad. Recarga la página.']);
+        }
+
+        if (! $activity->submissions()->exists()) {
+            return;
+        }
+
+        foreach (['school_id' => $schoolId, 'grade_id' => $data['grade_id'] ?? null, 'course_id' => $data['course_id'] ?? null] as $field => $value) {
+            if ((int) $activity->{$field} !== (int) $value) {
+                throw ValidationException::withMessages([$field => 'No se puede cambiar el grupo de una actividad con entregas. Crea una nueva actividad.']);
+            }
+        }
+
+        if (count($questions) !== $existing->count() || $submittedIds->count() !== $existing->count()) {
+            throw ValidationException::withMessages(['questions' => 'La actividad tiene entregas: no puedes agregar ni eliminar preguntas. Crea una nueva actividad.']);
+        }
+
+        foreach ($questions as $index => $question) {
+            $original = $existing->get((int) $question['id']);
+            if ($original->question_type !== $question['question_type']
+                || $original->options !== $this->questionOptions($question)
+                || $original->is_required !== (bool) ($question['is_required'] ?? false)) {
+                throw ValidationException::withMessages(["questions.$index.question_type" => 'Con entregas existentes solo puedes corregir el texto y el orden. Conserva tipo, opciones y obligatoriedad.']);
+            }
+        }
+    }
+
     private function syncQuestions(FieldDiaryActivity $activity, array $questions): void
     {
+        $retained = [];
         foreach ($questions as $index => $question) {
-            $options = null;
-
-            if (in_array($question['question_type'], ['select', 'radio', 'checkbox'], true)) {
-                $options = collect(explode(PHP_EOL, (string) ($question['options_text'] ?? '')))
-                    ->map(fn ($option) => trim($option))
-                    ->filter()
-                    ->values()
-                    ->all();
-            }
-
-            $activity->questions()->create([
+            $attributes = [
                 'question_text' => trim($question['question_text']),
                 'question_type' => $question['question_type'],
-                'options' => $options,
+                'options' => $this->questionOptions($question),
                 'order' => filled($question['order'] ?? null) ? (int) $question['order'] : $index + 1,
                 'is_required' => (bool) ($question['is_required'] ?? false),
-            ]);
+            ];
+            if (! empty($question['id'])) {
+                $model = $activity->questions()->findOrFail($question['id']);
+                $model->update($attributes);
+            } else {
+                $model = $activity->questions()->create($attributes);
+            }
+            $retained[] = $model->id;
         }
+        $activity->questions()->whereNotIn('id', $retained)->delete();
     }
 
     private function visibleSchools(User $authUser)
@@ -298,7 +353,7 @@ class FieldDiaryActivityController extends Controller
         $stations = $this->visibleWeatherStations($authUser, $schoolId)
             ->map(fn ($station) => [
                 'id' => $station->id,
-                'label' => trim($station->name . ' - ' . $station->code),
+                'label' => trim($station->name.' - '.$station->code),
             ])
             ->values();
 
@@ -364,17 +419,7 @@ class FieldDiaryActivityController extends Controller
 
     private function authorizeSchoolScope(User $authUser, ?int $schoolId): void
     {
-        if ($authUser->hasRole('super_admin')) {
-            return;
-        }
-
-        abort_if(! $authUser->school_id, 403, 'Tu usuario no tiene un colegio asignado.');
-
-        abort_if(
-            (int) $schoolId !== (int) $authUser->school_id,
-            403,
-            'No tienes autorización para gestionar actividades de diario de campo de otro colegio.'
-        );
+        app(FieldDiaryAccess::class)->authorizeManageSchool($authUser, $schoolId);
     }
 
     private function entryTypes(): array

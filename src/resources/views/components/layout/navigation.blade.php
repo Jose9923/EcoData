@@ -159,6 +159,11 @@
 
             <hr class="my-3">
 
+            @if($canAccessPhysicalRecords)
+                <li class="nav-item"><a class="nav-link {{ request()->routeIs('charts.*', 'analytics.*') ? 'active' : '' }}" href="{{ route('charts.index') }}">Gráficos</a></li>
+                <li class="nav-item"><a class="nav-link {{ request()->routeIs('reports.mail*') ? 'active' : '' }}" href="{{ route('reports.mail') }}">Reportes por correo</a></li>
+            @endif
+
             {{-- ADMINISTRACIÓN --}}
             @if($canManageAdmin)
                 <li class="nav-item">

@@ -16,7 +16,7 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class UsersTemplateSheetExport implements FromArray, WithTitle, WithStyles, WithEvents, WithDrawings, ShouldAutoSize, WithCustomStartCell
+class UsersTemplateSheetExport implements FromArray, ShouldAutoSize, WithCustomStartCell, WithDrawings, WithEvents, WithStyles, WithTitle
 {
     use AppliesSchoolExcelBranding;
 
@@ -43,17 +43,16 @@ class UsersTemplateSheetExport implements FromArray, WithTitle, WithStyles, With
             : ($this->authUser->school?->name ?? 'Colegio asignado');
 
         return [
-            ['name', 'email', 'document_type', 'document_number', 'role', 'school', 'grade', 'course', 'password', 'is_active'],
+            ['name', 'email', 'document_type', 'document_number', 'role', 'school', 'grade', 'course', 'is_active'],
             [
                 'Juan Pérez',
                 'juan.perez@ecodata.test',
                 'TI',
                 '123456789',
                 'estudiante',
-                $this->school?->name ?? 'Nombre exacto del colegio',
+                $exampleSchool,
                 '6',
                 '6-1',
-                'Cambio123*',
                 '1',
             ],
         ];
@@ -65,13 +64,13 @@ class UsersTemplateSheetExport implements FromArray, WithTitle, WithStyles, With
             return [];
         }
 
-        $fullPath = storage_path('app/public/' . $this->school->shield_path);
+        $fullPath = storage_path('app/public/'.$this->school->shield_path);
 
         if (! file_exists($fullPath)) {
             return [];
         }
 
-        $drawing = new Drawing();
+        $drawing = new Drawing;
         $drawing->setName('Escudo');
         $drawing->setDescription('Escudo del colegio');
         $drawing->setPath($fullPath);
@@ -91,8 +90,8 @@ class UsersTemplateSheetExport implements FromArray, WithTitle, WithStyles, With
             $this->generatedBy
         );
 
-        $this->applyTableHeaderStyle($sheet, 'B8:K8', $this->school);
-        $this->applyBodyStyle($sheet, 'B9:K5000', $this->school);
+        $this->applyTableHeaderStyle($sheet, 'B8:J8', $this->school);
+        $this->applyBodyStyle($sheet, 'B9:J5000', $this->school);
 
         return [];
     }
@@ -104,9 +103,9 @@ class UsersTemplateSheetExport implements FromArray, WithTitle, WithStyles, With
                 $sheet = $event->sheet->getDelegate();
 
                 $sheet->freezePane('B9');
-                $sheet->setAutoFilter('B8:K8');
+                $sheet->setAutoFilter('B8:J8');
 
-                foreach (range('B', 'K') as $col) {
+                foreach (range('B', 'J') as $col) {
                     $sheet->getColumnDimension($col)->setAutoSize(true);
                 }
 
@@ -114,11 +113,11 @@ class UsersTemplateSheetExport implements FromArray, WithTitle, WithStyles, With
                 $sheet->getRowDimension(9)->setRowHeight(22);
 
                 $sheet->setCellValue('J4', 'Modo de uso');
-                $sheet->setCellValue('K4', 'Completa desde la fila 10 usando las hojas auxiliares. No modifiques los encabezados.');
+                $sheet->setCellValue('K4', 'Elimina la fila de ejemplo y escribe tus usuarios desde la fila 9. No incluyas contraseñas.');
 
                 $this->applyInfoPanelStyle($sheet, 'J2:K4', $this->school);
-                $this->applyExampleRowStyle($sheet, 'B9:K9', $this->school);
-                $this->applyZebraRows($sheet, 10, 200, 2, 11);
+                $this->applyExampleRowStyle($sheet, 'B9:J9', $this->school);
+                $this->applyZebraRows($sheet, 10, 200, 2, 10);
             },
         ];
     }

@@ -1,18 +1,20 @@
-@import "bootstrap/scss/bootstrap";
+@use "bootstrap/dist/css/bootstrap.min.css";
+@use "layout";
+@use "charts";
 
 /*
 |--------------------------------------------------------------------------
 | EcoData SCSS
 |--------------------------------------------------------------------------
-| Los colores institucionales del colegio se definen dinámicamente
+| Los colores institucionales del colegio se definen dinÃ¡micamente
 | en resources/views/layouts/app.blade.php mediante:
 |
 | --school-primary
 | --school-secondary
 | --school-accent
 |
-| Por eso aquí no se deben fijar valores como #c93a7b,
-| #2f3b52 o #6366f1, porque pisan la personalización por colegio.
+| Por eso aquÃ­ no se deben fijar valores como #c93a7b,
+| #2f3b52 o #6366f1, porque pisan la personalizaciÃ³n por colegio.
 |--------------------------------------------------------------------------
 */
 

@@ -106,7 +106,7 @@ class MailRedirectControllerTest extends TestCase
         Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
 
         $user = User::create([
-            'name' => ucfirst($role) . ' EcoData',
+            'name' => ucfirst($role).' EcoData',
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
@@ -114,6 +114,7 @@ class MailRedirectControllerTest extends TestCase
             'is_active' => true,
         ]);
 
+        $user->forceFill(['email_verified_at' => now()])->save();
         $user->assignRole($role);
 
         return $user;

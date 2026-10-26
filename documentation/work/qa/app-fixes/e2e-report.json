@@ -1,0 +1,110 @@
+{
+  "started": "2026-10-26T14:14:23.702Z",
+  "checks": [
+    {
+      "name": "desktop login student",
+      "ok": true,
+      "data": {
+        "url": "http://127.0.0.1:18086/dashboard"
+      }
+    },
+    {
+      "name": "student chart and school isolation",
+      "ok": true,
+      "data": {
+        "points": 7
+      }
+    },
+    {
+      "name": "report email to verified account using array mail",
+      "ok": true
+    },
+    {
+      "name": "diary autosave persists across reload",
+      "ok": true
+    },
+    {
+      "name": "manual submit waits for active autosave and sends exactly once",
+      "ok": true,
+      "data": {
+        "submissions": 1
+      }
+    },
+    {
+      "name": "late autosave conflict does not overwrite sent answer",
+      "ok": true
+    },
+    {
+      "name": "teacher login",
+      "ok": true
+    },
+    {
+      "name": "CSV template download",
+      "ok": true
+    },
+    {
+      "name": "CSV preview and confirmation",
+      "ok": true
+    },
+    {
+      "name": "teacher reviews and student sees result",
+      "ok": true
+    },
+    {
+      "name": "mobile login and graph layout",
+      "ok": true,
+      "data": {
+        "width": 390,
+        "body": 390
+      }
+    },
+    {
+      "name": "mobile reviewed diary and report layout",
+      "ok": true
+    },
+    {
+      "name": "mobile chart final legible scale and dates",
+      "ok": true,
+      "data": {
+        "geometry": {
+          "width": 390,
+          "body": 390
+        },
+        "errors": [],
+        "text": "Menú de navegación\n☰\nEvolución de mediciones\n\nConsulta promedios diarios y compara el período con los mismos días inmediatamente anteriores. Solo se incluyen mediciones visibles para tu cuenta.\n\nDesde\nHasta\nVariable\nSelecciona una variable\nTemperatura QA (C)\nTemperatura QA (C)\nEstación\nTodas las estaciones y registros manuales\nEstación QA 1\nTodas las estaciones y registros manuales\nActualizar gráfica Reporte por correo\nTemperatura QA · C\nPERÍODO\tMEDICIONES\tPROMEDIO\tMÍNIMO\tMÁXIMO\n2026-09-27 a 2026-10-26\t9\t23,37\t20,50\t26,50\n2026-08-28 a 2026-09-26\t0\tSin datos\tSin datos\tSin datos\nEscala de promedios: 21,5000 a 26,5000 C.\n2026-09-27\n2026-10-26\n\nCada punto representa el promedio del día. No se asignan valores a fechas sin mediciones.\n\nVer datos de la gráfica"
+      }
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "httpErrors": [],
+  "screenshots": [
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\app-fixes\\01-login-desktop.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\app-fixes\\02-dashboard-desktop.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\app-fixes\\03-chart-desktop.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\app-fixes\\04-report-mail-desktop.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\app-fixes\\05-diary-initial-desktop.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\app-fixes\\06-diary-autosaved-desktop.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\app-fixes\\08-csv-preview-desktop.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\app-fixes\\09-csv-completed-desktop.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\app-fixes\\10-review-desktop.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\app-fixes\\11-diary-reviewed-desktop.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\app-fixes\\12-login-mobile.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\app-fixes\\13-dashboard-mobile.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\app-fixes\\14-chart-mobile.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\app-fixes\\15-diary-reviewed-mobile.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\app-fixes\\16-report-mail-mobile.png"
+  ],
+  "finished": "2026-10-26T14:19:25.179Z",
+  "visual_review": {
+    "desktop": "Sin recortes ni solapamientos funcionales",
+    "mobile": "Sin desbordamiento global; gráfica con escala y fechas HTML legibles; tablas amplias desplazables",
+    "capture_note": "Se omitió una captura tomada durante la animación de un modal; el recorrido de envío fue verificado correctamente."
+  },
+  "cleanup": {
+    "container": "ecodata-review-ui",
+    "stopped_and_removed": true,
+    "database": "SQLite temporal /tmp/ecodata-preview.sqlite eliminado con el contenedor",
+    "production_data_touched": false
+  }
+}
