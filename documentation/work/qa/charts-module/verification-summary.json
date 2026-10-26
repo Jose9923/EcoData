@@ -1,0 +1,24 @@
+{
+  "module": "Graficos ambientales",
+  "url": "http://localhost:8081/graficos",
+  "php_tests": 135,
+  "php_assertions": 828,
+  "javascript_tests": 8,
+  "browser_checks": 10,
+  "browser_errors": 0,
+  "mysql_read_only_verified": true,
+  "build_success": true,
+  "database_migrations_required": false,
+  "features": [
+    "trend-line-bar",
+    "day-week-month-weighted-averages",
+    "previous-period-comparison",
+    "configured-limits",
+    "station-comparison",
+    "histogram",
+    "png-export",
+    "csv-export",
+    "accessible-data-tables",
+    "school-and-role-scope"
+  ]
+}

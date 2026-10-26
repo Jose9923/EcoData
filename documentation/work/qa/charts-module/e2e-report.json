@@ -1,0 +1,60 @@
+{
+  "checks": [
+    {
+      "name": "navigation and initial empty state",
+      "ok": true
+    },
+    {
+      "name": "three charts and missing days",
+      "ok": true,
+      "detail": {
+        "days": 14
+      }
+    },
+    {
+      "name": "previous period and limits switches",
+      "ok": true
+    },
+    {
+      "name": "CSV and PNG downloads",
+      "ok": true,
+      "detail": {
+        "csvBytes": 1115,
+        "pngBytes": 139996
+      }
+    },
+    {
+      "name": "weekly grouping and bars",
+      "ok": true
+    },
+    {
+      "name": "monthly grouping and station filter",
+      "ok": true
+    },
+    {
+      "name": "zero constant and no limits",
+      "ok": true
+    },
+    {
+      "name": "empty result and forbidden variable",
+      "ok": true
+    },
+    {
+      "name": "mobile charts and exports",
+      "ok": true
+    },
+    {
+      "name": "table fallback without JavaScript",
+      "ok": true
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "screenshots": [
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\charts-module\\01-empty-desktop.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\charts-module\\02-charts-desktop.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\charts-module\\03-weekly-bars-desktop.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\charts-module\\04-zero-desktop.png",
+    "\\\\wsl.localhost\\Ubuntu-24.04\\home\\josev\\EcoData\\documentation\\work\\qa\\charts-module\\05-charts-mobile.png"
+  ]
+}
