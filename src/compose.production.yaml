@@ -1,0 +1,225 @@
+name: ecodata-production
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+x-app-environment: &app-environment
+  APP_NAME: EcoData
+  APP_ENV: production
+  APP_DEBUG: "false"
+  APP_KEY: ${APP_KEY:?Configure APP_KEY in a private env file}
+  APP_URL: ${APP_URL:?Configure the production HTTPS URL}
+  APP_TIMEZONE: ${APP_TIMEZONE:-America/Bogota}
+  APP_LOCALE: es
+  APP_FALLBACK_LOCALE: en
+  LOG_CHANNEL: stderr
+  LOG_LEVEL: warning
+  DB_CONNECTION: mysql
+  DB_HOST: mysql
+  DB_PORT: "3306"
+  DB_DATABASE: ${DB_DATABASE:-ecodata_production}
+  DB_USERNAME: ${DB_USERNAME:-ecodata_app}
+  DB_PASSWORD: ${DB_PASSWORD:?Configure an application DB password}
+  MYSQL_ROOT_PASSWORD: ""
+  DB_MIGRATOR_PASSWORD: ""
+  SESSION_DRIVER: database
+  SESSION_COOKIE: ecodata_production_session
+  SESSION_LIFETIME: "120"
+  SESSION_ENCRYPT: "true"
+  SESSION_SECURE_COOKIE: "true"
+  SESSION_HTTP_ONLY: "true"
+  SESSION_SAME_SITE: lax
+  SESSION_DOMAIN: ""
+  QUEUE_CONNECTION: database
+  DB_QUEUE_RETRY_AFTER: "180"
+  CACHE_STORE: redis
+  CACHE_PREFIX: ecodata_production_cache_
+  REDIS_CLIENT: phpredis
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  REDIS_PREFIX: ecodata_production_
+  REDIS_DB: "0"
+  REDIS_CACHE_DB: "1"
+  FILESYSTEM_DISK: local
+  AUTH_REGISTRATION_ENABLED: "false"
+  ECODATA_ALLOW_DEMO_SEED: "false"
+  MAIL_MAILER: ${MAIL_MAILER:-array}
+  MAIL_SCHEME: ${MAIL_SCHEME:-smtp}
+  MAIL_HOST: ${MAIL_HOST:-}
+  MAIL_PORT: ${MAIL_PORT:-587}
+  MAIL_USERNAME: ${MAIL_USERNAME:-}
+  MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-notificaciones@example.invalid}
+  MAIL_FROM_NAME: EcoData
+
+x-php: &php
+  image: ecodata-app:${ECODATA_IMAGE_TAG:-production}
+  build:
+    context: .
+    dockerfile: Dockerfile.production
+    target: production
+  restart: unless-stopped
+  init: true
+  user: "1000:1000"
+  read_only: true
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  environment: *app-environment
+  tmpfs:
+    - /tmp:size=128m,mode=1777
+    - /var/www/html/bootstrap/cache:size=32m,uid=1000,gid=1000,mode=0750
+  volumes:
+    - storage_data:/var/www/html/storage
+  networks: [backend]
+  logging: *logging
+  depends_on:
+    mysql: {condition: service_healthy}
+    redis: {condition: service_healthy}
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    mem_limit: 1536m
+    pids_limit: 256
+    command: ["--innodb-buffer-pool-size=512M", "--max-connections=75", "--mysqlx=0"]
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-ecodata_production}
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      ECODATA_DB_USER: ${DB_USERNAME:-ecodata_app}
+      ECODATA_MIGRATOR_USER: ${DB_MIGRATOR_USERNAME:-ecodata_migrator}
+    secrets: [mysql_root_password, db_password, db_migrator_password]
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/production/mysql-init.sh:/docker-entrypoint-initdb.d/10-ecodata.sh:ro
+      - ./docker/production/mysql-health.sh:/usr/local/bin/ecodata-mysql-health:ro
+    healthcheck:
+      test: [CMD, sh, /usr/local/bin/ecodata-mysql-health]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    security_opt: [no-new-privileges:true]
+    networks: [backend]
+    logging: *logging
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    mem_limit: 256m
+    pids_limit: 64
+    command: [redis-server, --save, "", --appendonly, "no", --maxmemory, 192mb, --maxmemory-policy, noeviction]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    security_opt: [no-new-privileges:true]
+    networks: [backend]
+    logging: *logging
+
+  app:
+    <<: *php
+    mem_limit: 1g
+    pids_limit: 128
+    healthcheck:
+      test: [CMD, ecodata-fpm-health]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  queue:
+    <<: *php
+    mem_limit: 512m
+    pids_limit: 64
+    command: [php, artisan, queue:work, --sleep=3, --tries=3, --timeout=60, --backoff=30, --max-time=3600]
+    stop_grace_period: 75s
+    healthcheck:
+      test: [CMD-SHELL, "kill -0 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  scheduler:
+    <<: *php
+    mem_limit: 256m
+    pids_limit: 64
+    command: [php, artisan, schedule:work]
+    stop_grace_period: 75s
+    healthcheck:
+      test: [CMD-SHELL, "kill -0 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  nginx:
+    image: ecodata-nginx:${ECODATA_IMAGE_TAG:-production}
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      target: web
+    restart: unless-stopped
+    mem_limit: 128m
+    pids_limit: 64
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    ports: ["127.0.0.1:18081:80"]
+    tmpfs:
+      - /var/cache/nginx:size=64m,mode=0755
+      - /var/run:size=8m,mode=0755
+      - /tmp:size=16m,mode=1777
+    volumes:
+      - type: volume
+        source: storage_data
+        target: /var/www/public-storage
+        read_only: true
+        volume:
+          subpath: app/public
+          nocopy: true
+    depends_on:
+      app: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, wget, --quiet, --spider, http://127.0.0.1/up]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks: [backend]
+    logging: *logging
+
+  migrate:
+    <<: *php
+    profiles: [maintenance]
+    restart: "no"
+    mem_limit: 512m
+    environment:
+      <<: *app-environment
+      DB_USERNAME: ${DB_MIGRATOR_USERNAME:-ecodata_migrator}
+      DB_PASSWORD: ""
+      DB_PASSWORD_FILE: /run/secrets/db_migrator_password
+    secrets: [db_migrator_password]
+    command: [php, artisan, migrate, --force, --no-interaction]
+
+secrets:
+  mysql_root_password:
+    file: ${ECODATA_SECRETS_DIR:?Set the private secrets directory}/mysql_root_password
+  db_password:
+    file: ${ECODATA_SECRETS_DIR:?Set the private secrets directory}/db_password
+  db_migrator_password:
+    file: ${ECODATA_SECRETS_DIR:?Set the private secrets directory}/db_migrator_password
+
+volumes:
+  mysql_data:
+  storage_data:
+
+networks:
+  backend:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.241.0/24
+          gateway: 172.28.241.1

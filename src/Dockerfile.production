@@ -1,0 +1,67 @@
+# syntax=docker/dockerfile:1
+FROM php:8.4-fpm-bookworm AS php-base
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libzip-dev libicu-dev libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
+        libonig-dev libxml2-dev libfcgi-bin unzip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" pdo_mysql bcmath intl zip gd pcntl mbstring opcache \
+    && pecl install redis-6.3.0 \
+    && docker-php-ext-enable redis \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/pear \
+    && groupadd --gid 1000 ecodata && useradd --uid 1000 --gid ecodata --no-create-home ecodata
+
+WORKDIR /var/www/html
+
+FROM php-base AS vendor
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction --prefer-dist --no-progress
+COPY app ./app
+COPY bootstrap ./bootstrap
+COPY config ./config
+COPY database ./database
+COPY routes ./routes
+COPY artisan ./artisan
+RUN mkdir -p bootstrap/cache storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs \
+    && composer dump-autoload --no-dev --classmap-authoritative --no-scripts \
+    && APP_ENV=production APP_DEBUG=false LOG_CHANNEL=stderr php artisan package:discover --ansi
+
+FROM node:22-bookworm-slim AS frontend
+WORKDIR /build
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts --no-audit --no-fund
+COPY resources ./resources
+COPY vite.config.js postcss.config.js tailwind.config.js ./
+RUN npm run build
+
+FROM php-base AS production
+ENV APP_ENV=production APP_DEBUG=false
+COPY --chown=root:root --from=vendor /var/www/html/vendor ./vendor
+COPY --chown=root:root app ./app
+COPY --chown=root:root bootstrap ./bootstrap
+COPY --chown=root:root config ./config
+COPY --chown=root:root database ./database
+COPY --chown=root:root resources ./resources
+COPY --chown=root:root routes ./routes
+COPY --chown=root:root public ./public
+COPY --chown=root:root artisan composer.json composer.lock ./
+COPY --chown=root:root --from=frontend /build/public/build ./public/build
+COPY --chown=root:root --from=vendor /var/www/html/bootstrap/cache/packages.php /var/www/html/bootstrap/cache/services.php /opt/ecodata/bootstrap-cache/
+COPY --chown=root:root docker/production/php.ini /usr/local/etc/php/conf.d/zz-production.ini
+COPY --chown=root:root docker/production/fpm.conf /usr/local/etc/php-fpm.d/zz-production.conf
+COPY --chown=root:root --chmod=755 docker/production/entrypoint.sh /usr/local/bin/ecodata-entrypoint
+COPY --chown=root:root --chmod=755 docker/production/fpm-health.sh /usr/local/bin/ecodata-fpm-health
+RUN mkdir -p storage/app/private storage/app/public/schools/shields \
+        storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && chown -R ecodata:ecodata storage bootstrap/cache \
+    && chmod 750 storage/app/private \
+    && ln -s /var/www/html/storage/app/public public/storage
+USER ecodata
+ENTRYPOINT ["ecodata-entrypoint"]
+CMD ["php-fpm", "-F"]
+
+FROM nginx:stable-alpine AS web
+COPY docker/production/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=production /var/www/html/public /var/www/html/public
+RUN rm -f /var/www/html/public/storage

@@ -2,6 +2,12 @@
 
 Aplicación Laravel para colegios, mediciones ambientales, estaciones y sensores, guías de laboratorio, eventos y diarios de campo.
 
+## Producción y documentación
+
+EcoData está publicado en [ecodata.varcor.tech](https://ecodata.varcor.tech/login). El 4 de noviembre de 2026 se verificó una instalación nueva con un colegio y cuatro cuentas iniciales, sin copiar datos locales. Los comandos de operación, el alta inicial, las verificaciones y el respaldo se registran en [Despliegue de producción](../documentation/deployment-production.md). Brevo SMTP está activado; las pruebas fueron aceptadas por el transporte y su recepción fue confirmada por el usuario. El ensayo de restauración y las copias periódicas/externas siguen pendientes. En el VPS, el código está en la raíz del release, sin el subdirectorio `src`.
+
+Los [manuales PDF existentes](../output/pdf/) corresponden a la edición histórica del 15 de octubre de 2026 y no se han reeditado para esta publicación. Algunas descripciones funcionales quedaron superadas; consultar este README y el código vigente para la implementación actual.
+
 ## Requisitos
 
 - PHP 8.4 con PDO MySQL/SQLite, mbstring, intl, bcmath, zip, XML y GD; Composer 2.
